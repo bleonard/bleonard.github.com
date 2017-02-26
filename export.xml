@@ -17,7 +17,7 @@
  7. WordPress will then import each of the posts, pages, comments, categories, etc.
     contained in this file into your site.
 -->
-<!-- generator="WordPress.com" created="2017-02-25 22:05:39 -0800"-->
+<!-- generator="WordPress.com" created="2017-02-25 22:09:42 -0800"-->
 <rss
     version="2.0"
     xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/"
@@ -29,7 +29,7 @@
         <title>BLog</title>
         <link>http://bleonard.github.io/</link>
         <description>Strong catchphrase situation here</description>
-        <pubDate>2017-02-25 22:05:39 -0800</pubDate>
+        <pubDate>2017-02-25 22:09:42 -0800</pubDate>
         <language>en</language>
         <wp:wxr_version>1.2</wp:wxr_version>
         <wp:base_site_url>http://bleonard.github.io/</wp:base_site_url>

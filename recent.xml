@@ -17,7 +17,7 @@
  7. WordPress will then import each of the posts, pages, comments, categories, etc.
     contained in this file into your site.
 -->
-<!-- generator="WordPress.com" created="{{ site.time | date_to_rfc822 }}"-->
+<!-- generator="WordPress.com" created="2017-02-25 22:09:42 -0800"-->
 <rss
     version="2.0"
     xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/"
@@ -26,36 +26,135 @@
     xmlns:dc="http://purl.org/dc/elements/1.1/"
     xmlns:wp="http://wordpress.org/export/1.2/">
     <channel>
-        <title>{{ page.site_title }}</title>
-        <link>{{ page.site_root }}/</link>
-        <description>{{ page.site_description }}</description>
-        <pubDate>{{ site.time | date_to_rfc822 }}</pubDate>
+        <title>BLog</title>
+        <link>http://bleonard.github.io/</link>
+        <description>Strong catchphrase situation here</description>
+        <pubDate>2017-02-25 22:09:42 -0800</pubDate>
         <language>en</language>
         <wp:wxr_version>1.2</wp:wxr_version>
-        <wp:base_site_url>{{ page.site_root }}/</wp:base_site_url>
-        <wp:base_blog_url>{{ page.site_root }}/</wp:base_blog_url>
+        <wp:base_site_url>http://bleonard.github.io/</wp:base_site_url>
+        <wp:base_blog_url>http://bleonard.github.io/</wp:base_blog_url>
         <wp:wp_author>
-            <wp:author_login>{{ page.author_name | slugify }}</wp:author_login>
-            <wp:author_email>{{ page.author_email }}</wp:author_email>
-            <wp:author_display_name>{{ page.author_name }}</wp:author_display_name>
+            <wp:author_login>Brian Leonard</wp:author_login>
+            <wp:author_email>brian@bleonard.com</wp:author_email>
+            <wp:author_display_name>Brian Leonard</wp:author_display_name>
         </wp:wp_author>
         <generator>http://wordpress.com/</generator>
-        {% for post in site.posts %}
+        
         <item>
-            <title>{{ post.title | xml_escape }}</title>
-            <link>{{ page.site_root }}{{ post.url }}</link>
-            <pubDate>{{ post.date | date_to_rfc822 }}</pubDate>
-            <dc:creator>{{ page.author_name | slugify }}</dc:creator>
-            <guid isPermaLink="false">{{ page.site_root }}{{ post.url }}</guid>
+            <title>Architecture: Models</title>
+            <link>http://bleonard.github.io/blog/2017/02/24/architecture-models/</link>
+            <pubDate>2017-02-24 00:00:00 -0800</pubDate>
+            <dc:creator>Brian Leonard</dc:creator>
+            <guid isPermaLink="false">http://bleonard.github.io/blog/2017/02/24/architecture-models/</guid>
             <description/>
             <content:encoded>
-                <![CDATA[{{ post.content | replace: '/images/posts/', 'http://bleonard.github.io/images/posts/' }}]]>
+                <![CDATA[<p>This is the first post in what I hope will be a series of articles about how we build things at <a href="https://www.taskrabbit.com">TaskRabbit</a>. Over time, we/I have internalized all kinds of lessons and patterns, but have never written them down explicitly and publicly. So let&#8217;s give that a try.</p>
+
+<p>I thought we&#8217;d start with models. That&#8217;s what <a href="http://api.rubyonrails.org/classes/ActiveRecord/Base.html">Rails</a> calls database tables where each row is an instance of that model class.</p>
+
+<p>Overall, we default to the following rules when designing the models in a system:</p>
+
+<ul>
+<li>Keep the scope small and based on decisions in the workflow</li>
+<li>Use state machines to declare and lock in the valid transitions</li>
+<li>Denormalize as needed to optimize use cases in the experience</li>
+</ul>
+
+
+<h3>Scope</h3>
+
+<p>When designing a feature (or the whole app in its early days), you have to decide what the models represent. I&#8217;m calling that the &#8220;scope&#8221; of the model.</p>
+
+<p>For example, most applications have a <code>User</code> model. What columns will it have? Stuff about the user, obviously. But what stuff? One of the tradeoffs to consider is <code>User</code> vs. <code>Account</code> vs. <code>Profile</code>. If you put everything about the user in the same table as the one that&#8217;s pointed to in many foreign keys through the system, there will be a performance impact.</p>
+
+<p>So we put the most commonly needed items on every screen load in the <code>User</code> model and &#8220;extra&#8221; stuff in the <code>Profile</code>.</p>
+
+<ul>
+<li><code>User</code>: authentication, name, avatar, state</li>
+<li><code>Profile</code>: address, average rating, bio information</li>
+</ul>
+
+
+<p>There are plenty of ways to cut this up into other models and move things around, but that&#8217;s what I mean about &#8220;scope&#8221; of a model.</p>
+
+<h3>States</h3>
+
+<p>State machines are built into the foundation of the system. Almost every model has a <code>state</code> column and an initial state. There are then valid transitions to other states.</p>
+
+<p>For example, there is a <code>PaymentTransaction</code> model. It has an initial &#8220;pending&#8221; state that represents the time between when an invoice is submitted and when we charge the credit card. During this time, it can move to a &#8220;canceled&#8221; state if tit should not happen. Or, if things go as planned, it can transition to a &#8220;settled&#8221; state. After that, if there is an issue of some sort, it would go to a &#8220;refunded&#8221; state. Notably, going from &#8220;pending&#8221; to &#8220;refunded&#8221; is <em>not</em> a valid transition.</p>
+
+<div class="jumbotron">
+<img src="http://bleonard.github.io/images/posts/architecture-models/states.png" class="bigPicture" />
+</div>
+
+
+<p>Creating these state and transitions preserves some sanity in the system. It&#8217;s a safety check. By asserting what is possible, we can (try to) prevent things that should not be possible.</p>
+
+<h3>Nouns and Verbs</h3>
+
+<p>The TaskRabbit marketplace creates a job that is sent to a Tasker. The Tasker can chat with the Client and can say they will do the job. Or they can decline. If they agree, they are officially assigned to the job and make an appointment. When they complete the job, they invoice the Client for the time worked. In most cases, it&#8217;s done at that point. In other cases, it is &#8220;ongoing&#8221; where they come back next week (to clean again, for example). At more or less any time, they whole thing can be canceled.</p>
+
+<p>If given that description, you could come up with many possible model structures. They would all have a set of pros and cons, but many would work out just fine.</p>
+
+<p>For example, you could have a <code>Job</code> model with these kinds of states: <code>invited</code>, <code>invitation_declined</code>, <code>assigned</code>, <code>appointment_made</code>, <code>invoiced</code>, <code>invoice_paid</code>, <code>canceled</code>, etc. Each would only allow the valid transitions as described above. You would also need the columns to represent the data: <code>client_id</code>, <code>tasker_id</code>, <code>appointment_at</code>, etc.</p>
+
+<p>The main benefit of this approach is centrality. You can <code>SELECT * FROM jobs WHERE client_id = 42</code> and get all of that user&#8217;s situation. Over time, however, we came to value a more decentralized approach.</p>
+
+<p>Now, the models of our system reflect its objects and decisions that the actors make about them. Each fork in the experience has a corresponding model with a simple state machine.</p>
+
+<p>For example, the <code>Invitation</code> model is created first to note the decision the Tasker must make. It then either transitions to <code>accepted</code> or <code>declined</code>.  If accepted, it spawns an <code>Assignment</code>. It, in turn, can move to states like <code>completed</code> or <code>ongoing</code>.</p>
+
+<div class="jumbotron">
+<img src="http://bleonard.github.io/images/posts/architecture-models/invitations.png" class="bigPicture" />
+</div>
+
+
+<p>There is still the the <code>Job</code> model but it contains the &#8220;description&#8221; of the work to do and its <code>id</code> ties together the decision-based models.</p>
+
+<h3>Trade-offs</h3>
+
+<p>Everything is pros and cons. The decentralized approach has more global complexity (more objects and interactions) but less local complexity (simpler decisions, states).</p>
+
+<p>It seemed to be the single, monolithic state machine that doomed the single <code>Job</code> model. Everything is fine as long as that&#8217;s the only path through the system. However, as soon as there is a new way for a Task to be assigned, we have a tangled web of states.</p>
+
+<p>Not every task has the invitation pattern noted above. Some are &#8220;broadcast&#8221; to many Taskers at once and shown in a browse-able &#8220;Available Tasks&#8221; section in the their app. That&#8217;s a new fork in the experience. Ongoing tasks also create a state loop of sorts.</p>
+
+<p>These cause the single state machine to get a bit tangled up, but is more easily handled in the decentralized approach. We can make a <code>Broadcast</code> model instead of an <code>Invitation</code> one. That can have its own set of states. Success in that local state machine can also spawn an <code>Assignment</code> and everything goes on as before.</p>
+
+<h3>Denormalization</h3>
+
+<p>To try and get the both worlds, we have also aggressively embraced a variety of forms of denormalization.</p>
+
+<p>We actively try not to do SQL <code>JOIN</code>s for simplicity and performance reasons, but that is at odds with all these little models all over the place. So we have said it&#8217;s OK to have duplicate data. For example, each of these &#8220;decision&#8221; models have the <code>client_id</code>, <code>tasker_id</code>, and pricing information. It just gets passed along. This makes everything a local decision and queries very straightforward.</p>
+
+<p>The big hole in the decentralized approach is to &#8220;get all my stuff&#8221; easily. For that we have different tactics, both of which are denormalization with use cases in mind.</p>
+
+<p>On write to an object, we can update a central model with the current situation for that <code>Job</code>. For example, when an <code>Assignment</code> gets created, we recalculate and store data in two different tables. One for both the Tasker and the Client on what they should be seeing on their respective dashboards. Thus, the API call to &#8220;get all my stuff&#8221; uses one of those tables. That is done in the same transaction as the original write.</p>
+
+<p>The other option is basically the same thing but for either less time-sensitive data or more complicated queries. We use a <a href="/blog/2015/04/02/queue-bus/">message bus</a> to observe changes. We then denormalize applicable data for a specific use case into a table or <a href="http://www.elastic.co">Elasticsearch</a>. For example, when an <code>Appointment</code> is created, we would update the Taskers availability schedule in the database. Updating this schedule would also trigger an update to our recommendation algorithm which uses Elasticsearch.</p>
+
+<p>One important note: all of these denormalizations should be <a href="http://www.restapitutorial.com/lessons/idempotency.html">idempotent</a>. This allows us to recreate the whole thing from the source of truth or recover if any given event is dropped.</p>
+
+<h3>Summary</h3>
+
+<p>At TaskRabbit, we default to the following rules when designing the models in a system:</p>
+
+<ul>
+<li>Keep the scope small and based on decisions in the workflow</li>
+<li>Use state machines to declare and lock in the valid transitions</li>
+<li>Denormalize as needed to optimize use cases in the experience</li>
+</ul>
+
+
+<p>As always, these are just the default guidelines. In any given case, there may be a reason to deviate, but it would have to be clear why that case was special.</p>
+]]>
             </content:encoded>
             <excerpt:encoded>
                 <![CDATA[]]>
             </excerpt:encoded>
-            <wp:post_id>{{ post.title | slugify }}</wp:post_id>
-            <wp:post_date>{{ post.date | date: &#8220;%F %T&#8221; }}</wp:post_date>
+            <wp:post_id>Architecture: Models</wp:post_id>
+            <wp:post_date>2017-02-24 00:00:00</wp:post_date>
             <wp:comment_status>closed</wp:comment_status>
             <wp:ping_status>closed</wp:ping_status>
             <wp:post_name>post-format-standard</wp:post_name>
@@ -66,7 +165,5 @@
             <wp:post_password/>
             <wp:is_sticky>0</wp:is_sticky>
         </item>
-        {% break %}
-        {% endfor %}
     </channel>
 </rss>
