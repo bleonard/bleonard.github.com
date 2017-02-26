@@ -1,0 +1,225 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Rails Schema with LHM - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="At TaskRabbit, we like MySQL. As with everything, it has its own set of issues, though. One of these issues is that it locks the table while a column &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2014/10/30/rails-schema-with-lhm/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">Rails Schema With LHM</h1>
+	<div class="entry-content"><p>At <a href="https://www.taskrabbit.com">TaskRabbit</a>, we like <a href="http://www.mysql.com/">MySQL</a>. As with everything, it has its own set of issues, though. One of these issues is that it locks the table while a column is added. This is not the biggest deal in the early days of a table, but once you start getting millions of rows and consistent traffic around the clock, this prevents the site from working as expected.</p>
+
+<p>The first way that we worked around this problem was with the <a href="http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html">pt-online-schema-change</a> tool. It does the following:</p>
+
+<ul>
+<li>Makes a a new table with the old table&#8217;s schema</li>
+<li>Copies data from the old table to the new table</li>
+<li>Sets up a trigger for data to keep syncing</li>
+<li>Adds the column to the new table</li>
+<li>Renames the old table to something else and renames the new table to replace it</li>
+<li>Deletes the old table</li>
+</ul>
+
+
+<p>This worked quite well, but had a flaw within our process. It was outside of the development and deployment workflow. In order to develop, we would still make a <a href="http://guides.rubyonrails.org/migrations.html">Rails migration</a>. Then just before deploy, we would run the tool and add the row to the <code>schema_migrations</code> table. When we deploy, it runs migrations, but in this case it would not run because we had added that row. I don&#8217;t think we ever messed it up, but the process had a few gaps.</p>
+
+<p>We now use <a href="https://github.com/soundcloud/lhm">LHM</a> also known as Large Hadron Migrator from the good folks at <a href="https://soundcloud.com/">soundcloud</a>. It does basically the same thing, but allows you to do it right there in the migration.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">require</span> <span class="s1">&#39;lhm&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">AddMiddleNameToUsers</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Migration</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">change</span>
+</span><span class='line'>    <span class="no">Lhm</span><span class="o">.</span><span class="n">change_table</span> <span class="ss">:users</span> <span class="k">do</span> <span class="o">|</span><span class="n">m</span><span class="o">|</span>
+</span><span class='line'>      <span class="c1"># same as: add_column :users, :middle_name</span>
+</span><span class='line'>      <span class="n">m</span><span class="o">.</span><span class="n">add_column</span> <span class="ss">:middle_name</span><span class="p">,</span> <span class="s2">&quot;VARCHAR(191) DEFAULT NULL&quot;</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So this is great. Now it&#8217;s in the process.</p>
+
+<h3>Schema</h3>
+
+<p>One design choice (and it seems like the right one) is that it makes the last step manual. That is, it leaves the old (renamed) table around. We go back and delete these from production when sure everything worked out. The above migration might leave around a table named something like this: <code>lhma_2014_10_28_20_41_56_933_users</code>.</p>
+
+<p>So that&#8217;s fine, but you&#8217;ll notice that when you run <code>rake db:migrate</code> that your <code>schema.rb</code> file now has that table in it. This happens because ActiveRecord takes a snapshot of your database right after the migration. We try to take really good care of our schema file, so this made us sad.</p>
+
+<p>I went poking around in the ActiveRecord code ready to monkey patch the adapter that reads the table list or the code that generates the schema file. When I got there, though, I found there was already a class setting that did what I wanted. It even took a regex!</p>
+
+<p>So here&#8217;s what to add if you don&#8217;t want those tables showing up in your schema file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># config/initializers/active_record_schema.rb</span>
+</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;active_record&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># ignore LHM</span>
+</span><span class='line'><span class="no">ActiveRecord</span><span class="o">::</span><span class="no">SchemaDumper</span><span class="o">.</span><span class="n">ignore_tables</span> <span class="o">&lt;&lt;</span> <span class="sr">/^lhma_/</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>That&#8217;s it. Happy migrating.</p>
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

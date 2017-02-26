@@ -1,0 +1,274 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Big Decimal - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="At TaskRabbit, people have hourly rates for the tasks that they do. They get paid based on the number of hours that they work. We try to deal in base &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2015/06/04/big-decimal/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">Big Decimal</h1>
+	<div class="entry-content"><p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, people have hourly rates for the tasks that they do. They get paid based on the number of hours that they work.</p>
+
+<p>We try to deal in base units to remove ambiguity. For example, we store the hourly rate in cents as an integer instead of in dollars as a double. Reporting time worked occurs in seconds. When that reporting occurs, there is a calculation to do to understand how much the Tasker needs to be paid. It might go something like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">FloatCalculator</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">hourly_rate_in_cents</span><span class="p">)</span>
+</span><span class='line'>    <span class="vi">@hourly_rate_in_cents</span> <span class="o">=</span> <span class="n">hourly_rate_in_cents</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">total_in_dollars</span><span class="p">(</span><span class="n">seconds_worked</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">hours</span> <span class="o">=</span> <span class="n">seconds_worked</span> <span class="o">/</span> <span class="mi">3600</span><span class="o">.</span><span class="mi">0</span> <span class="c1"># seconds in an hour</span>
+</span><span class='line'>    <span class="n">cents</span> <span class="o">=</span> <span class="vi">@hourly_rate_in_cents</span> <span class="o">*</span> <span class="n">hours</span>
+</span><span class='line'>    <span class="n">dollars</span> <span class="o">=</span> <span class="n">cents</span> <span class="o">/</span> <span class="mi">100</span> <span class="c1"># make it dollars</span>
+</span><span class='line'>    <span class="n">dollars</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Over the years, we saw a few errors because of <a href="http://floating-point-gui.de/">limitations of floating point math</a>. Since then, we have switched to using <a href="http://ruby-doc.org/stdlib-2.1.5/libdoc/bigdecimal/rdoc/BigDecimal.html">BigDecimal</a> to prevent these kinds of errors.</p>
+
+<p>There were no visible performance issues, but I recently got curious because all of the docs say that they are substantial. By writing the same calculator using BigDecimal, we can see the difference.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">BigDecimalCalculator</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">hourly_rate_in_cents</span><span class="p">)</span>
+</span><span class='line'>    <span class="vi">@hourly_rate_in_cents</span> <span class="o">=</span> <span class="no">BigDecimal</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">hourly_rate_in_cents</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">total_in_dollars</span><span class="p">(</span><span class="n">seconds_worked</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">hours</span> <span class="o">=</span> <span class="no">BigDecimal</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">seconds_worked</span><span class="p">)</span> <span class="o">/</span> <span class="no">BigDecimal</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mi">3600</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">cents</span> <span class="o">=</span> <span class="vi">@hourly_rate_in_cents</span> <span class="o">*</span> <span class="no">BigDecimal</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">hours</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">dollars</span> <span class="o">=</span> <span class="n">cents</span> <span class="o">/</span> <span class="no">BigDecimal</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">dollars</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">to_f</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This does turn out to be significantly slower, so I also benchmarked marking the constants class level variables.</p>
+
+<!-- more -->
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">BigDecimalStaticCalculator</span>
+</span><span class='line'>  <span class="no">CONVERSION_RATE</span> <span class="o">=</span> <span class="no">BigDecimal</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mi">3600</span><span class="p">)</span> <span class="o">*</span> <span class="no">BigDecimal</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">hourly_rate_in_cents</span><span class="p">)</span>
+</span><span class='line'>    <span class="vi">@hourly_rate_in_cents</span> <span class="o">=</span> <span class="no">BigDecimal</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">hourly_rate_in_cents</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">total_in_dollars</span><span class="p">(</span><span class="n">seconds_worked</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">dollars</span> <span class="o">=</span> <span class="vi">@hourly_rate_in_cents</span> <span class="o">*</span> <span class="no">BigDecimal</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">seconds_worked</span><span class="p">)</span> <span class="o">/</span> <span class="no">CONVERSION_RATE</span>
+</span><span class='line'>    <span class="n">dollars</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">to_f</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Results</h3>
+
+<p>The results are in!</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>                     <span class="n">user</span>     <span class="nb">system</span>      <span class="n">total</span>        <span class="n">real</span>
+</span><span class='line'><span class="n">floats</span>               <span class="mi">0</span><span class="o">.</span><span class="mi">220000</span>   <span class="mi">0</span><span class="o">.</span><span class="mo">010000</span>   <span class="mi">0</span><span class="o">.</span><span class="mi">230000</span> <span class="p">(</span>  <span class="mi">0</span><span class="o">.</span><span class="mi">231120</span><span class="p">)</span>
+</span><span class='line'><span class="n">big</span> <span class="n">decimal</span>          <span class="mi">4</span><span class="o">.</span><span class="mi">130000</span>   <span class="mi">0</span><span class="o">.</span><span class="mo">070000</span>   <span class="mi">4</span><span class="o">.</span><span class="mi">200000</span> <span class="p">(</span>  <span class="mi">4</span><span class="o">.</span><span class="mi">234744</span><span class="p">)</span>
+</span><span class='line'><span class="n">big</span> <span class="n">decimal</span> <span class="n">static</span>   <span class="mi">2</span><span class="o">.</span><span class="mi">620000</span>   <span class="mi">0</span><span class="o">.</span><span class="mo">040000</span>   <span class="mi">2</span><span class="o">.</span><span class="mi">660000</span> <span class="p">(</span>  <span class="mi">2</span><span class="o">.</span><span class="mi">680582</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The cost of using BigDecimal to reduce the error rate is a slowdown of 15x-20x compared to floating point math. This is not a big deal in practice. First of all, we need to get the money correct. Secondly, these are times for 250,000 calculations. Any given request only has 1, which is nothing compared to the other stuff (SQL, template rendering) happening.</p>
+
+<p>It seems that the initialization process takes up a lot of time, though, so one technique to speed it up is to pull out constants in your BigDecimal code to the class level. These would only be initialized once, but may also affect the base memory level.</p>
+
+<p>These classes and the benchmark itself are available as a <a href="https://gist.github.com/bleonard/6d7ffa979e9720baf71b">gist</a> if you are interested.</p>
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

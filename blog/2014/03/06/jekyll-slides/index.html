@@ -1,0 +1,315 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Jekyll Slides - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="I really like Jekyll/Octopress and have aspirations to make my presentations in HTML instead of Powerpoint. For my last presentation to the Redis &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2014/03/06/jekyll-slides/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">Jekyll Slides</h1>
+	<div class="entry-content"><p>I really like <a href="http://jekyllrb.com/">Jekyll</a>/<a href="http://octopress.org/">Octopress</a> and have aspirations to make my presentations in HTML instead of Powerpoint. For my last <a href="http://www.meetup.com/San-Francisco-Redis-Meetup/events/164972192/">presentation to the Redis Meetup</a>, I combined the two. I found it really easy to &#8220;blog&#8221; the talk and created a <a href="https://github.com/bleonard/jekyll-slides">plugin</a> to convert <a href="http://www.bleonard.com/blog/2014/02/16/resque-bus-presentation/">that</a> to a <a href="http://lab.hakim.se/reveal-js">reveal.js</a> <a href="http://www.bleonard.com/blog/2014/02/16/resque-bus-presentation/slides">presentation</a> from the same source. It&#8217;s my first Jekyll plugin, but it got the job done. Check it out <a href="https://github.com/bleonard/jekyll-slides">here</a>.</p>
+
+<h2>Usage</h2>
+
+<p>Make a new blog post and add <code>slides: simple</code> to the metadata at the top. The value <code>simple</code> refers to the <a href="http://lab.hakim.se/reveal-js/?theme=solarized#/themes">reveal.js theme</a> to use. The options are: <code>beige</code>, <code>blood</code>, <code>moon</code>, <code>night</code>, <code>serif</code>, <code>simple</code>, <code>sky</code>, and <code>solarized</code>.</p>
+
+<p>Here is the header from the <a href="http://www.bleonard.com/blog/2014/02/16/resque-bus-presentation/slides">last presentation</a>:</p>
+
+<pre><code>---
+layout: post
+published: true
+title: "Resque Bus Presentation"
+date: 2014-02-16 08:48
+comments: true
+author: BL
+slides: simple
+categories: architecture resque redis bus
+---
+</code></pre>
+
+<p>You then write your normal blog post with a few extra elements mixed in.</p>
+
+<p>For example, you start a slide with the <code>{% slide %}</code> notation. You can also say <code>{% notes %}</code> at the &#8220;bottom&#8221; of a slide. This will not appear in the slideshow, but will appear in the blog post.</p>
+
+<p>You say <code>{% endslide %}</code> at the end of the presentation. You could do this each time, but it&#8217;s inferred by the beginning of a new slide using <code>{% slide %}</code>, so the end notation is only needed at the end.</p>
+
+<p>That&#8217;s about it. Here &#8216;s the whole presentation if it was only a few of the slides:</p>
+
+<pre><code>{% slide %}
+
+## Resque Bus
+
+### Brian Leonard
+
+##### TaskRabbit
+##### 02/17/2014
+
+{% notes %}
+
+Hi, my name is Brian Leonard and I'm the Chief Architect and Technical Cofounder of TaskRabbit. TaskRabbit is a marketplace where neighbors help neighbors get things done.
+
+At TaskRabbit we are using Redis and Resque to do all of our background processing. We've also gone one step further to use these tools to create an asynchronous message bus system that we call Resque Bus.
+
+{% slide %}
+
+### Redis
+
+* Key/Value Store
+* Atomic Operations
+
+![Redis Logo](/images/posts/resque-bus-presentation/redis-logo.jpeg)
+
+{% notes %}
+
+I don't have to tell you guys about Redis, but for our purposes the main point is that we can store stuff in it and the operations are atomic.
+
+{% slide %}
+
+## Thanks!
+
+Questions?
+
+{% endslide %}
+</code></pre>
+
+<p>Compilation produces the <a href="http://www.bleonard.com/blog/2014/02/16/resque-bus-presentation/">blog post here</a> as well as the <a href="http://www.bleonard.com/blog/2014/02/16/resque-bus-presentation/slides">presentation here</a>.</p>
+
+<!-- more -->
+
+
+<h2>Installation</h2>
+
+<p>The jekyll-slides repo is <a href="https://github.com/bleonard/jekyll-slides">here</a>. Clone the project.</p>
+
+<pre><code>cd jekyll-slides
+./install ~/your/blog/path
+</code></pre>
+
+<p>This will run a bash script that copies over the necessary files.</p>
+
+<ul>
+<li>plugins/slides.rb</li>
+<li>assets/slides/(js|css)</li>
+<li>layouts/slides.html</li>
+</ul>
+
+
+<p>It also will add a link to <code>/assets/slides/css/for_blog.css</code> in the custom head.html file that <a href="http://octopress.org/">octopress</a> uses within _includes. If you have another setup, you&#8217;ll have to add something like this to your normal blog layout:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">href=</span><span class="s">&quot;/assets/slides/css/for_blog.css&quot;</span><span class="nt">&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>That should be it. I couldn&#8217;t find a best practice for installing these plugins so I made this script. I&#8217;ve tested it on a fresh octopress install and it works as expected. If you have another setup or other issues, please let me know.</p>
+
+<h2>Extra Options</h2>
+
+<p>There are a few other things I threw in that I wanted to have in my presentation.</p>
+
+<p>The reveal.js framework supports <a href="http://lab.hakim.se/reveal-js/#/2">vertical slides</a>. This is handled in jekyll through the <code>{% slide_top %}</code> and <code>{% slide_bottom %}</code> tags used instead of the normal <code>{% slide %}</code> one. The first one in a vertical stack is noted as <code>slide_top</code>, the last one is <code>slide_bottom</code> and the ones in the middle are just <code>slide</code>.</p>
+
+<p>It also supports other metadata on the slide. For example, if you add <code>data-transition="none"</code> to the <code>&lt;section class="slide"&gt;</code> it will affect the transition. You can add metadata by adding it to the <code>{% slide %}</code> (or <code>{% slide_top %}</code> or <code>{% slide_bottom %}</code>) tag. The <code>data-background</code> options should also work with this approach.</p>
+
+<p>Here is the example from the presentation</p>
+
+<pre><code>{% slide_top transition: none %}
+
+![Bus 2](/images/posts/resque-bus-presentation/rating_bus_2.png)
+
+{% notes %}
+
+As you can see, the difference is this new layer of `resquebus_incoming` that we've added, so now it looks like this.
+
+{% slide transition: none %}
+
+![Bus 3](/images/posts/resque-bus-presentation/rating_bus_3.png)
+
+{% notes %}
+
+Several more slides in the stack
+
+{% slide_bottom transition: none %}
+
+![Bus 9](/images/posts/resque-bus-presentation/rating_bus_9.png)
+</code></pre>
+
+<h2>Supported Reveal Features</h2>
+
+<p>A few of the presentation-mode features are supported as well. Hitting the <code>f</code> key in the presentation will put it in full screen mode.</p>
+
+<p>Speaker notes are also supported. Hitting <code>s</code> in the presentation will launch a new window that shows the current and next slides along with the current notes.</p>
+
+<h2>Technical Details</h2>
+
+<p>All the ruby code is in <a href="https://github.com/bleonard/jekyll-slides/blob/master/slides.rb">slides.rb</a>. It implements the tags used, all of which extend from <code>Liquid::Tag</code>. Each available tag is mapped to a ruby class the outputs HTML.</p>
+
+<p>I tried to be as minimal as possible about tag use. That is, there are no blocks or unnecessary end tags. To do this, context is kept in memory about where we are in the hierarchy. For example, if it hits a new <code>{% slide %}</code> call, it knows it hasn&#8217;t closed out the last one and takes care of that before proceeding.</p>
+
+<p>It was important that all of these tags only take effect if the page/post was marked as <code>slide</code> in the metadata. Similarly, I extended the <code>Site</code> compile process to produce the extra files (one for slides and one for notes) if it has the same metadata field.</p>
+
+<p>Something interesting was that I was trying to output HTML, but I think Jekyll/Liquid was expecting that it was outputting Markdown. This probably usually works out fine as HTML can be rendered in Markdown and the HTML is usually something inline and not huge blocks. The issue was that it put <code>&lt;p&gt;</code> tags around everything which threw off the reveal.js situation. To fix this, I go back over the text in the compilation process and remove those <code>&lt;p&gt;</code> tags with a fairly targeted <code>gsub</code> call.</p>
+
+<h2>Summary</h2>
+
+<p>It&#8217;s likely a limitation added by the translation layer, but I didn&#8217;t have the control I wanted to over the slides. In Powerpoint, I would have made them just right. I&#8217;m not sure if I could achieve that even in straight HTML without massive effort and this added abstraction might be insurmountable.</p>
+
+<p>So we&#8217;ll see how it goes. I achieved what I was trying to do with this and I hope you get some use of out of it. I&#8217;ll probably iterate on it a bit to see if I can make the slides better. Pull requests quite welcome.</p>
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+
+<section id="comment">
+    <h1 class="title">Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://bleonard.github.com/blog/2014/03/06/jekyll-slides/';
+        var disqus_url = 'http://bleonard.github.com/blog/2014/03/06/jekyll-slides/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,231 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Teaching CSS - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="To my surprise, my daughter asked me if I would teach her how to build a web site today. She more or less wants a blog to keep track of what is going &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2015/08/01/teaching-css/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">Teaching CSS</h1>
+	<div class="entry-content"><p>To my surprise, my daughter asked me if I would teach her how to build a web site today. She more or less wants a blog to keep track of what is going on at a recess club she made at school: regular notes, calendar, things like that.</p>
+
+<p>I had her draw out on paper what she wanted to build. It was interesting to see her reinvent the concept of a blog. For example, her first iteration only showed the post from &#8220;Today.&#8221; I asked her how you would see yesterday&#8217;s post. So she add a &#8220;Today&#8221; and a &#8220;Yesterday&#8221; button. So I asked her how to see the post from last week. Her answer was approximately, &#8220;Well, they just need to keep up!&#8221; However, she eventually conceded to a &#8220;Previous&#8221; and &#8220;Next&#8221; button.</p>
+
+<p>Even on one&#8217;s first encounter, it seems that it&#8217;s impossible to teach this stuff without also teaching about concessions:</p>
+
+<p><strong>Daughter</strong>: OK, here&#8217;s a picture of what I want to make (shows few buttons on top, content underneath)</p>
+
+<p><strong>Dad</strong>: (Talks about closing and opening tags, gets a word on the page)</p>
+
+<p><strong>Daughter</strong>: Make it bigger.</p>
+
+<p><strong>Dad</strong>: (adds <code>h1</code> tag)</p>
+
+<p><strong>Daughter</strong>: Add the other buttons.</p>
+
+<p><strong>Dad</strong>: (adds two more <code>h1</code> tags)</p>
+
+<p><strong>Daughter</strong>: Why are they not next to each other?</p>
+
+<p><strong>Dad</strong>: (mumbles about <code>ul</code> and <code>li</code> - makes them a list)</p>
+
+<p><strong>Daughter</strong>: Now they are too small again and have those dots.</p>
+
+<p><strong>Dad</strong>: We need to &#8220;style&#8221; them. Let&#8217;s remove the dots. (inlines styles: <code>list-style-type:none;</code>)</p>
+
+<p><strong>Daughter</strong>: OK. Now make it bigger again.</p>
+
+<p><strong>Dad</strong>: (adds <code>font-size:50px;</code> to the first one) There.</p>
+
+<p><strong>Daughter</strong>: What about the other ones?</p>
+
+<p><strong>Dad</strong>: How do you think we make them bigger too?</p>
+
+<p><strong>Daughter</strong>: (eventually adds inline style to other ones). Perfect! Now put them next to each other.</p>
+
+<p><strong>Dad</strong>: (adds <code>display:inline;</code>)</p>
+
+<p><strong>Daughter</strong>: You&#8217;re amazing! Ok, now make the background gold.</p>
+
+<p><strong>Dad</strong>: (<code>background-color:Gold</code>)</p>
+
+<p><strong>Daughter</strong>: That&#8217;s yellow.</p>
+
+<p><strong>Dad</strong>: Here, look at <a href="http://www.w3schools.com/cssref/css_colornames.asp">this</a>.</p>
+
+<p><strong>Daughter</strong>: Wow, so many choices! (picks GoldenRod)</p>
+
+<p><strong>Dad</strong>: (shows how to change to that)</p>
+
+<p><strong>Daughter</strong>: Perfect! Now make the buttons this one (points to DarkTorquise)</p>
+
+<p><strong>Dad</strong>: (adds links makes them <code>background-color:DarkTurquoise;padding: 10px;</code>)</p>
+
+<p><strong>Daughter</strong>: OK, let&#8217;s add the main words. In a white box.</p>
+
+<p><strong>Dad</strong>: (adds <code>div</code> with <code>background-color:White;</code> and a few words)</p>
+
+<p><strong>Daughter</strong>: Why is it so small?</p>
+
+<p><strong>Dad</strong>: We need more words. (pastes Lorem Ipsum)</p>
+
+<p><strong>Daughter</strong>: (not impressed) It needs to be bigger and in the middle.</p>
+
+<p><strong>Dad</strong>: (adds <code>padding:20px;margin-left:auto;margin-right:auto;</code> to horizontally center content) How about that?</p>
+
+<p><strong>Daughter</strong>: Also in the middle between the top and bottom.</p>
+
+<p><strong>Dad</strong>: (sighs heavily. googles &#8220;vertical center div css&#8221; for the 100th time. reads for 7 minutes.)</p>
+
+<p><strong>Daughter</strong>: What&#8217;s wrong?</p>
+
+<p><strong>Dad</strong>: Are you sure you don&#8217;t want it near the top?</p>
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

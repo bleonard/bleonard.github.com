@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: business | BLog]]></title>
+  <link href="http://bleonard.github.com/blog/categories/business/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.com/"/>
+  <updated>2017-02-25T21:54:36-08:00</updated>
+  <id>http://bleonard.github.com/</id>
+  <author>
+    <name><![CDATA[Brian Leonard]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Post Election]]></title>
+    <link href="http://bleonard.github.com/blog/2016/11/10/post-election/"/>
+    <updated>2016-11-10T00:00:00-08:00</updated>
+    <id>http://bleonard.github.com/blog/2016/11/10/post-election</id>
+    <content type="html"><![CDATA[<p>I've been thinking a lot about the book <a href="https://en.wikipedia.org/wiki/The_City_%26_the_City"><em>The City &amp; the City</em></a> by China Miéville. It describes a town in which two sets of people share the same physical space but do not acknowledge each other. For that matter, they are forbidden to do so.</p>
+
+<p>I remember being surprised in 1992 when Bill Clinton won the election. I lived in Texas and everyone I knew was voting for Bush. Now, I live in California and the same thing snuck up on me again this week. There's very little learning there.</p>
+
+<p>But it's not just where I live because technology has allowed a nation like in the book. Today, my Twitter feed is filled with anxiety, sadness, outrage, and very scared people. I am certain there are people nearby, not to mention in all those (many) red states, that have an exceptionally different feed: one full of hope, expectation, and triumph. And there is no connection between the two.</p>
+
+<p>In that 1992 election, it was the economy (<a href="https://en.wikipedia.org/wiki/It%27s_the_economy,_stupid">stupid</a>) and the need for change. I'm certainly not a political analyst, but that rings just as true this week. All the jobs numbers are up over the last 8 years, but not everywhere and not for everyone. This has caused a rift.</p>
+
+<h2>Forward</h2>
+
+<p>Where do we go from here? I believe it's best for each of use to use our talents and position as leverage to make a difference. In my case, I can help literally provide work in these areas of the country.</p>
+
+<p><a href="https://www.taskrabbit.com">TaskRabbit</a> has been focusing on its largest markets because there is still plenty of room to grow there. And the whole thing is a hard problem. The focus helps, but our map is somewhat bare in Middle America. For me, this election is a kick in the pants to get there sooner than later.</p>
+
+<p>The biggest fail there would be to believe that we can "save" people from on high by bestowing the magic of technology. Fortunately, even as the chief technologist at TaskRabbit, I understand that's not where the value lies. It's always been about neighbors helping neighbors. We're just there to make the real-life connection.</p>
+
+<p>I don't know about you, but I think we could all really use a few more real-life connections at the moment.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[OKRs]]></title>
+    <link href="http://bleonard.github.com/blog/2015/07/01/okrs/"/>
+    <updated>2015-07-01T00:00:00-07:00</updated>
+    <id>http://bleonard.github.com/blog/2015/07/01/okrs</id>
+    <content type="html"><![CDATA[<p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, we have something called Objectives and Key Results or <a href="https://en.wikipedia.org/wiki/OKR">OKRs</a> for short. Many companies do the same.</p>
+
+<p>We've always talked about them as one thing. As in, "What's the OKR?" That would more or less mean, "What number are we trying to hit?" An example would be getting better at fulfilling tasks by focusing on moving up the percentage of tasks that are posted and get successfully completed.</p>
+
+<p>This metrics-driven approach can really work but its efficacy seems related to the metric chosen. If the team believes it's the right number to move, it works out. If they see weird loopholes or tricks, then it is less effective. Because of this, there is much discussion each time about the best metric to focus upon. Assuming we don't focus on something all-encompassing ("Revenue"), it often has turned out to be very difficult to find exactly the right metric.</p>
+
+<p>My recent realization is that there are objectives <em>and</em> key results. Of course, that's obvious because it's the name of the thing. However, in my mind, I don't think I ever separated them to the degree that they deserve to be separated. It was always about hitting the metric and that <em>was</em> the objective. The goal, as I now understand it, should be to make the objective more of the "intent" of the situation. The key result is simply a way to "sample" that intent.</p>
+
+<h3>Example</h3>
+
+<p>As an example, we could have an objective of "making TaskRabbit a habit." I think it's helpful to make it completely about the intent and not something like "increasing lifetime value" or "doubling monthly active users" or whatever. That helps when making decisions throughout the quarter and is open to interpretation as the understanding of it evolves. The key result, then, is for sampling the progress. It could be "increase the average number of tasks per month to X" or "get Y% more people to their 4th completed task," or "increase the average number of consecutive weeks of usage to Z" or any number of other options.</p>
+
+<p>Each metric will have its holes, but the best metrics will be the one or two that:</p>
+
+<ul>
+<li>are highly correlated to the intent of the objective</li>
+<li>can be sampled frequently to understand and measure progress</li>
+<li>are easily explainable and understandable to everyone</li>
+</ul>
+
+
+<p>This produces a metric that doesn't have to have its nuances explained every time we talk about it, can be on the wall in dashboard form to see if it's going well, and that we believe is a good enough sample of the goal.</p>
+
+<!-- more -->
+
+
+<h3>Metric</h3>
+
+<p>I think one of the trickier traps is the allure of percentages. Let's say that we have the retention goal as noted above. One seemingly fine metric is to make up some concept called "habitors" (those that have made TaskRabbit a habit). We could define that means they get 4 tasks done in their first 2 months. The goal could be to get 50% of new users to be a habitor, up from 40%. In my experience, this fails the "can be sampled frequently to understand and measure progress" point.</p>
+
+<p>First, the window is too long. We can only really report a percentage after someone has had their 2 months on the platform. Anything before that and I'd have to caveat it with it being a projection. The graph will also drop off towards the current date. I can explain that, but I believe it has a psychological effect on the team. Finally, the long window tends to suggest that we need to work forward from acquiring the user. We'll start that tomorrow with a new cohort and we'll know if we succeeded in 2 months. That's just not the right level of urgency.</p>
+
+<p>Second, percents as a whole seem to be a problem - at least when combined with the long time period. It's just hard to visualize what a 1% change means. When prioritizing work, we'll have to understand if the work will make a meaningful dent in the problem. 1% could be 10 or 10,000 people. That's helpful to know when calculating the likely return on investment of the feature.</p>
+
+<p>So if percents are not actionable, what is? Straight numbers. I've seen better success with a metric like "1000 people post their 4th task each day." Because the time window is so large, we already know how many people signed up and will fall in the window for at least the next two months. This enables us to just set a monthly, weekly, or daily number. This fixes the mindset issue by noting there are people right now that we should be pushing up that ladder, not starting off a new cohort. It also reduces the metric lag from weeks to being able to report on the number so far <em>today</em>. Importantly, it also has a similar level of correlation to the objective.</p>
+
+<h3>Tactics</h3>
+
+<p>Another issue I've seen is focusing the objective or key result on a tactic. It's a viable tactic to try to reach the objective by instituting some sort of "punchcard" program like at the coffee shop. Maybe you post 3 tasks and get 1 free. It's a fine feature, but it would be a mistake to have that hypothesis and make the objective or a key result mention it.</p>
+
+<p>Maybe a year into the program it can be a goal to "increase punchcard participation" or something, but definitely not at the beginning. It's just one tactic at this point. If it doesn't move the numbers, we try the next thing.</p>
+
+<h3>Learnings</h3>
+
+<p>It should be easy to agree on the overall intent (objective). Let's agree that we're going to work towards the objective and not do any unnatural acts to hit any specific number. That being said, we need to be be able to sample a few metrics (key results) to be able to course correct and drive motivation. And yes, that's a good tactic but let's apply it to something higher-level so we're open to learn as we go.</p>
+
+<p>It's completely possible that this is already a chapter in some book or a known theory with slightly different names. Either way, this framework helped make these conversations go much more smoothly this quarter and thought I would share.</p>
+]]></content>
+  </entry>
+  
+</feed>

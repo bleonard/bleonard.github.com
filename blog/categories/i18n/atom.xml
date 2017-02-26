@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: i18n | BLog]]></title>
+  <link href="http://bleonard.github.com/blog/categories/i18n/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.com/"/>
+  <updated>2017-02-25T21:54:36-08:00</updated>
+  <id>http://bleonard.github.com/</id>
+  <author>
+    <name><![CDATA[Brian Leonard]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Translating Rails fields]]></title>
+    <link href="http://bleonard.github.com/blog/2015/01/06/translating-rails-fields/"/>
+    <updated>2015-01-06T00:00:00-08:00</updated>
+    <id>http://bleonard.github.com/blog/2015/01/06/translating-rails-fields</id>
+    <content type="html"><![CDATA[<p>When we launched <a href="https://www.taskrabbit.com">TaskRabbit</a> in London, one of our goals was to have a fully localized product. There are enough differences between British English and US English to not cut (m)any corners. Of course, it's even more important in completely different languages.</p>
+
+<p>An issue that I noticed one day was in our signup flow. It said "Last name is required." This was caused by a blank field and a model-level validation.</p>
+
+<p><code>ruby
+class User
+  validates :last_name, presence: true
+end
+</code></p>
+
+<p>It was working as expected, but it should have said "Surname is required." That's what they want across the pond.</p>
+
+<p>We translate all of our "en" locale into "en-GB" but this wasn't there because it more or less works automatically. <a href="http://api.rubyonrails.org/classes/ActiveModel/Validations.html">Active Model</a> does a <code>humanize</code> call on the field name. To translate this field, which we had done on stranger field names, you add it to a YML locale file.</p>
+
+<p>```yaml
+en:
+  activerecord:</p>
+
+<pre><code>attributes:
+  user:
+    last_name: 'Last Name'
+</code></pre>
+
+<p>```</p>
+
+<p>This is for the one model, but there is <a href="https://github.com/rails/rails/blob/ebaf4e40cdcb80ebe16014a2c979f688213d7b92/activemodel/lib/active_model/translation.rb#L61">fallback code</a> in Active Model that also allows you to define the name for all models. You can do this:</p>
+
+<p>```yaml
+en:
+  attributes:</p>
+
+<pre><code>last_name: 'Last Name'
+</code></pre>
+
+<p>```</p>
+
+<p>This has the advantage of also working for another model as well as an Active Model <a href="https://blog.engineyard.com/2014/keeping-your-rails-controllers-dry-with-services">service objects</a> in one shot.</p>
+
+<!-- more -->
+
+
+<h2>Generate a File</h2>
+
+<p>So I wrote some code to make sure all fields were defined in our "en" locale. This would ensure that they would get translated into "en-GB" and others. The values are just what Active Model would have done anyway, so there's no functional difference. It does. however, prevent us from missing anything because of Rails magic.</p>
+
+<p>Now we have a rake job that calls <code>Translation::Fields.new.generate!</code> to:</p>
+
+<ul>
+<li>load all the models that have attributes/validations</li>
+<li>clear out the file and reload I18n</li>
+<li>go through all the models and look at each one's attributes</li>
+<li>if not already defined, add the humanized version to the file</li>
+</ul>
+
+
+<p>Here is the code. It's been working well so far.</p>
+
+<p>```ruby
+module Translation
+  class Fields</p>
+
+<pre><code>def initialize
+  load_all_models
+end
+
+def generate!
+  clear_file
+  I18n.backend.send(:init_translations) # make sure init'd
+
+  old_locale = I18n.locale
+  I18n.locale = "en"
+  load_children(ActiveRecord::Base)
+
+  hash = build_hash
+  write_file(hash)
+
+  puts ""
+  hash
+ensure
+  I18n.locale = old_locale if old_locale
+end
+
+def file_name
+  @file_name ||= Rails.root.join("config",
+                                 "locales", 
+                                 "generated_default_fields.en.yml"
+                                ).to_s
+end
+
+def clear_file
+  write_file({})
+end
+
+def write_file(to_file)
+  File.open(file_name, 'w') do |file|
+    file.write({'en' =&gt; {'attributes' =&gt; to_file}}.ya2yaml)
+  end
+end
+
+def load_all_models
+  # models
+  Dir[Rails.root.join('/app/models/**/*.rb')].each do |path|
+    require_dependency path
+  end
+
+  # can load more objects that have validations here
+end
+
+def load_children(klass)
+  klass.subclasses.each do |klass|
+    attributes = klass.attribute_names
+
+    attributes.each do |attribute|
+      current = I18n.t("attributes.#{attribute}", default: "")
+      next if current.present?
+      all_keys[attribute.to_s] = attribute
+    end
+  end
+end
+
+def build_hash
+  out = {}
+  all_keys.each do |key, value|
+    out[key] = key.humanize
+  end
+  out
+end
+
+def all_keys
+  @all_keys ||= {}
+end
+</code></pre>
+
+<p>  end
+end
+```</p>
+]]></content>
+  </entry>
+  
+</feed>

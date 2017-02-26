@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: bots | BLog]]></title>
+  <link href="http://bleonard.github.com/blog/categories/bots/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.com/"/>
+  <updated>2017-02-25T21:54:36-08:00</updated>
+  <id>http://bleonard.github.com/</id>
+  <author>
+    <name><![CDATA[Brian Leonard]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Developing an Amazon Alexa Skill on Rails]]></title>
+    <link href="http://bleonard.github.com/blog/2016/12/02/amazon-alexa-rails/"/>
+    <updated>2016-12-02T00:00:00-08:00</updated>
+    <id>http://bleonard.github.com/blog/2016/12/02/amazon-alexa-rails</id>
+    <content type="html"><![CDATA[<p>In March, we had a hack day at <a href="https://www.taskrabbit.com">TaskRabbit</a> and I did a demo of posting a task using a borrowed new-ish (at the time) Amazon <a href="https://www.amazon.com/echo">Echo</a> via <a href="https://developer.amazon.com/alexa">Alexa</a>. For the first time in a year, I made a new <a href="/blog/2014/02/11/rails-4-engines/">engine</a> that would handle all these new-fangled conversational UIs and bots and stuff.</p>
+
+<p>The hack day came and went (I didn't win) and this branch was just sitting there every time I did a <code>git branch</code> command. I only have a few there. Keep it clean, people! Then I saw the Cyber Monday deals on Amazon. I decided that it had sat there long enough so I dusted it off to try and bring it to the finish line.</p>
+
+<p>I more or less started over, of course, because that's how it goes. I thought I would document the process for anyone else on the trail.</p>
+
+<div class="jumbotron">
+  <image src="http://bleonard.github.com/images/posts/alexa/skill_store.png" class="bigPicture"/>
+</div>
+
+
+<h3>Alexa Sessions</h3>
+
+<p>The <a href="https://developer.amazon.com/alexa-skills-kit">Alexa API</a> uses JSON to make requests and receive responses. Each session has a guid and (optional) user information.</p>
+
+<p>The API has some cool session management tricks. You can <a href="https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/alexa-skills-kit-interface-reference">return attributes</a> that will also get passed back on the next request. This effectively gives you "memory" of the previous parts of a conversation. I chose to not do this because I am hoping to use the same engine for other similiar interfaces. Instead I save the same stuff but to a table table using the session guid as the key. In ether case, it's important to know where you've been and what you need to move forward.</p>
+
+<p>In our case, we want to check the box that says there has to be a linked user. Because this is checked, the Alexa App will send them through an OAuth flow on our site. So we generate a token that maps to the user in our system and Alexa stores that token in hers. Side note: it's hard to not fully personify Alexa after talking (arguing) back and forth all week.</p>
+
+<h3>Hello World</h3>
+
+<p>Alexa is given a single endpoint for a skill. It will POST the request to that route. So I added the line to the <code>routes.rb</code> file and sent it to a new <code>SkillsController</code>. It looks something like this:</p>
+
+<p>```ruby
+class SkillsController &lt; ::ActionController::Base
+  def root</p>
+
+<pre><code>output = AlexaRubykit::Response.new
+session_end = true
+output.add_speech("Hello World")
+render json: output.build_response(session_end)
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<!-- more -->
+
+
+<p>I used the <a href="https://github.com/damianFC/alexa-rubykit">alexa_rubykit</a> gem with some <a href="https://github.com/damianFC/alexa-rubykit/pull/5">modifications</a> to parse the request and write the response.</p>
+
+<p>So how can we get the Echo on the desk to talk to the computer? It's only 12 inches away and yet... so far! The Alexa app in the developer console has to point to a publically accessible HTTPS site. I googled around a little bit and stumbled upon <a href="https://ngrok.com">ngrok</a>. You install ngrok and run <code>ngrok http 3000</code>. This gives you a public https site that forwards to your localhost that you can put in the developer console.</p>
+
+<h3>Alexa Intents</h3>
+
+<p>To know what the user said involves the <a href="https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/alexa-skills-kit-interaction-model-reference">intents</a> that are created in the developer console.</p>
+
+<p>A simple example to get whatever the user said would look like this.</p>
+
+<p>```json
+{
+  "intents": [</p>
+
+<pre><code>{
+  "intent": "UserInput",
+  "slots": [
+    {
+      "name": "Generic",
+      "type": "AMAZON.LITERAL"
+    }
+  ]
+}
+</code></pre>
+
+<p>  ]
+}
+```</p>
+
+<p>You also use "utterances" to give examples of this generic input.</p>
+
+<p>There are also several other helpful intents that normalize data. For example, the user can say the date and time in many ways but Amazon can normalize that and send over a known format. Other examples include commands commands like <em>yes</em>, <em>no</em>, <em>cancel</em>, and <em>stop</em>.</p>
+
+<p>Here are the intents I ended up with:</p>
+
+<p>```json
+{
+  "intents": [</p>
+
+<pre><code>{
+  "intent": "AMAZON.YesIntent"
+},
+{
+  "intent": "AMAZON.NoIntent"
+},
+{
+  "intent": "AMAZON.CancelIntent"
+},
+{
+  "intent": "AMAZON.StopIntent"
+},
+{
+  "intent": "TaskPost",
+  "slots": [
+    {
+      "name": "Generic",
+      "type": "AMAZON.LITERAL"
+    },
+    {
+      "name": "ScheduleDate",
+      "type": "AMAZON.DATE"
+    },
+    {
+      "name": "ScheduleTime",
+      "type": "AMAZON.TIME"
+    }
+  ]
+}
+</code></pre>
+
+<p>  ]
+}
+```</p>
+
+<p>I used the <a href="https://github.com/sidoh/alexa_generator">alexa_generator</a> gem with some <a href="https://github.com/sidoh/alexa_generator/pull/1">updates</a> to declare these in a way that looks like routes. It also allows you to give examples which helps generate all the files that is needed.</p>
+
+<p>For example, here is my <code>alexa.rb</code> file.</p>
+
+<p>```ruby
+require 'alexa_generator'</p>
+
+<p>module Interactive
+  class AlexaModel</p>
+
+<pre><code>def self.get
+  @instance
+end
+
+def self.define(&amp;block)
+  @instance = AlexaGenerator::InteractionModel.build do |model|
+    yield model
+  end
+end
+</code></pre>
+
+<p>  end
+end</p>
+
+<p>Interactive::AlexaModel.define do |model|
+  model.add_intent("AMAZON.YesIntent")
+  model.add_intent("AMAZON.NoIntent")
+  model.add_intent("AMAZON.CancelIntent")
+  model.add_intent("AMAZON.StopIntent")</p>
+
+<p>  model.add_intent(:TaskPost) do |intent|</p>
+
+<pre><code>intent.add_slot(:Generic, "AMAZON.LITERAL") do |slot|
+  slot.add_bindings(
+    'find me a handyman',
+    'clean my house',
+    # ... many, many things here ...
+    'wait in line',
+  )
+end
+
+intent.add_slot(:ScheduleDate, "AMAZON.DATE") do |slot|
+  slot.add_bindings(
+    'tomorrow',
+    'today',
+    'this friday',
+    'thursday',
+  )
+end
+
+intent.add_slot(:ScheduleTime, "AMAZON.TIME") do |slot|
+  slot.add_bindings(
+    'morning',
+    'afternoon',
+    'evening',
+    'noon',
+    'six pm',
+  )
+end
+
+intent.add_utterance_template('{Generic}')
+intent.add_utterance_template('{ScheduleDate} at {ScheduleTime}')
+intent.add_utterance_template('{ScheduleDate} {ScheduleTime}')
+intent.add_utterance_template('{ScheduleTime} {ScheduleDate}')
+intent.add_utterance_template('{ScheduleDate}')
+intent.add_utterance_template('{ScheduleTime}')
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>Running a rake job I wrote will the generate the above intents json as well as the sample utterances for the developer console.</p>
+
+<p><code>text
+TaskPost {find me a handyman|Generic}
+TaskPost {clean my house|Generic}
+... many, many things here ...
+TaskPost {wait in line|Generic}
+TaskPost {ScheduleDate}
+TaskPost {ScheduleDate} at {ScheduleTime}
+TaskPost {ScheduleDate} {ScheduleTime}
+TaskPost {ScheduleTime}
+TaskPost {ScheduleTime} {ScheduleDate}
+</code></p>
+
+<h3>Simple Response</h3>
+
+<p>A simple skill would probably have one-ish intent and few examples. It would receives those in the controller, return the response, and then end the session. We would also handle a few of the states to help the user out.</p>
+
+<p>The controller might look like this:</p>
+
+<p>```ruby
+class SkillsController &lt; ::ActionController::Base
+  def root</p>
+
+<pre><code>input = AlexaRubykit.build_request(params)
+output = AlexaRubykit::Response.new
+session_end = true
+message = "There was an error." # unknown thing happened
+
+case input.type
+when "LAUNCH_REQUEST"
+  # user talked to our skill but did not say something matching intent
+  message = "Say something see what happens."
+when "INTENT_REQUEST"
+  case input.name
+  when "UserInput"
+    # our custom, simple intent from above that user matched
+    given = input.slots["Generic"].value
+    message = "You said, #{given}."
+  end
+when "SESSION_ENDED_REQUEST"
+  # it's over
+  message = nil
+end
+
+output.add_speech(message) unless message.blank?
+render json: output.build_response(session_end)
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<h3>Conversations</h3>
+
+<p>It all gets a bit more complicated when there is a back and forth conversation. At this point, I would say Alexa is not yet optimized for this use case.</p>
+
+<p>For example, in our app with the shown set of intents, any one of them could come through. I could ask the user a yes/no question like "Your task is ready to book. Continue?" but the user could say "clean my house" or literally... anything. So I'd be expecting a <code>AMAZON.YesIntent</code> but get a <code>AMAZON.LITERAL</code> one. At the same time, it's very helpful to use the built in intents for their normalization capabilities. Otherwise, I'd have to do my own natural language stuff to know all the variations of dates and ways to cancel, etc.</p>
+
+<p>So the trick of a conversation seems to be to know the state, know the related intents that are expected, and merge them together as best as possible. As noted, I store the state and the data collected in the database. In concept (in reality this is spread out over many classes), we add a case statement to the controller.</p>
+
+<p>```ruby
+class SkillsController &lt; ::ActionController::Base
+  def root</p>
+
+<pre><code>input = AlexaRubykit.build_request(params)
+output = AlexaRubykit::Response.new
+session_end = false # probably going to keep going
+message = "There was an error." # unknown thing happened
+session = Session.find_or_initialize_by(session_id: input.session.session_id)
+
+case input.type
+when "LAUNCH_REQUEST"
+  # user talked to our skill but did not say something matching intent
+  message = "Hi. How can we help?"
+when "INTENT_REQUEST"
+  case session.state
+  when "selecting_category"
+    category = select_category(slot_params) # uses generic
+    if category
+      session.category = category
+      message = "What date and time?"
+      session.state = "deciding_time"
+    else
+      message = "Sorry, missed that. Try cleaning or handyman."
+    end
+  when "deciding_time"
+    schedule = select_schedule(slot_params) # uses date/time
+    if schedule
+      session.schedule = schedule
+      message = "Tell us more about it"
+      session.state = "adding_details"
+    else
+      message = "Try things like Friday at noon."
+    end
+  when "adding_details" # etc
+  when "confirming"
+    if did_confirm?(slot_params) # uses yes
+      # do it!
+      message = "Your task has been booked"
+      session.state = "completed"
+    elsif did_exit?(slot_parms)  # uses no
+      session.state = "canceled"
+      session_end = true
+    else
+      message = "Ready to confirm? Say yes or no"
+    end
+  when "completed"      # etc
+  end
+when "SESSION_ENDED_REQUEST"
+  # it's over
+  message = nil
+  session_end = true
+end
+
+session.save!
+output.add_speech(message) unless message.blank?
+render json: output.build_response(session_end)
+</code></pre>
+
+<p>  end</p>
+
+<p>  private</p>
+
+<p>  def slot_params</p>
+
+<pre><code># returns all the intent slots
+# e.g. {"generic" =&gt; "what they said", "schedule_date" =&gt; "2016-12-05"}
+return @slot_params if @slot_params
+
+@slot_params = {}
+return @slot_params unless input.type == "INTENT_REQUEST"
+input.slots.each do |name, slot|
+  key = name.underscore # category_noun, etc
+  value = slot['value']
+  @slot_params[key] = value
+end
+
+@slot_params
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>Using this pattern, you can have a decent conversation.</p>
+
+<h3>SDK Update Requests</h3>
+
+<p>There are two simple things that I think would make this a much better platform.</p>
+
+<p>The first is to be able to handle conversations better. If I could include which intents I am expecting back from the thing I just asked, everything would be 10x better.</p>
+
+<p>The issue can be seen when the app asks for more details about the app. Basically, it wants wants to get a <code>AMAZON.Literal</code> of a few sentences and write it down. I found that if the user happens to say "tomorrow" in there somewhere, it sometimes matches the Date and that's the only data I get.</p>
+
+<p>The issue is that what I'm interested in is specified globally and therefore does not have the context. If we could respond with expected intents or something to that effect, conversations would be much better.</p>
+
+<p>The other feature is to be able to return links in the card. When I return <code>LinkAccount</code> card in a response, there is a call to action on the card in the Alexa App to do OAuth. I would like to return text and URL to put arbitrary things in the same spot. That way I could link the user to their task they just posted to create a more seamless experience.</p>
+
+<h3>Summary</h3>
+
+<p>Alexa development is fairly straightforward assuming you don't need or already have the OAuth provider bits set up. Most of the docs talk about a Java package but doing it in the Rails environment was no trouble with existing gems or parsing the json yourself.</p>
+
+<p>It's not quite as easy for conversations but you can make it work. A few more tweaks, along with push notifications, would add a ton of value.</p>
+
+<p>The TaskRabbit Skill is now published! Check it out.</p>
+]]></content>
+  </entry>
+  
+</feed>

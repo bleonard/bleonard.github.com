@@ -1,0 +1,443 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: apple | BLog]]></title>
+  <link href="http://bleonard.github.com/blog/categories/apple/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.com/"/>
+  <updated>2017-02-25T21:54:36-08:00</updated>
+  <id>http://bleonard.github.com/</id>
+  <author>
+    <name><![CDATA[Brian Leonard]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Apple TV Dashboard]]></title>
+    <link href="http://bleonard.github.com/blog/2015/02/16/apple-tv-dashboard/"/>
+    <updated>2015-02-16T00:00:00-08:00</updated>
+    <id>http://bleonard.github.com/blog/2015/02/16/apple-tv-dashboard</id>
+    <content type="html"><![CDATA[<p>So you have all these screens around and you want to have something awesome like on those one that Panic <a href="http://www.panic.com/blog/panic-status-board-2013-edition/">made</a>. You may also already have Apple TVs on these TVs because AirPlay is an effective way to project screens in an office full of Macs. This is position we were in at <a href="https://www.taskrabbit.com">TaskRabbit</a> and we'd tried a few things.</p>
+
+<p>The most recent iteration was to have one Mac Mini in a closet and lots of very long wires into the TVs. It displayed a web page that cycled through the content. This wasn't bad, but had a few issues. First, the screens all had to show the same thing. I wanted to be able to have different content on each. For example, in addition to key metrics, the conference rooms would have who had the room booked or the one by customer support would have more data on the call volume. But it just isn't worth it to have 10 Mac Minis for this purpose. The other issue is that people still wanted to use Airplay, so they would switch the input and then not switch it back to the ambient content.</p>
+
+<p>The solution seemed clear. I needed to get the dashboards to be the screensaver of an Apple TV.</p>
+
+<h2>TLDR</h2>
+
+<p><a href="https://github.com/bleonard/dashing_on_appletv">Here</a> is a sample project to ties all of this up into one package.</p>
+
+<p>It uses the new gems, <a href="https://github.com/taskrabbit/dashing-screenshots">dashing-screenshots</a> and <a href="https://github.com/taskrabbit/icloud-photo">icloud-photo</a>, to take screenshots and upload them to iCloud. These then show up on an Apple TV</p>
+
+<div class="jumbotron">
+<img alt="Sample dashboard on the wall" src="http://bleonard.github.com/images/posts/appletv/sampletv.jpg" class="bigPicture" />
+</div>
+
+
+<p>(not actual dashboard)</p>
+
+<p>To make this happen, check out the <a href="https://github.com/bleonard/dashing_on_appletv">project</a> and follow the instructions there.</p>
+
+<h2>Dashboard</h2>
+
+<p>Looking around at <a href="https://ducksboard.com/">various</a> <a href="https://www.geckoboard.com/">dashboard</a> <a href="http://panic.com/statusboard/">apps</a> and having made a few custom solutions, I settled on <a href="http://dashing.io/">Dashing</a> this time. It looked nice by default, had a great model for adding custom content, and is written in the language we tend to use around here (Ruby).</p>
+
+<p>The Dashing <a href="http://dashing.io/#setup">docs</a> are quite good so I won't go into detail of how we pulled in our data. The <a href="http://dashing.io/#widgets">samples</a> are actually the best as they show a simple use case of the pattern of how to add <code>jobs</code>. I made some helpers to be able to pull in data from <a href="http://www.looker.com/">Looker</a>. By putting the actual data in Looker, I'm hoping it will allow others to maintain the metrics definitions. This will hopefully keep the dashboard up to date and relevant. An issue we've had in the past is that the SQL became somewhat stale.</p>
+
+<h2>Screenshots</h2>
+
+<p>I'd like a fully dynamic dashboard as much as the next guy, but the screensaver of an Apple TV consists only of images. Therefore, the next step was to get a screenshot of all of the dashboards that Dashing has to offer. I have worked on a similar project within our test suite and had great success with <a href="https://rubygems.org/gems/selenium-webdriver">Selenium</a>. I added <code>selenium-webdriver</code> to the Gemfile and this file to <code>lib</code>.</p>
+
+<!-- more -->
+
+
+<p>```ruby
+require 'fileutils'</p>
+
+<p>module Dashing
+  class Screenshot</p>
+
+<pre><code>def initialize(directory, options=nil)
+  @directory = directory
+  @options = options || {}
+end
+
+def capture!
+  require 'selenium-webdriver'
+  ::FileUtils.mkdir_p(@directory)
+
+  @driver = Selenium::WebDriver.for :firefox
+  Dir["dashboards/**/*.erb"].each do |file|
+    file.gsub!(/^dashboards\//, "")
+    file.gsub!(/\.erb$/, "")
+    next if ["layout"].include?(file)
+    snap(file)
+  end
+  @driver.quit
+end
+
+private
+
+def snap(path)
+  puts "Fetching #{path}" if @options[:log]
+  @driver.navigate.to "http://localhost:3030/#{path}"
+  filename = File.join(@directory, "#{path.gsub("/", "__")}.png")
+  puts "  saving: #{filename}" if @options[:log]
+  sleep 2
+  @driver.save_screenshot(filename)
+rescue Exception =&gt; e
+  puts "        SCREENSHOT ERROR: #{e.message}"
+end
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>This is called by something like this (which I added to the Rakefile):</p>
+
+<p>```ruby
+namespace :dashing do
+  desc "takes screenshots"
+  task :screenshots do</p>
+
+<pre><code>require_relative './lib/screenshot' # now available with require 'dashing-screenshots'
+Dashing::Screenshot.new("screenshots").capture!
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>So running <code>bundle exec rake dashing:screenshots</code> will take pictures of all the dashboards that your Dashing project knows about. I picked the folder "screenshots," but that could also take any path in or outside of the project.</p>
+
+<p>There are few gotchas during the process:</p>
+
+<ul>
+<li>I also tried to use <a href="http://phantomjs.org/">PhantomJS</a> and <a href="https://github.com/teampoltergeist/poltergeist">Poltergeist</a>, but these systems both have an issue with <a href="http://www.html5rocks.com/en/tutorials/eventsource/basics/">server-sent events</a> which Dashing uses to update the data.</li>
+<li>For similar updating reasons, I found that the <code>sleep 2</code> or something along those lines was necessary.</li>
+<li>Dashing initially loads with data from <code>history.yml</code> so that is most likely what you'll get from this tool. Therefore, it's necessary to have Dashing running in the background and be updating to always get "current" data.</li>
+</ul>
+
+
+<h2>Apple TV</h2>
+
+<p>I figured I was in the home stretch, but Apple had other plans for me. Other the next day or so, I struggled with ways to get these screenshots updating in (near) real-time onto the TVs. There are several ways to populate the screensaver and I still can't believe how hard it turned out to be.</p>
+
+<p>The best chance seemed to the the Flickr option. I knew how to upload photos to Flickr. Apple TV knew how to show photos from Flickr. Done. I made a private photo album for each TV and went about uploading the right screenshots to them. But it turns out that Apple TV doesn't poll Flickr to get the updated sets. After several tests of changing the contents of the Flickr albums and waiting for hours, they never updated. Even restarting the device didn't seem to help. I wanted these to update on the order of every 10 minutes or so. It just didn't work.</p>
+
+<p>I next tried the iTunes feature. iTunes has something called "Home Sharing" and the Apple TV knows how to get it's photos from there. Home sharing lets you point it at a folder on the system, so I thought that would work. I just had it pointed to the screenshots folder of my Dashing project. Unfortunately, the same issue occurs here where either Apple TV or iTunes does not look for changed content. The same is true of using iPhoto for Home Sharing instead of a simple folder.</p>
+
+<p>The final feasible option for populating the screen saver was iCloud. The Apple TV will read from your Photo Stream or an album in iCloud. I ran a manual test and literally leapt with joy (it had been hours trying all the configurations) when the screensaver updated in real time as I added things to iCloud via iPhoto. It seems that, for whatever reason, the Apple TV is set to poll for changed content in this one case. So that's how it had to be then.</p>
+
+<h2>iCloud</h2>
+
+<p>Feeling some momentum, the only task left to complete was to upload the screenshots automatically to the new iCloud account I created. Following the trend, this turned out to be at least 10 times harder than expected.</p>
+
+<p>As far as I can tell, there is no server API for iCloud Photos. I found a few projects that seem to have tried to reverse engineer various protocols, but nothing definitively for photos. There may be an iOS SDK, but that was not going to help me in this case.</p>
+
+<p>Thinking they had figured it out, I spent a long time trying to get the right set up to make <a href="https://ifttt.com/recipes/202630-send-photos-in-dropbox-to-icloud-photo-library">this IFTTT</a> recipe work. I set it up to sync from the computer's Dropbox to an <em>always running</em> iOS device also running Dropbox. At this point I was prepared to sacrifice the iPod touch to make it work. But it seems that the recipe is simply misnamed. It puts the photos in your iOS library and not into iCloud.</p>
+
+<h2>Applescript</h2>
+
+<p>Resigned to the fact that the only this that would work is doing it through iPhoto, I set out to learn Applescript to automate that process. Luckily, our new VPE Paul Devine had used it heavily in a past life. We wrote this script:</p>
+
+<p>```applescript
+tell application "iPhoto"</p>
+
+<pre><code>quit
+delay 10
+
+activate
+delay 1
+tell album "Photos"
+    set thePhotos to get every photo
+    repeat with aPhoto in thePhotos
+        try
+            -- log aPhoto's name as text
+            remove aPhoto
+        on error errMsg
+            log "ERROR: " &amp; errMsg
+        end try
+    end repeat
+end tell
+
+set iFolder to "/Users/dashboard/screenshots"
+import photo from iFolder
+
+delay 2
+
+tell me to refreshCloud("dashboard", {"sampletv"})
+
+empty trash
+delay 10
+quit
+</code></pre>
+
+<p>end tell</p>
+
+<p>on refreshCloud(cloudName, thePhotos)</p>
+
+<pre><code>tell application "iPhoto"
+    set currentPhotos to {}
+    set currentSize to 0
+    set hasHold to false
+    tell album cloudName
+        set cloudPhotos to get every photo
+        set currentSize to the count of cloudPhotos
+        repeat with aPhoto in cloudPhotos
+            if name of aPhoto is "hold" then
+                set hasHold to true
+            else
+                set the end of currentPhotos to aPhoto
+            end if
+        end repeat
+    end tell
+
+    repeat with aName in thePhotos
+        activate
+        delay 1
+
+        tell album "Last Import" to select photo aName
+        delay 1
+
+        tell application "System Events"
+            tell process "iPhoto"
+                click menu item "iCloud…" of menu "Share" of menu bar 1
+                delay 1
+
+                keystroke cloudName
+                delay 1
+
+                keystroke (ASCII character 13) -- return
+                delay 1
+
+                keystroke (ASCII character 13) -- return
+                delay 3
+            end tell
+        end tell
+    end repeat
+
+    if not hasHold then
+        -- need to let iCloud catch up
+        delay 100
+    end if
+
+    delay 20 -- make sure all uploaded and stuff
+    select album cloudName
+
+    set updatedSize to the count of every photo in album cloudName
+
+    if updatedSize &gt; currentSize then
+        -- for some reason, it doesn't always actually upload
+        if (count of currentPhotos) &gt; 0 then
+            repeat with aPhoto in currentPhotos
+                activate
+                delay 1
+                select aPhoto
+                tell application "System Events"
+                    delay 1
+                    keystroke (ASCII character 127) -- delete
+                    delay 1
+                    keystroke "d" using command down -- yes, really
+                    delay 3
+                end tell
+            end repeat
+        end if
+    end if
+
+end tell
+</code></pre>
+
+<p>end refreshCloud
+```</p>
+
+<p>It does the following:</p>
+
+<ul>
+<li>closes (if necessary) iPhoto</li>
+<li>launches iPhoto</li>
+<li>imports the "screenshots" folder into iCloud</li>
+<li>switches to the "dashboard" iCloud album</li>
+<li>notes all the photos currently in there</li>
+<li>switches to the "Last Import" album</li>
+<li>finds the picture named "sampletv"</li>
+<li>click Share... iCloud and picks the "dashboard" and adds it</li>
+<li>waits for a minute</li>
+<li>goes through all the old ones in "dashboard" and removes them</li>
+</ul>
+
+
+<p>It waits for a minute because I found that the Apple TV screensaver is not able to recover from an empty set. It will switch permanently to National Geographic photos. I'm not sure how this is possible other than some sort of lag in iCloud. Another approach that I ended up going with is to use the "Shifting Tiles" screensaver and always made sure to always have 1 image that never got removed in the album. I set up the Applescript so that if you make "hold" the image's name, it will leave it alone. So try that if you keep seeing beautiful whale pictures instead of your dashboard.</p>
+
+<p>Note that is also assumes that the iCloud albums already exist. I made those manually.</p>
+
+<p>It's obviously exhausting that this is how it had to be. However, I'm sure very little resources are being given to Applescript these days and I find it amazing that it's still able to automate everything in OS X.</p>
+
+<h2>Gems</h2>
+
+<p>The final step was to automate this in some way. I decided to keep it in Ruby.</p>
+
+<p>To do that and reduce the maintenance of the Applescript, I made it so that the script was more configurable. Maybe it's a terrible idea, but it turned out pretty well.</p>
+
+<p>```ruby</p>
+
+<h1>encoding: utf-8</h1>
+
+<p>require 'fileutils'
+require 'tempfile'</p>
+
+<p>module ICloudPhoto
+  class Sync</p>
+
+<pre><code>SCRIPT = File.read(File.expand_path("../../applescript/sync.applescript", __FILE__), encoding: "UTF-8")
+def initialize(directory)
+  @directory = directory
+  @targets = []
+end
+
+def add(icloud_name, image_names)
+  image_names = [image_names].flatten
+  @targets &lt;&lt; [icloud_name, image_names]
+end
+
+def upload!
+  tmpfile = nil
+  uploader = nil
+  script = SCRIPT.dup
+  script.gsub!("/Users/dashboard/screenshots", File.expand_path(@directory))
+
+  marker = 'tell me to refreshCloud("dashboard", {"sampletv"})'
+  index = script.index(marker) + 1
+  script.gsub!(marker, '')
+
+  @targets.each do |tuple|
+    icloud_name, image_names = tuple
+    files = image_names.collect{ |name| "\"#{name}\"" }
+    val = "\ttell me to refreshCloud(\"#{icloud_name}\", {#{files.join(", ")}})\n"
+    script.insert(index, val)
+  end
+
+  tmpfile = Tempfile.new('applescript')
+  tmpfile.write(script)
+  tmpfile.close
+
+  uploader = Tempfile.new('uploader')
+  uploader.close
+
+  puts "osacompile -o #{uploader.path} #{tmpfile.path}"
+  puts `osacompile -o #{uploader.path} #{tmpfile.path}`
+
+  puts "osascript #{uploader.path}"
+  puts `osascript #{uploader.path}`
+ensure
+  tmpfile.unlink  if tmpfile
+  uploader.unlink if uploader
+end
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>So the Applescript was checked into the project. This code does the following:</p>
+
+<ul>
+<li>reads the script from the file.</li>
+<li>replaces my directory with the given "real" one</li>
+<li>removes this "dashboard" and "sampletv" business and keeps a marker</li>
+<li>for every iCloud to photo(s) mapping, it adds a line to the script in memory to call the <code>refreshCloud</code> method</li>
+<li>saves that all to a temp file</li>
+<li>compiles the temp file to another temp file</li>
+<li>runs the compiled version</li>
+</ul>
+
+
+<p>It is called like this:</p>
+
+<p>```ruby
+namespace :dashing do
+  desc "takes screenshots"
+  task :screenshots do</p>
+
+<pre><code>require 'dashing-screenshots'
+Dashing::Screenshot.new("screenshots").capture!
+</code></pre>
+
+<p>  end</p>
+
+<p>  desc "uploads screenshots to iCloud"
+  task :upload do</p>
+
+<pre><code>  require 'icloud-photo'
+  cloud = ICloudPhoto::Sync.new("screenshots")
+  # put the sampletv image in the dashboard album
+  cloud.add("dashboard", ["sampletv"])
+  cloud.upload!
+</code></pre>
+
+<p>  end</p>
+
+<p>  desc "record and upload dashboards"
+  task cron: [:screenshots, :upload]
+end
+```</p>
+
+<p>Then it can be automated using the <a href="https://github.com/javan/whenever">whenever</a> gem and running <code>whenever -w</code></p>
+
+<p><code>ruby
+every 10.minutes do
+  rake "dashing:cron"
+end
+</code></p>
+
+<p>It's important to be sure to be running <code>dashing start</code> as well.
+I also found it helpful to use <a href="http://semaja2.net/projects/insomniaxinfo/">Insomnia X</a> to not go to sleep when the laptop lid is shut.</p>
+
+<h2>Apple TV setup</h2>
+
+<p>Just a few notes on the settings I used when configuring the Apple TV</p>
+
+<p><em>Restore to newest software</em></p>
+
+<p><em>General</em></p>
+
+<ul>
+<li>Set up keyboard</li>
+<li>Set name</li>
+<li>Sleep after: never</li>
+<li>Software updates - Update automatically: on</li>
+</ul>
+
+
+<p><em>Screensaver</em></p>
+
+<ul>
+<li>Start after: 2 minutes</li>
+<li>Photos - iCloud photos - Login - Pick "dashboard" album</li>
+<li>Classic  - Fade through black - 20 seconds</li>
+</ul>
+
+
+<p><em>AirPlay</em></p>
+
+<ul>
+<li>Conference room display - off</li>
+<li>Play iTunes from the cloud - off</li>
+</ul>
+
+
+<p>The "Classic" screensaver will show one image at a time. This works pretty well if you are taking a picture of the whole dashboard. I've also had success making a "dashboard" out of each widget and taking several screenshots and uploading all of them. In this case, I would use the "Shifting Tiles" noted above to solve the iCloud empty issue. This ends up looking like the original dashboard but it moves around a bit.</p>
+
+<h2>It works</h2>
+
+<p>We now have an old laptop with the Dashing project and iPhoto. Every ten minutes, the screen flashes and firefox pops up and takes some screenshots. Then iPhoto pops up and things start moving around. Within a few minutes of that, the screensaver on all the Apple TVs automatically refresh to the new content.</p>
+
+<p>It's not pretty, but it does work. One of my fears (and hopes) is that somebody emails me a better way to make this happen. I spent about three days figuring this out but would gladly throw it away for a better solution. Ideally, there would be one that did not involved this running laptop and especially not this Applescript business.</p>
+
+<p>To be clear, though, I don't see it as time wasted. I believe it's exceptionally important to increase visibility about the health of the business. By doing so in the most pervasive way I could think of, it may help set the context for people as they make decisions throughout the day. I'd say that's worth one old laptop and some janky Applescript.</p>
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: mysql | BLog]]></title>
+  <link href="http://bleonard.github.com/blog/categories/mysql/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.com/"/>
+  <updated>2017-02-25T21:54:36-08:00</updated>
+  <id>http://bleonard.github.com/</id>
+  <author>
+    <name><![CDATA[Brian Leonard]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Rails Schema with LHM]]></title>
+    <link href="http://bleonard.github.com/blog/2014/10/30/rails-schema-with-lhm/"/>
+    <updated>2014-10-30T00:00:00-07:00</updated>
+    <id>http://bleonard.github.com/blog/2014/10/30/rails-schema-with-lhm</id>
+    <content type="html"><![CDATA[<p>At <a href="https://www.taskrabbit.com">TaskRabbit</a>, we like <a href="http://www.mysql.com/">MySQL</a>. As with everything, it has its own set of issues, though. One of these issues is that it locks the table while a column is added. This is not the biggest deal in the early days of a table, but once you start getting millions of rows and consistent traffic around the clock, this prevents the site from working as expected.</p>
+
+<p>The first way that we worked around this problem was with the <a href="http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html">pt-online-schema-change</a> tool. It does the following:</p>
+
+<ul>
+<li>Makes a a new table with the old table's schema</li>
+<li>Copies data from the old table to the new table</li>
+<li>Sets up a trigger for data to keep syncing</li>
+<li>Adds the column to the new table</li>
+<li>Renames the old table to something else and renames the new table to replace it</li>
+<li>Deletes the old table</li>
+</ul>
+
+
+<p>This worked quite well, but had a flaw within our process. It was outside of the development and deployment workflow. In order to develop, we would still make a <a href="http://guides.rubyonrails.org/migrations.html">Rails migration</a>. Then just before deploy, we would run the tool and add the row to the <code>schema_migrations</code> table. When we deploy, it runs migrations, but in this case it would not run because we had added that row. I don't think we ever messed it up, but the process had a few gaps.</p>
+
+<p>We now use <a href="https://github.com/soundcloud/lhm">LHM</a> also known as Large Hadron Migrator from the good folks at <a href="https://soundcloud.com/">soundcloud</a>. It does basically the same thing, but allows you to do it right there in the migration.</p>
+
+<p>```ruby
+require 'lhm'</p>
+
+<p>class AddMiddleNameToUsers &lt; ActiveRecord::Migration
+  def change</p>
+
+<pre><code>Lhm.change_table :users do |m|
+  # same as: add_column :users, :middle_name
+  m.add_column :middle_name, "VARCHAR(191) DEFAULT NULL"
+end
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>So this is great. Now it's in the process.</p>
+
+<h3>Schema</h3>
+
+<p>One design choice (and it seems like the right one) is that it makes the last step manual. That is, it leaves the old (renamed) table around. We go back and delete these from production when sure everything worked out. The above migration might leave around a table named something like this: <code>lhma_2014_10_28_20_41_56_933_users</code>.</p>
+
+<p>So that's fine, but you'll notice that when you run <code>rake db:migrate</code> that your <code>schema.rb</code> file now has that table in it. This happens because ActiveRecord takes a snapshot of your database right after the migration. We try to take really good care of our schema file, so this made us sad.</p>
+
+<p>I went poking around in the ActiveRecord code ready to monkey patch the adapter that reads the table list or the code that generates the schema file. When I got there, though, I found there was already a class setting that did what I wanted. It even took a regex!</p>
+
+<p>So here's what to add if you don't want those tables showing up in your schema file:</p>
+
+<p>```ruby</p>
+
+<h1>config/initializers/active_record_schema.rb</h1>
+
+<p>require 'active_record'</p>
+
+<h1>ignore LHM</h1>
+
+<p>ActiveRecord::SchemaDumper.ignore_tables &lt;&lt; /<sup>lhma_/</sup>
+```</p>
+
+<p>That's it. Happy migrating.</p>
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: elasticsearch | BLog]]></title>
+  <link href="http://bleonard.github.com/blog/categories/elasticsearch/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.com/"/>
+  <updated>2017-02-25T21:54:36-08:00</updated>
+  <id>http://bleonard.github.com/</id>
+  <author>
+    <name><![CDATA[Brian Leonard]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Geohashes]]></title>
+    <link href="http://bleonard.github.com/blog/2014/09/24/geohashes/"/>
+    <updated>2014-09-24T00:00:00-07:00</updated>
+    <id>http://bleonard.github.com/blog/2014/09/24/geohashes</id>
+    <content type="html"><![CDATA[<p>Over the years, we've struggled at <a href="https://www.taskrabbit.com">TaskRabbit</a> with a way to represent smaller geographic areas. Postal codes seems to be the most obvious but these vary dramatically in size. For example, there are postal codes that are just one building and ones that are bigger than some US states. We've also tried "neighborhood" data from various sources, but these are somewhat unreliable.</p>
+
+<p>I recently learned about and started using <a href="http://en.wikipedia.org/wiki/Geohash">geohashes</a> to break the world into boxes and have been very happy with the results. I gave a lightning talk last week at <a href="http://gogaruco.com/">GoGaRuCo</a> on the subject. Many of them had heard about it, but the talk went over fairly well.</p>
+
+<h3>Use Case</h3>
+
+<p>The problem at hand is one of probabilities. Given a task, who are the best taskers for the job. Or conversely, given a tasker, what are the best few tasks for them. Taskers give us an idea of where they want to work but actions often speak louder than <s>words</s> user-drawn geographic polygons. So what I wanted to do was map their history into positive and negative areas of probability depending on what tasks they wanted to do and which they did not.</p>
+
+<p>I had all those points and it was fairly easy to draw a heatmap using <a href="https://www.mapbox.com/mapbox.js/example/v1.0.0/leaflet-heat/">this Leaflet plugin</a>, but that needed to be mapped to something more concrete. We would be using <a href="http://www.elasticsearch.org/">Elasticsearch</a> for the storage, so while researching it's geo functions, I stumbled across the concept of <a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-aggregations-bucket-geohashgrid-aggregation.html">geohashes</a> which it evidently uses internally for such queries.</p>
+
+<p><a href="http://www.bigfastblog.com/geohash-intro">This</a> article gives a really good explanation of how it works. The short version is that if you were to start with the whole world and keep cutting it in half depending on where your lat/lng was, you'd end up with a lot of left/right (or top/bottom) choices. Those choices can be encoded into binary, which can be encoded into a simple string. So this spot in London (51.507794, -0.127952) would become the "gcpvj0dyds" geohash. It has the interesting property that strings (locations) that have the same start are known to be close to it. For example, the "gcpvj09swr" geohash has the first six characters in common, so we would know that is within half a mile or so of the first one.</p>
+
+<p>So now I have all of these points. I can map them to geohashes of the necessary precision (I chose 6) and give positive and negative weights for each user action. The actual calculation turns out to be really fast. I used the code from the <a href="https://github.com/masuidrive/pr_geohash/blob/master/lib/pr_geohash.rb">pr_geohash</a> gem and had no issues. It also calculates neighbors which turns out the be important.</p>
+
+<p>Using the weight, I can combine and draw the geohashes (<a href="https://github.com/rgeo/rgeo">RGeo</a>/<a href="http://leafletjs.com/">Leaflet</a>). As an example, here is drawing where a particular Tasker is likely to want to work:</p>
+
+<p><img src="/images/posts/geohashes/medium.jpg" alt="Likely to Accept" /></p>
+
+<!-- more -->
+
+
+<p>And where this Tasker is generally positive:</p>
+
+<p><img src="/images/posts/geohashes/low.jpg" alt="Positive" /></p>
+
+<p>And also where they have negative feedback:</p>
+
+<p><img src="/images/posts/geohashes/negative.jpg" alt="Negative" /></p>
+
+<p>Using these tools and the fact that every Tasker's map is different, we can make better recommendations. This reduces friction in the marketplace.</p>
+
+<p>One of the gotchas is mentioned in the <a href="http://www.bigfastblog.com/geohash-intro">article</a> I referenced earlier. If a point is on a border, especially at the beginning of the decision process, it can end up being massively off. I worked around this in my implementation by spreading out the weight to it's neighbors. So if the location got 100 points, the neighbors would also get some, degrading as it spread out.</p>
+
+<p><img src="/images/posts/geohashes/boxes.jpg" alt="Spread out the weight" /></p>
+
+<p>This has proven to minimize the boundary issue.</p>
+
+<h3>Conclusion</h3>
+
+<p>Overall, I just wanted to share a new tool and concept that I learned about. We've found it to be a great pattern and will likely use geohashes more for representing our world.</p>
+]]></content>
+  </entry>
+  
+</feed>

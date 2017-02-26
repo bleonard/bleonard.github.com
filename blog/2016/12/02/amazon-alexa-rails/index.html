@@ -1,0 +1,712 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Developing an Amazon Alexa Skill on Rails - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="In March, we had a hack day at TaskRabbit and I did a demo of posting a task using a borrowed new-ish (at the time) Amazon Echo via Alexa. For the &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2016/12/02/amazon-alexa-rails/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">Developing an Amazon Alexa Skill on Rails</h1>
+	<div class="entry-content"><p>In March, we had a hack day at <a href="https://www.taskrabbit.com">TaskRabbit</a> and I did a demo of posting a task using a borrowed new-ish (at the time) Amazon <a href="https://www.amazon.com/echo">Echo</a> via <a href="https://developer.amazon.com/alexa">Alexa</a>. For the first time in a year, I made a new <a href="/blog/2014/02/11/rails-4-engines/">engine</a> that would handle all these new-fangled conversational UIs and bots and stuff.</p>
+
+<p>The hack day came and went (I didn&#8217;t win) and this branch was just sitting there every time I did a <code>git branch</code> command. I only have a few there. Keep it clean, people! Then I saw the Cyber Monday deals on Amazon. I decided that it had sat there long enough so I dusted it off to try and bring it to the finish line.</p>
+
+<p>I more or less started over, of course, because that&#8217;s how it goes. I thought I would document the process for anyone else on the trail.</p>
+
+<div class="jumbotron">
+  <image src="/images/posts/alexa/skill_store.png" class="bigPicture"/>
+</div>
+
+
+<h3>Alexa Sessions</h3>
+
+<p>The <a href="https://developer.amazon.com/alexa-skills-kit">Alexa API</a> uses JSON to make requests and receive responses. Each session has a guid and (optional) user information.</p>
+
+<p>The API has some cool session management tricks. You can <a href="https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/alexa-skills-kit-interface-reference">return attributes</a> that will also get passed back on the next request. This effectively gives you &#8220;memory&#8221; of the previous parts of a conversation. I chose to not do this because I am hoping to use the same engine for other similiar interfaces. Instead I save the same stuff but to a table table using the session guid as the key. In ether case, it&#8217;s important to know where you&#8217;ve been and what you need to move forward.</p>
+
+<p>In our case, we want to check the box that says there has to be a linked user. Because this is checked, the Alexa App will send them through an OAuth flow on our site. So we generate a token that maps to the user in our system and Alexa stores that token in hers. Side note: it&#8217;s hard to not fully personify Alexa after talking (arguing) back and forth all week.</p>
+
+<h3>Hello World</h3>
+
+<p>Alexa is given a single endpoint for a skill. It will POST the request to that route. So I added the line to the <code>routes.rb</code> file and sent it to a new <code>SkillsController</code>. It looks something like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">SkillsController</span> <span class="o">&lt;</span> <span class="o">::</span><span class="no">ActionController</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">root</span>
+</span><span class='line'>    <span class="n">output</span> <span class="o">=</span> <span class="no">AlexaRubykit</span><span class="o">::</span><span class="no">Response</span><span class="o">.</span><span class="n">new</span>
+</span><span class='line'>    <span class="n">session_end</span> <span class="o">=</span> <span class="kp">true</span>
+</span><span class='line'>    <span class="n">output</span><span class="o">.</span><span class="n">add_speech</span><span class="p">(</span><span class="s2">&quot;Hello World&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">render</span> <span class="n">json</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">build_response</span><span class="p">(</span><span class="n">session_end</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<!-- more -->
+
+
+<p>I used the <a href="https://github.com/damianFC/alexa-rubykit">alexa_rubykit</a> gem with some <a href="https://github.com/damianFC/alexa-rubykit/pull/5">modifications</a> to parse the request and write the response.</p>
+
+<p>So how can we get the Echo on the desk to talk to the computer? It&#8217;s only 12 inches away and yet&#8230; so far! The Alexa app in the developer console has to point to a publically accessible HTTPS site. I googled around a little bit and stumbled upon <a href="https://ngrok.com">ngrok</a>. You install ngrok and run <code>ngrok http 3000</code>. This gives you a public https site that forwards to your localhost that you can put in the developer console.</p>
+
+<h3>Alexa Intents</h3>
+
+<p>To know what the user said involves the <a href="https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/alexa-skills-kit-interaction-model-reference">intents</a> that are created in the developer console.</p>
+
+<p>A simple example to get whatever the user said would look like this.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="nt">&quot;intents&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>      <span class="nt">&quot;intent&quot;</span><span class="p">:</span> <span class="s2">&quot;UserInput&quot;</span><span class="p">,</span>
+</span><span class='line'>      <span class="nt">&quot;slots&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span class='line'>        <span class="p">{</span>
+</span><span class='line'>          <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Generic&quot;</span><span class="p">,</span>
+</span><span class='line'>          <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;AMAZON.LITERAL&quot;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>      <span class="p">]</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">]</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You also use &#8220;utterances&#8221; to give examples of this generic input.</p>
+
+<p>There are also several other helpful intents that normalize data. For example, the user can say the date and time in many ways but Amazon can normalize that and send over a known format. Other examples include commands commands like <em>yes</em>, <em>no</em>, <em>cancel</em>, and <em>stop</em>.</p>
+
+<p>Here are the intents I ended up with:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+</pre></td><td class='code'><pre><code class='json'><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="nt">&quot;intents&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>      <span class="nt">&quot;intent&quot;</span><span class="p">:</span> <span class="s2">&quot;AMAZON.YesIntent&quot;</span>
+</span><span class='line'>    <span class="p">},</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>      <span class="nt">&quot;intent&quot;</span><span class="p">:</span> <span class="s2">&quot;AMAZON.NoIntent&quot;</span>
+</span><span class='line'>    <span class="p">},</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>      <span class="nt">&quot;intent&quot;</span><span class="p">:</span> <span class="s2">&quot;AMAZON.CancelIntent&quot;</span>
+</span><span class='line'>    <span class="p">},</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>      <span class="nt">&quot;intent&quot;</span><span class="p">:</span> <span class="s2">&quot;AMAZON.StopIntent&quot;</span>
+</span><span class='line'>    <span class="p">},</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>      <span class="nt">&quot;intent&quot;</span><span class="p">:</span> <span class="s2">&quot;TaskPost&quot;</span><span class="p">,</span>
+</span><span class='line'>      <span class="nt">&quot;slots&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span class='line'>        <span class="p">{</span>
+</span><span class='line'>          <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Generic&quot;</span><span class="p">,</span>
+</span><span class='line'>          <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;AMAZON.LITERAL&quot;</span>
+</span><span class='line'>        <span class="p">},</span>
+</span><span class='line'>        <span class="p">{</span>
+</span><span class='line'>          <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;ScheduleDate&quot;</span><span class="p">,</span>
+</span><span class='line'>          <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;AMAZON.DATE&quot;</span>
+</span><span class='line'>        <span class="p">},</span>
+</span><span class='line'>        <span class="p">{</span>
+</span><span class='line'>          <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;ScheduleTime&quot;</span><span class="p">,</span>
+</span><span class='line'>          <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;AMAZON.TIME&quot;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>      <span class="p">]</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">]</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>I used the <a href="https://github.com/sidoh/alexa_generator">alexa_generator</a> gem with some <a href="https://github.com/sidoh/alexa_generator/pull/1">updates</a> to declare these in a way that looks like routes. It also allows you to give examples which helps generate all the files that is needed.</p>
+
+<p>For example, here is my <code>alexa.rb</code> file.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">require</span> <span class="s1">&#39;alexa_generator&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">module</span> <span class="nn">Interactive</span>
+</span><span class='line'>  <span class="k">class</span> <span class="nc">AlexaModel</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">get</span>
+</span><span class='line'>      <span class="vi">@instance</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">define</span><span class="p">(</span><span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+</span><span class='line'>      <span class="vi">@instance</span> <span class="o">=</span> <span class="no">AlexaGenerator</span><span class="o">::</span><span class="no">InteractionModel</span><span class="o">.</span><span class="n">build</span> <span class="k">do</span> <span class="o">|</span><span class="n">model</span><span class="o">|</span>
+</span><span class='line'>        <span class="k">yield</span> <span class="n">model</span>
+</span><span class='line'>      <span class="k">end</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="no">Interactive</span><span class="o">::</span><span class="no">AlexaModel</span><span class="o">.</span><span class="n">define</span> <span class="k">do</span> <span class="o">|</span><span class="n">model</span><span class="o">|</span>
+</span><span class='line'>  <span class="n">model</span><span class="o">.</span><span class="n">add_intent</span><span class="p">(</span><span class="s2">&quot;AMAZON.YesIntent&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">model</span><span class="o">.</span><span class="n">add_intent</span><span class="p">(</span><span class="s2">&quot;AMAZON.NoIntent&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">model</span><span class="o">.</span><span class="n">add_intent</span><span class="p">(</span><span class="s2">&quot;AMAZON.CancelIntent&quot;</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">model</span><span class="o">.</span><span class="n">add_intent</span><span class="p">(</span><span class="s2">&quot;AMAZON.StopIntent&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">model</span><span class="o">.</span><span class="n">add_intent</span><span class="p">(</span><span class="ss">:TaskPost</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">intent</span><span class="o">|</span>
+</span><span class='line'>    <span class="n">intent</span><span class="o">.</span><span class="n">add_slot</span><span class="p">(</span><span class="ss">:Generic</span><span class="p">,</span> <span class="s2">&quot;AMAZON.LITERAL&quot;</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">slot</span><span class="o">|</span>
+</span><span class='line'>      <span class="n">slot</span><span class="o">.</span><span class="n">add_bindings</span><span class="p">(</span>
+</span><span class='line'>        <span class="s1">&#39;find me a handyman&#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="s1">&#39;clean my house&#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="c1"># ... many, many things here ...</span>
+</span><span class='line'>        <span class="s1">&#39;wait in line&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="p">)</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">intent</span><span class="o">.</span><span class="n">add_slot</span><span class="p">(</span><span class="ss">:ScheduleDate</span><span class="p">,</span> <span class="s2">&quot;AMAZON.DATE&quot;</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">slot</span><span class="o">|</span>
+</span><span class='line'>      <span class="n">slot</span><span class="o">.</span><span class="n">add_bindings</span><span class="p">(</span>
+</span><span class='line'>        <span class="s1">&#39;tomorrow&#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="s1">&#39;today&#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="s1">&#39;this friday&#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="s1">&#39;thursday&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="p">)</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">intent</span><span class="o">.</span><span class="n">add_slot</span><span class="p">(</span><span class="ss">:ScheduleTime</span><span class="p">,</span> <span class="s2">&quot;AMAZON.TIME&quot;</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">slot</span><span class="o">|</span>
+</span><span class='line'>      <span class="n">slot</span><span class="o">.</span><span class="n">add_bindings</span><span class="p">(</span>
+</span><span class='line'>        <span class="s1">&#39;morning&#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="s1">&#39;afternoon&#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="s1">&#39;evening&#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="s1">&#39;noon&#39;</span><span class="p">,</span>
+</span><span class='line'>        <span class="s1">&#39;six pm&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="p">)</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">intent</span><span class="o">.</span><span class="n">add_utterance_template</span><span class="p">(</span><span class="s1">&#39;{Generic}&#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">intent</span><span class="o">.</span><span class="n">add_utterance_template</span><span class="p">(</span><span class="s1">&#39;{ScheduleDate} at {ScheduleTime}&#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">intent</span><span class="o">.</span><span class="n">add_utterance_template</span><span class="p">(</span><span class="s1">&#39;{ScheduleDate} {ScheduleTime}&#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">intent</span><span class="o">.</span><span class="n">add_utterance_template</span><span class="p">(</span><span class="s1">&#39;{ScheduleTime} {ScheduleDate}&#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">intent</span><span class="o">.</span><span class="n">add_utterance_template</span><span class="p">(</span><span class="s1">&#39;{ScheduleDate}&#39;</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">intent</span><span class="o">.</span><span class="n">add_utterance_template</span><span class="p">(</span><span class="s1">&#39;{ScheduleTime}&#39;</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Running a rake job I wrote will the generate the above intents json as well as the sample utterances for the developer console.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>TaskPost {find me a handyman|Generic}
+</span><span class='line'>TaskPost {clean my house|Generic}
+</span><span class='line'>... many, many things here ...
+</span><span class='line'>TaskPost {wait in line|Generic}
+</span><span class='line'>TaskPost {ScheduleDate}
+</span><span class='line'>TaskPost {ScheduleDate} at {ScheduleTime}
+</span><span class='line'>TaskPost {ScheduleDate} {ScheduleTime}
+</span><span class='line'>TaskPost {ScheduleTime}
+</span><span class='line'>TaskPost {ScheduleTime} {ScheduleDate}
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Simple Response</h3>
+
+<p>A simple skill would probably have one-ish intent and few examples. It would receives those in the controller, return the response, and then end the session. We would also handle a few of the states to help the user out.</p>
+
+<p>The controller might look like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">SkillsController</span> <span class="o">&lt;</span> <span class="o">::</span><span class="no">ActionController</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">root</span>
+</span><span class='line'>    <span class="n">input</span> <span class="o">=</span> <span class="no">AlexaRubykit</span><span class="o">.</span><span class="n">build_request</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">output</span> <span class="o">=</span> <span class="no">AlexaRubykit</span><span class="o">::</span><span class="no">Response</span><span class="o">.</span><span class="n">new</span>
+</span><span class='line'>    <span class="n">session_end</span> <span class="o">=</span> <span class="kp">true</span>
+</span><span class='line'>    <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;There was an error.&quot;</span> <span class="c1"># unknown thing happened</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">case</span> <span class="n">input</span><span class="o">.</span><span class="n">type</span>
+</span><span class='line'>    <span class="k">when</span> <span class="s2">&quot;LAUNCH_REQUEST&quot;</span>
+</span><span class='line'>      <span class="c1"># user talked to our skill but did not say something matching intent</span>
+</span><span class='line'>      <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Say something see what happens.&quot;</span>
+</span><span class='line'>    <span class="k">when</span> <span class="s2">&quot;INTENT_REQUEST&quot;</span>
+</span><span class='line'>      <span class="k">case</span> <span class="n">input</span><span class="o">.</span><span class="n">name</span>
+</span><span class='line'>      <span class="k">when</span> <span class="s2">&quot;UserInput&quot;</span>
+</span><span class='line'>        <span class="c1"># our custom, simple intent from above that user matched</span>
+</span><span class='line'>        <span class="n">given</span> <span class="o">=</span> <span class="n">input</span><span class="o">.</span><span class="n">slots</span><span class="o">[</span><span class="s2">&quot;Generic&quot;</span><span class="o">].</span><span class="n">value</span>
+</span><span class='line'>        <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;You said, </span><span class="si">#{</span><span class="n">given</span><span class="si">}</span><span class="s2">.&quot;</span>
+</span><span class='line'>      <span class="k">end</span>
+</span><span class='line'>    <span class="k">when</span> <span class="s2">&quot;SESSION_ENDED_REQUEST&quot;</span>
+</span><span class='line'>      <span class="c1"># it&#39;s over</span>
+</span><span class='line'>      <span class="n">message</span> <span class="o">=</span> <span class="kp">nil</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">output</span><span class="o">.</span><span class="n">add_speech</span><span class="p">(</span><span class="n">message</span><span class="p">)</span> <span class="k">unless</span> <span class="n">message</span><span class="o">.</span><span class="n">blank?</span>
+</span><span class='line'>    <span class="n">render</span> <span class="n">json</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">build_response</span><span class="p">(</span><span class="n">session_end</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Conversations</h3>
+
+<p>It all gets a bit more complicated when there is a back and forth conversation. At this point, I would say Alexa is not yet optimized for this use case.</p>
+
+<p>For example, in our app with the shown set of intents, any one of them could come through. I could ask the user a yes/no question like &#8220;Your task is ready to book. Continue?&#8221; but the user could say &#8220;clean my house&#8221; or literally&#8230; anything. So I&#8217;d be expecting a <code>AMAZON.YesIntent</code> but get a <code>AMAZON.LITERAL</code> one. At the same time, it&#8217;s very helpful to use the built in intents for their normalization capabilities. Otherwise, I&#8217;d have to do my own natural language stuff to know all the variations of dates and ways to cancel, etc.</p>
+
+<p>So the trick of a conversation seems to be to know the state, know the related intents that are expected, and merge them together as best as possible. As noted, I store the state and the data collected in the database. In concept (in reality this is spread out over many classes), we add a case statement to the controller.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">SkillsController</span> <span class="o">&lt;</span> <span class="o">::</span><span class="no">ActionController</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">root</span>
+</span><span class='line'>    <span class="n">input</span> <span class="o">=</span> <span class="no">AlexaRubykit</span><span class="o">.</span><span class="n">build_request</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">output</span> <span class="o">=</span> <span class="no">AlexaRubykit</span><span class="o">::</span><span class="no">Response</span><span class="o">.</span><span class="n">new</span>
+</span><span class='line'>    <span class="n">session_end</span> <span class="o">=</span> <span class="kp">false</span> <span class="c1"># probably going to keep going</span>
+</span><span class='line'>    <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;There was an error.&quot;</span> <span class="c1"># unknown thing happened</span>
+</span><span class='line'>    <span class="n">session</span> <span class="o">=</span> <span class="no">Session</span><span class="o">.</span><span class="n">find_or_initialize_by</span><span class="p">(</span><span class="n">session_id</span><span class="p">:</span> <span class="n">input</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">session_id</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">case</span> <span class="n">input</span><span class="o">.</span><span class="n">type</span>
+</span><span class='line'>    <span class="k">when</span> <span class="s2">&quot;LAUNCH_REQUEST&quot;</span>
+</span><span class='line'>      <span class="c1"># user talked to our skill but did not say something matching intent</span>
+</span><span class='line'>      <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Hi. How can we help?&quot;</span>
+</span><span class='line'>    <span class="k">when</span> <span class="s2">&quot;INTENT_REQUEST&quot;</span>
+</span><span class='line'>      <span class="k">case</span> <span class="n">session</span><span class="o">.</span><span class="n">state</span>
+</span><span class='line'>      <span class="k">when</span> <span class="s2">&quot;selecting_category&quot;</span>
+</span><span class='line'>        <span class="n">category</span> <span class="o">=</span> <span class="n">select_category</span><span class="p">(</span><span class="n">slot_params</span><span class="p">)</span> <span class="c1"># uses generic</span>
+</span><span class='line'>        <span class="k">if</span> <span class="n">category</span>
+</span><span class='line'>          <span class="n">session</span><span class="o">.</span><span class="n">category</span> <span class="o">=</span> <span class="n">category</span>
+</span><span class='line'>          <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;What date and time?&quot;</span>
+</span><span class='line'>          <span class="n">session</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="s2">&quot;deciding_time&quot;</span>
+</span><span class='line'>        <span class="k">else</span>
+</span><span class='line'>          <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Sorry, missed that. Try cleaning or handyman.&quot;</span>
+</span><span class='line'>        <span class="k">end</span>
+</span><span class='line'>      <span class="k">when</span> <span class="s2">&quot;deciding_time&quot;</span>
+</span><span class='line'>        <span class="n">schedule</span> <span class="o">=</span> <span class="n">select_schedule</span><span class="p">(</span><span class="n">slot_params</span><span class="p">)</span> <span class="c1"># uses date/time</span>
+</span><span class='line'>        <span class="k">if</span> <span class="n">schedule</span>
+</span><span class='line'>          <span class="n">session</span><span class="o">.</span><span class="n">schedule</span> <span class="o">=</span> <span class="n">schedule</span>
+</span><span class='line'>          <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Tell us more about it&quot;</span>
+</span><span class='line'>          <span class="n">session</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="s2">&quot;adding_details&quot;</span>
+</span><span class='line'>        <span class="k">else</span>
+</span><span class='line'>          <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Try things like Friday at noon.&quot;</span>
+</span><span class='line'>        <span class="k">end</span>
+</span><span class='line'>      <span class="k">when</span> <span class="s2">&quot;adding_details&quot;</span> <span class="c1"># etc</span>
+</span><span class='line'>      <span class="k">when</span> <span class="s2">&quot;confirming&quot;</span>
+</span><span class='line'>        <span class="k">if</span> <span class="n">did_confirm?</span><span class="p">(</span><span class="n">slot_params</span><span class="p">)</span> <span class="c1"># uses yes</span>
+</span><span class='line'>          <span class="c1"># do it!</span>
+</span><span class='line'>          <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Your task has been booked&quot;</span>
+</span><span class='line'>          <span class="n">session</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="s2">&quot;completed&quot;</span>
+</span><span class='line'>        <span class="k">elsif</span> <span class="n">did_exit?</span><span class="p">(</span><span class="n">slot_parms</span><span class="p">)</span>  <span class="c1"># uses no</span>
+</span><span class='line'>          <span class="n">session</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="s2">&quot;canceled&quot;</span>
+</span><span class='line'>          <span class="n">session_end</span> <span class="o">=</span> <span class="kp">true</span>
+</span><span class='line'>        <span class="k">else</span>
+</span><span class='line'>          <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;Ready to confirm? Say yes or no&quot;</span>
+</span><span class='line'>        <span class="k">end</span>
+</span><span class='line'>      <span class="k">when</span> <span class="s2">&quot;completed&quot;</span>      <span class="c1"># etc</span>
+</span><span class='line'>      <span class="k">end</span>
+</span><span class='line'>    <span class="k">when</span> <span class="s2">&quot;SESSION_ENDED_REQUEST&quot;</span>
+</span><span class='line'>      <span class="c1"># it&#39;s over</span>
+</span><span class='line'>      <span class="n">message</span> <span class="o">=</span> <span class="kp">nil</span>
+</span><span class='line'>      <span class="n">session_end</span> <span class="o">=</span> <span class="kp">true</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">session</span><span class="o">.</span><span class="n">save!</span>
+</span><span class='line'>    <span class="n">output</span><span class="o">.</span><span class="n">add_speech</span><span class="p">(</span><span class="n">message</span><span class="p">)</span> <span class="k">unless</span> <span class="n">message</span><span class="o">.</span><span class="n">blank?</span>
+</span><span class='line'>    <span class="n">render</span> <span class="n">json</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">build_response</span><span class="p">(</span><span class="n">session_end</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kp">private</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">slot_params</span>
+</span><span class='line'>    <span class="c1"># returns all the intent slots</span>
+</span><span class='line'>    <span class="c1"># e.g. {&quot;generic&quot; =&gt; &quot;what they said&quot;, &quot;schedule_date&quot; =&gt; &quot;2016-12-05&quot;}</span>
+</span><span class='line'>    <span class="k">return</span> <span class="vi">@slot_params</span> <span class="k">if</span> <span class="vi">@slot_params</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="vi">@slot_params</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span class='line'>    <span class="k">return</span> <span class="vi">@slot_params</span> <span class="k">unless</span> <span class="n">input</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;INTENT_REQUEST&quot;</span>
+</span><span class='line'>    <span class="n">input</span><span class="o">.</span><span class="n">slots</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="nb">name</span><span class="p">,</span> <span class="n">slot</span><span class="o">|</span>
+</span><span class='line'>      <span class="n">key</span> <span class="o">=</span> <span class="nb">name</span><span class="o">.</span><span class="n">underscore</span> <span class="c1"># category_noun, etc</span>
+</span><span class='line'>      <span class="n">value</span> <span class="o">=</span> <span class="n">slot</span><span class="o">[</span><span class="s1">&#39;value&#39;</span><span class="o">]</span>
+</span><span class='line'>      <span class="vi">@slot_params</span><span class="o">[</span><span class="n">key</span><span class="o">]</span> <span class="o">=</span> <span class="n">value</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="vi">@slot_params</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Using this pattern, you can have a decent conversation.</p>
+
+<h3>SDK Update Requests</h3>
+
+<p>There are two simple things that I think would make this a much better platform.</p>
+
+<p>The first is to be able to handle conversations better. If I could include which intents I am expecting back from the thing I just asked, everything would be 10x better.</p>
+
+<p>The issue can be seen when the app asks for more details about the app. Basically, it wants wants to get a <code>AMAZON.Literal</code> of a few sentences and write it down. I found that if the user happens to say &#8220;tomorrow&#8221; in there somewhere, it sometimes matches the Date and that&#8217;s the only data I get.</p>
+
+<p>The issue is that what I&#8217;m interested in is specified globally and therefore does not have the context. If we could respond with expected intents or something to that effect, conversations would be much better.</p>
+
+<p>The other feature is to be able to return links in the card. When I return <code>LinkAccount</code> card in a response, there is a call to action on the card in the Alexa App to do OAuth. I would like to return text and URL to put arbitrary things in the same spot. That way I could link the user to their task they just posted to create a more seamless experience.</p>
+
+<h3>Summary</h3>
+
+<p>Alexa development is fairly straightforward assuming you don&#8217;t need or already have the OAuth provider bits set up. Most of the docs talk about a Java package but doing it in the Rails environment was no trouble with existing gems or parsing the json yourself.</p>
+
+<p>It&#8217;s not quite as easy for conversations but you can make it work. A few more tweaks, along with push notifications, would add a ton of value.</p>
+
+<p>The TaskRabbit Skill is now published! Check it out.</p>
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

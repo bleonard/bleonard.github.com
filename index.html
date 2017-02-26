@@ -1,1 +1,880 @@
-My Octopress Page is coming soon &hellip;
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="This is the first post in what I hope will be a series of articles about how we build things at TaskRabbit. Over time, we/I have internalized all &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner">
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2017-02-24T00:00:00-08:00" pubdate data-updated="true">Feb 24<span>th</span>, 2017</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/architecture/'>architecture</a>, <a class='category' href='/blog/categories/rails/'>rails</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2017/02/24/architecture-models/">Architecture: Models</a></h1>
+	<div class="entry-content">
+		<p>This is the first post in what I hope will be a series of articles about how we build things at <a href="https://www.taskrabbit.com">TaskRabbit</a>. Over time, we/I have internalized all kinds of lessons and patterns, but have never written them down explicitly and publicly. So let&#8217;s give that a try.</p>
+
+<p>I thought we&#8217;d start with models. That&#8217;s what <a href="http://api.rubyonrails.org/classes/ActiveRecord/Base.html">Rails</a> calls database tables where each row is an instance of that model class.</p>
+
+<p>Overall, we default to the following rules when designing the models in a system:</p>
+
+<ul>
+<li>Keep the scope small and based on decisions in the workflow</li>
+<li>Use state machines to declare and lock in the valid transitions</li>
+<li>Denormalize as needed to optimize use cases in the experience</li>
+</ul>
+
+
+<h3>Scope</h3>
+
+<p>When designing a feature (or the whole app in its early days), you have to decide what the models represent. I&#8217;m calling that the &#8220;scope&#8221; of the model.</p>
+
+<p>For example, most applications have a <code>User</code> model. What columns will it have? Stuff about the user, obviously. But what stuff? One of the tradeoffs to consider is <code>User</code> vs. <code>Account</code> vs. <code>Profile</code>. If you put everything about the user in the same table as the one that&#8217;s pointed to in many foreign keys through the system, there will be a performance impact.</p>
+
+<p>So we put the most commonly needed items on every screen load in the <code>User</code> model and &#8220;extra&#8221; stuff in the <code>Profile</code>.</p>
+
+<ul>
+<li><code>User</code>: authentication, name, avatar, state</li>
+<li><code>Profile</code>: address, average rating, bio information</li>
+</ul>
+
+
+<p>There are plenty of ways to cut this up into other models and move things around, but that&#8217;s what I mean about &#8220;scope&#8221; of a model.</p>
+
+<h3>States</h3>
+
+<p>State machines are built into the foundation of the system. Almost every model has a <code>state</code> column and an initial state. There are then valid transitions to other states.</p>
+
+<p>For example, there is a <code>PaymentTransaction</code> model. It has an initial &#8220;pending&#8221; state that represents the time between when an invoice is submitted and when we charge the credit card. During this time, it can move to a &#8220;canceled&#8221; state if tit should not happen. Or, if things go as planned, it can transition to a &#8220;settled&#8221; state. After that, if there is an issue of some sort, it would go to a &#8220;refunded&#8221; state. Notably, going from &#8220;pending&#8221; to &#8220;refunded&#8221; is <em>not</em> a valid transition.</p>
+
+<div class="jumbotron">
+<img src="/images/posts/architecture-models/states.png" class="bigPicture" />
+</div>
+
+
+<p>Creating these state and transitions preserves some sanity in the system. It&#8217;s a safety check. By asserting what is possible, we can (try to) prevent things that should not be possible.</p>
+
+<h3>Nouns and Verbs</h3>
+
+<p>The TaskRabbit marketplace creates a job that is sent to a Tasker. The Tasker can chat with the Client and can say they will do the job. Or they can decline. If they agree, they are officially assigned to the job and make an appointment. When they complete the job, they invoice the Client for the time worked. In most cases, it&#8217;s done at that point. In other cases, it is &#8220;ongoing&#8221; where they come back next week (to clean again, for example). At more or less any time, they whole thing can be canceled.</p>
+
+<p>If given that description, you could come up with many possible model structures. They would all have a set of pros and cons, but many would work out just fine.</p>
+
+<p>For example, you could have a <code>Job</code> model with these kinds of states: <code>invited</code>, <code>invitation_declined</code>, <code>assigned</code>, <code>appointment_made</code>, <code>invoiced</code>, <code>invoice_paid</code>, <code>canceled</code>, etc. Each would only allow the valid transitions as described above. You would also need the columns to represent the data: <code>client_id</code>, <code>tasker_id</code>, <code>appointment_at</code>, etc.</p>
+
+<p>The main benefit of this approach is centrality. You can <code>SELECT * FROM jobs WHERE client_id = 42</code> and get all of that user&#8217;s situation. Over time, however, we came to value a more decentralized approach.</p>
+
+<p>Now, the models of our system reflect its objects and decisions that the actors make about them. Each fork in the experience has a corresponding model with a simple state machine.</p>
+
+<p>For example, the <code>Invitation</code> model is created first to note the decision the Tasker must make. It then either transitions to <code>accepted</code> or <code>declined</code>.  If accepted, it spawns an <code>Assignment</code>. It, in turn, can move to states like <code>completed</code> or <code>ongoing</code>.</p>
+
+<div class="jumbotron">
+<img src="/images/posts/architecture-models/invitations.png" class="bigPicture" />
+</div>
+
+
+<p>There is still the the <code>Job</code> model but it contains the &#8220;description&#8221; of the work to do and its <code>id</code> ties together the decision-based models.</p>
+
+<h3>Trade-offs</h3>
+
+<p>Everything is pros and cons. The decentralized approach has more global complexity (more objects and interactions) but less local complexity (simpler decisions, states).</p>
+
+<p>It seemed to be the single, monolithic state machine that doomed the single <code>Job</code> model. Everything is fine as long as that&#8217;s the only path through the system. However, as soon as there is a new way for a Task to be assigned, we have a tangled web of states.</p>
+
+<p>Not every task has the invitation pattern noted above. Some are &#8220;broadcast&#8221; to many Taskers at once and shown in a browse-able &#8220;Available Tasks&#8221; section in the their app. That&#8217;s a new fork in the experience. Ongoing tasks also create a state loop of sorts.</p>
+
+<p>These cause the single state machine to get a bit tangled up, but is more easily handled in the decentralized approach. We can make a <code>Broadcast</code> model instead of an <code>Invitation</code> one. That can have its own set of states. Success in that local state machine can also spawn an <code>Assignment</code> and everything goes on as before.</p>
+
+<h3>Denormalization</h3>
+
+<p>To try and get the both worlds, we have also aggressively embraced a variety of forms of denormalization.</p>
+
+<p>We actively try not to do SQL <code>JOIN</code>s for simplicity and performance reasons, but that is at odds with all these little models all over the place. So we have said it&#8217;s OK to have duplicate data. For example, each of these &#8220;decision&#8221; models have the <code>client_id</code>, <code>tasker_id</code>, and pricing information. It just gets passed along. This makes everything a local decision and queries very straightforward.</p>
+
+<p>The big hole in the decentralized approach is to &#8220;get all my stuff&#8221; easily. For that we have different tactics, both of which are denormalization with use cases in mind.</p>
+
+<p>On write to an object, we can update a central model with the current situation for that <code>Job</code>. For example, when an <code>Assignment</code> gets created, we recalculate and store data in two different tables. One for both the Tasker and the Client on what they should be seeing on their respective dashboards. Thus, the API call to &#8220;get all my stuff&#8221; uses one of those tables. That is done in the same transaction as the original write.</p>
+
+<p>The other option is basically the same thing but for either less time-sensitive data or more complicated queries. We use a <a href="/blog/2015/04/02/queue-bus/">message bus</a> to observe changes. We then denormalize applicable data for a specific use case into a table or <a href="http://www.elastic.co">Elasticsearch</a>. For example, when an <code>Appointment</code> is created, we would update the Taskers availability schedule in the database. Updating this schedule would also trigger an update to our recommendation algorithm which uses Elasticsearch.</p>
+
+<p>One important note: all of these denormalizations should be <a href="http://www.restapitutorial.com/lessons/idempotency.html">idempotent</a>. This allows us to recreate the whole thing from the source of truth or recover if any given event is dropped.</p>
+
+<h3>Summary</h3>
+
+<p>At TaskRabbit, we default to the following rules when designing the models in a system:</p>
+
+<ul>
+<li>Keep the scope small and based on decisions in the workflow</li>
+<li>Use state machines to declare and lock in the valid transitions</li>
+<li>Denormalize as needed to optimize use cases in the experience</li>
+</ul>
+
+
+<p>As always, these are just the default guidelines. In any given case, there may be a reason to deviate, but it would have to be clear why that case was special.</p>
+
+		
+		
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2016-12-02T00:00:00-08:00" pubdate data-updated="true">Dec 2<span>nd</span>, 2016</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/alexa/'>alexa</a>, <a class='category' href='/blog/categories/bots/'>bots</a>, <a class='category' href='/blog/categories/rails/'>rails</a>, <a class='category' href='/blog/categories/voice/'>voice</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2016/12/02/amazon-alexa-rails/">Developing an Amazon Alexa Skill on Rails</a></h1>
+	<div class="entry-content">
+		<p>In March, we had a hack day at <a href="https://www.taskrabbit.com">TaskRabbit</a> and I did a demo of posting a task using a borrowed new-ish (at the time) Amazon <a href="https://www.amazon.com/echo">Echo</a> via <a href="https://developer.amazon.com/alexa">Alexa</a>. For the first time in a year, I made a new <a href="/blog/2014/02/11/rails-4-engines/">engine</a> that would handle all these new-fangled conversational UIs and bots and stuff.</p>
+
+<p>The hack day came and went (I didn&#8217;t win) and this branch was just sitting there every time I did a <code>git branch</code> command. I only have a few there. Keep it clean, people! Then I saw the Cyber Monday deals on Amazon. I decided that it had sat there long enough so I dusted it off to try and bring it to the finish line.</p>
+
+<p>I more or less started over, of course, because that&#8217;s how it goes. I thought I would document the process for anyone else on the trail.</p>
+
+<div class="jumbotron">
+  <image src="/images/posts/alexa/skill_store.png" class="bigPicture"/>
+</div>
+
+
+<h3>Alexa Sessions</h3>
+
+<p>The <a href="https://developer.amazon.com/alexa-skills-kit">Alexa API</a> uses JSON to make requests and receive responses. Each session has a guid and (optional) user information.</p>
+
+<p>The API has some cool session management tricks. You can <a href="https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/alexa-skills-kit-interface-reference">return attributes</a> that will also get passed back on the next request. This effectively gives you &#8220;memory&#8221; of the previous parts of a conversation. I chose to not do this because I am hoping to use the same engine for other similiar interfaces. Instead I save the same stuff but to a table table using the session guid as the key. In ether case, it&#8217;s important to know where you&#8217;ve been and what you need to move forward.</p>
+
+<p>In our case, we want to check the box that says there has to be a linked user. Because this is checked, the Alexa App will send them through an OAuth flow on our site. So we generate a token that maps to the user in our system and Alexa stores that token in hers. Side note: it&#8217;s hard to not fully personify Alexa after talking (arguing) back and forth all week.</p>
+
+<h3>Hello World</h3>
+
+<p>Alexa is given a single endpoint for a skill. It will POST the request to that route. So I added the line to the <code>routes.rb</code> file and sent it to a new <code>SkillsController</code>. It looks something like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">SkillsController</span> <span class="o">&lt;</span> <span class="o">::</span><span class="no">ActionController</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">root</span>
+</span><span class='line'>    <span class="n">output</span> <span class="o">=</span> <span class="no">AlexaRubykit</span><span class="o">::</span><span class="no">Response</span><span class="o">.</span><span class="n">new</span>
+</span><span class='line'>    <span class="n">session_end</span> <span class="o">=</span> <span class="kp">true</span>
+</span><span class='line'>    <span class="n">output</span><span class="o">.</span><span class="n">add_speech</span><span class="p">(</span><span class="s2">&quot;Hello World&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">render</span> <span class="n">json</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">build_response</span><span class="p">(</span><span class="n">session_end</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+
+		
+		<a href="/blog/2016/12/02/amazon-alexa-rails/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2016-11-10T00:00:00-08:00" pubdate data-updated="true">Nov 10<span>th</span>, 2016</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/business/'>business</a>, <a class='category' href='/blog/categories/politics/'>politics</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2016/11/10/post-election/">Post Election</a></h1>
+	<div class="entry-content">
+		<p>I&#8217;ve been thinking a lot about the book <a href="https://en.wikipedia.org/wiki/The_City_%26_the_City"><em>The City &amp; the City</em></a> by China Miéville. It describes a town in which two sets of people share the same physical space but do not acknowledge each other. For that matter, they are forbidden to do so.</p>
+
+<p>I remember being surprised in 1992 when Bill Clinton won the election. I lived in Texas and everyone I knew was voting for Bush. Now, I live in California and the same thing snuck up on me again this week. There&#8217;s very little learning there.</p>
+
+<p>But it&#8217;s not just where I live because technology has allowed a nation like in the book. Today, my Twitter feed is filled with anxiety, sadness, outrage, and very scared people. I am certain there are people nearby, not to mention in all those (many) red states, that have an exceptionally different feed: one full of hope, expectation, and triumph. And there is no connection between the two.</p>
+
+<p>In that 1992 election, it was the economy (<a href="https://en.wikipedia.org/wiki/It%27s_the_economy,_stupid">stupid</a>) and the need for change. I&#8217;m certainly not a political analyst, but that rings just as true this week. All the jobs numbers are up over the last 8 years, but not everywhere and not for everyone. This has caused a rift.</p>
+
+<h2>Forward</h2>
+
+<p>Where do we go from here? I believe it&#8217;s best for each of use to use our talents and position as leverage to make a difference. In my case, I can help literally provide work in these areas of the country.</p>
+
+<p><a href="https://www.taskrabbit.com">TaskRabbit</a> has been focusing on its largest markets because there is still plenty of room to grow there. And the whole thing is a hard problem. The focus helps, but our map is somewhat bare in Middle America. For me, this election is a kick in the pants to get there sooner than later.</p>
+
+<p>The biggest fail there would be to believe that we can &#8220;save&#8221; people from on high by bestowing the magic of technology. Fortunately, even as the chief technologist at TaskRabbit, I understand that&#8217;s not where the value lies. It&#8217;s always been about neighbors helping neighbors. We&#8217;re just there to make the real-life connection.</p>
+
+<p>I don&#8217;t know about you, but I think we could all really use a few more real-life connections at the moment.</p>
+
+		
+		
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2016-03-24T00:00:00-07:00" pubdate data-updated="true">Mar 24<span>th</span>, 2016</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/android/'>android</a>, <a class='category' href='/blog/categories/javascript/'>javascript</a>, <a class='category' href='/blog/categories/react/'>react</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2016/03/24/react-native-android-launch/">React Native Android Launch</a></h1>
+	<div class="entry-content">
+		<p>Yesterday, we launched our updated Tasker app to our Android community. As noted <a href="/blog/2015/12/17/react-native-launch/">before</a> on the iOS launch, this is the app that Taskers use to get their work done. This completes our migration to <a href="https://facebook.github.io/react-native/">React Native</a>.</p>
+
+<p>All of the credit goes to the team that made this happen, especially <a href="https://twitter.com/jrichardlai">JR</a> and <a href="http://jeremyeaton.co/">Jeremy</a>. It was a lot harder than expected to get everything working on both platforms and they showed great dedication and persistence.</p>
+
+<h2>Approach</h2>
+
+<p>The goal of the last release was for the iOS users to not even notice. Mission (more or less) accomplished! However, for this one, it didn&#8217;t make sense to fork the code by platform without a good reason. So admittedly, the app looks more like an iOS app and than an Android one. However, we did go screen by screen looking for places where Android-specific attention would help the user.</p>
+
+<h2>Differences</h2>
+
+<p>I&#8217;ll let JR do a followup to his <a href="/blog/2016/01/11/react-native-android/">previous post</a> of all the differences, but the biggest ones in my mind were the handling of the hardware back button and different pickers (date, for example) in the forms. The <code>Platform</code> directory strategy we had put in place during the first cycle worked out pretty well.</p>
+
+<p>We also really struggled with getting push notifications right. This is key for our business and there were many more nuances on the Android platform to work out. We hope to publish what we came up with.</p>
+
+<p>Of course, there was also the more extensive testing to do. Our Android pile:</p>
+
+<div class="jumbotron">
+  <img src="/images/posts/react-native-android-launch/pile.jpg" class="bigPicture"/>
+</div>
+
+
+<h2>Stats</h2>
+
+<ul>
+<li>App Javascript: 302 files with 21515 lines of code</li>
+<li>Test Javascript: 47 files with 5708 lines of code</li>
+<li>iOS Javascript: 19 files with 449 lines of code</li>
+<li>Android Javascript: 19 files with 770 lines of code</li>
+<li>Objective C: 17 files with 885 lines of code</li>
+<li>Java: 15 files with 912 lines of code</li>
+<li>iOS Config files: 18 files with 2538 lines of stuff</li>
+<li>Android Config files: 16 files with 1106 lines of stuff</li>
+<li>React Components: 124</li>
+<li>Screens (addressable url patterns): 25</li>
+<li>Avg. components per screen: 5</li>
+<li>Dispatcher Events: 55</li>
+<li>Shared JS (vs. Platform JS) percentage: 94%</li>
+<li>JS (vs. Native ObjC/Java) percentage: 92%</li>
+<li>Total shared code percentage: 87%</li>
+<li>Total shared (including config) percentage: 75%</li>
+</ul>
+
+
+<h2>Next steps</h2>
+
+<p>Now, we certainly didn&#8217;t do this engineering project because the tech was cool (even though it is). We did it to create a foundation that allows us to deliver value more effectively to our community. So that&#8217;s the next order of business. Time to get rolling! I estimate that we can ship features to both platforms at least twice as quickly with half the engineers than we had before.</p>
+
+<p>Too long, but did read anyway: For you execs out there that somehow read this far (even past lines of code counts!), I&#8217;d say that we&#8217;ve found React Native to be at least 5x more productive than traditional mobile development.</p>
+
+		
+		
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-12-17T00:00:00-08:00" pubdate data-updated="true">Dec 17<span>th</span>, 2015</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/ios/'>ios</a>, <a class='category' href='/blog/categories/javascript/'>javascript</a>, <a class='category' href='/blog/categories/react/'>react</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2015/12/17/react-native-launch/">React Native Launch</a></h1>
+	<div class="entry-content">
+		<p>This week, we launched our updated Tasker app to the community. This is not the app on the app store, but rather the one the Taskers use to get their work done. Functionally, not much has changed since the last release. But underneath, the app has been completely rewritten in <a href="https://facebook.github.io/react-native/">React Native</a>.</p>
+
+<p>First and foremost, a huge congratulations needs to go out to the team, especially <a href="https://twitter.com/jrichardlai">JR</a>. I&#8217;ve never been on an engineering project that went as smoothly or was as fun as this one. So good!</p>
+
+<h2>Prototype</h2>
+
+<p>I started looking into React Native in the beginning of August. It&#8217;s a really great story. First of all, it&#8217;s <a href="https://facebook.github.io/react/">React</a>. I&#8217;ve now decided that&#8217;s just about the best thing out there. Secondly, I was 10x more productive than when developing a regular iOS app. Finally, there was a decent chance much of the code could be reused on Android. If every feature did not have to be developed twice, we could choose to develop twice as many features or have half the engineers work on something else.</p>
+
+<p>I created a prototype to see if I thought it could work. The main concerns I had we around navigation, push notifications, other native features, data storage, and just getting the right project structure. More or less, I ended up with the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">React Native Sample App</a> that we published. All of those things showed great promise or at least that they were possible.</p>
+
+
+		
+		<a href="/blog/2015/12/17/react-native-launch/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-11-08T00:00:00-08:00" pubdate data-updated="true">Nov 8<span>th</span>, 2015</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/ios/'>ios</a>, <a class='category' href='/blog/categories/javascript/'>javascript</a>, <a class='category' href='/blog/categories/react/'>react</a>, <a class='category' href='/blog/categories/testing/'>testing</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2015/11/08/react-native-integration-tests/">React Native Integration Tests</a></h1>
+	<div class="entry-content">
+		<p>Coming from a Rails <a href="http://guides.rubyonrails.org/testing.html">background</a>, we are very familiar with testing our code. While writing our new <a href="/blog/2015/09/21/react-native-example-app/">React Native app</a>, we found ourself missing a way to test it and ship with confidence. I&#8217;ve updated the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">sample app</a> with the approach we are using for integration tests.</p>
+
+<h2>Test Levels</h2>
+
+<p>When thinking about what and how to test a React Native app, a few levels come to mind:</p>
+
+<ul>
+<li>Unit: Testing some pure Javascript object and it&#8217;s methods. Just run in Javascript.</li>
+<li>Component: Testing a React component in isolation. You&#8217;d want to check its reaction to various state and props. Maybe run just in Javascript with heavy stubbing or in the simulator.</li>
+<li>Integration: Testing a single screen or workflow in the &#8220;real&#8221; app. Run in the simulator or on the device.</li>
+</ul>
+
+
+<p>The approach shown here is the last one: integration testing. We did this one first because if you are only going to do one of the above, it is probably your best bet. By actually testing out what the user does, you get the highest level of &#8220;don&#8217;t screw it up&#8221; coverage.</p>
+
+<p>There are some tradeoffs in this choice. They mostly stem from the fact that it&#8217;s the slowest (runtime) approach. Because of that, to test many edges cases takes f-o-r-e-v-e-r to actually run the tests. Something lower-level without the simulator would be much faster.</p>
+
+<h2>Running Tests</h2>
+
+<p>In the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">sample app</a>, you follow these steps:</p>
+
+<ul>
+<li>Make sure you have the 9.0 simulators installed in XCode</li>
+<li>Compile app for the test environment: <code>npm run compile:test</code></li>
+<li>Launch simulator and tests: <code>npm test</code></li>
+</ul>
+
+
+<p>Running <code>npm test</code> will launch the simulator and the robots take over.</p>
+
+<div class="jumbotron">
+  <image src="/images/posts/react-native-integration-tests/follows.gif" class="bigPicture" />
+</div>
+
+
+
+
+
+		
+		<a href="/blog/2015/11/08/react-native-integration-tests/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-10-26T00:00:00-07:00" pubdate data-updated="true">Oct 26<span>th</span>, 2015</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/architecture/'>architecture</a>, <a class='category' href='/blog/categories/code/'>code</a>, <a class='category' href='/blog/categories/rails/'>rails</a>, <a class='category' href='/blog/categories/startups/'>startups</a>, <a class='category' href='/blog/categories/v3/'>v3</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2015/10/26/rewrite/">To Rewrite or Not to Rewrite?</a></h1>
+	<div class="entry-content">
+		<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>To rewrite, or not to rewrite- that is the question: 
+</span><span class='line'>Whether 'tis better for the product to suffer
+</span><span class='line'>The features and debt of outrageous history
+</span><span class='line'>Or to once again battle a sea of edge cases,
+</span><span class='line'>And by forgetting relive them. To wish- to hope-
+</span><span class='line'>No more; and by hope to say we end
+</span><span class='line'>The heartache, and the thousand unnatural cases
+</span><span class='line'>That code can error to. 'Tis a codebase
+</span><span class='line'>Devoutly to be wish'd. To wish- to hope.
+</span><span class='line'>To hope- perchance to rebuild: ay, there's the rub!
+</span><span class='line'>For in that hope of clarity what simplicity comes
+</span><span class='line'>When we have removed this outdated cruft
+</span><span class='line'>Must give us success. But give the respect
+</span><span class='line'>To the current repo of such long life.
+</span><span class='line'>For who would bear the features of the past,
+</span><span class='line'>High expectations, the race conditions,
+</span><span class='line'>The admin tools, the product delay,
+</span><span class='line'>The exhaustion overcome, and the data
+</span><span class='line'>That shall posthaste be moved to a new store
+</span><span class='line'>As each mistake of the past be brought back
+</span><span class='line'>With sighs of regret? Who would these issues bear,
+</span><span class='line'>To toil and code under a weary life,
+</span><span class='line'>But that the chance of something rebuilt
+</span><span class='line'>That undiscover'd codebase, from whose lines
+</span><span class='line'>No complexity returns- tempts the will,
+</span><span class='line'>And makes us choose between those ills we have
+</span><span class='line'>Than sprint towards others we know not of?
+</span><span class='line'>Thus the unknowns make cowards of us all,
+</span><span class='line'>And thus the heavy weight of such choice
+</span><span class='line'>Is oft tempered by promises of thought,
+</span><span class='line'>And refactorings of great scope and breadth
+</span><span class='line'>With this regard the hope does turn awry
+</span><span class='line'>And lose the name of action.- What say you?
+</span><span class='line'>The lauded pivot! Siren of opportunity
+</span><span class='line'>May all our sins be forgotten.</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The internal struggle of the rewrite decision eats away at developers. It could be so much better. We have learned so much. Let&#8217;s start over. It causes inaction over months accompanied by much grumbling. But if you do it, how can you make sure it doesn&#8217;t turn into a tragedy?</p>
+
+<p>I can&#8217;t say that I am happy or proud that we have rewritten TaskRabbit twice. That doesn&#8217;t feel right. Conceptually, if we would have done it correctly the first time, then it wouldn&#8217;t have been needed. Or maybe we should have done it in place. I would say that&#8217;s absolutely fair, but doesn&#8217;t capture the reality of development of the last 6 years.</p>
+
+<p>When I started writing this post, I just felt like mapping my existential crisis to Hamlet&#8217;s and now I&#8217;m heading towards defending myself against Joel&#8217;s famous <a href="http://www.joelonsoftware.com/articles/fog0000000069.html">post</a> stating the fact that you should never do a rewrite. I just went back and read it (again) and I (still) agree. It&#8217;s hard to argue with. Maybe it&#8217;s best to discuss the times we did rewrite to the times we didn&#8217;t.</p>
+
+
+		
+		<a href="/blog/2015/10/26/rewrite/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-10-18T00:00:00-07:00" pubdate data-updated="true">Oct 18<span>th</span>, 2015</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/ios/'>ios</a>, <a class='category' href='/blog/categories/javascript/'>javascript</a>, <a class='category' href='/blog/categories/react/'>react</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2015/10/18/building-react-native-apps/">Building React Native Apps</a></h1>
+	<div class="entry-content">
+		<p>We&#8217;ve been using and loving React Native as noted in my <a href="/blog/2015/09/21/react-native-example-app">previous post</a>. As we are working towards rolling out a fully-featured app, one thing that needed solved was how we should build the app for different environments. For example, how can we make (slightly different) development, staging, and production builds?</p>
+
+<p>In a <a href="https://github.com/facebook/react-native/issues/2246">Github issue</a>, I ran into a few other people also wondering how to do this, so I&#8217;ve added a few ways to the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">Example App</a> to show the approaches we are using.</p>
+
+<p>The three approaches we are trying out are:</p>
+
+<ul>
+<li>Configurations</li>
+<li>Compile Flags</li>
+<li>Run Variables</li>
+</ul>
+
+
+<h2>Environments</h2>
+
+<p>I had already added the <code>Environment</code> <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/2cf43f3ce17f830ff17065d6b4d973ac85043b05/App/Models/Environment.js">model</a> and <code>EnvironmentStore</code> <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/2cf43f3ce17f830ff17065d6b4d973ac85043b05/App/Stores/EnvironmentStore.js">store</a> to the project. However, I just added actual dynamic configurations to the XCode project and the <code>EnvironmentManager</code> <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/2cf43f3ce17f830ff17065d6b4d973ac85043b05/ios/Sample/EnvironmentManager.m">code</a> is using that.</p>
+
+
+		
+		<a href="/blog/2015/10/18/building-react-native-apps/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-10-06T00:00:00-07:00" pubdate data-updated="true">Oct 6<span>th</span>, 2015</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/architecture/'>architecture</a>, <a class='category' href='/blog/categories/code/'>code</a>, <a class='category' href='/blog/categories/rails/'>rails</a>, <a class='category' href='/blog/categories/startups/'>startups</a>, <a class='category' href='/blog/categories/v3/'>v3</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2015/10/06/v2-retrospective/">V2 - Retrospective</a></h1>
+	<div class="entry-content">
+		<p>TaskRabbit began as <a href="http://www.boston.com/business/technology/articles/2009/07/05/web_start_up_takes_entrepreneurs_idea_and_runs_with_it/">RunMyErrand</a> in 2008 when Leah had the <a href="http://techli.com/2011/09/taskrabbit-interview-leah-busque/">idea</a> and coded up the first version of the site. In 2009, I had the opportunity to help out in little ways like adding Facebook Connect support just after it launched and Leah got into <a href="http://techcrunch.com/2009/05/28/facebook-names-first-class-of-fbfund-rev-its-new-incubator/">Facebook Fund</a>. From there, she raised a <a href="http://www.xconomy.com/boston/2009/10/30/runmyerrand-picks-up-1-million-from-west-coast-venture-firms/">seed round</a> and I came on full-time.</p>
+
+<p>For a few weeks after starting, I worked on the RunMyErrand codebase, adding features and fixing bugs. Quickly, though, a few things became clear. First, we were probably going to change our name. RunMyErrand made people think only about laundry. Second, the changes we wanted to make drastic and hard to make with confidence in a codebase with no tests. I was hoping to work and live with this code for several years and we did not have the foundation that would make that a productive and enjoyable experience.</p>
+
+<p>So around Christmas 2009, I started a new Rails project. It was still called <code>runmyerrand</code> because we still didn&#8217;t have a new name. For a while at the end we called it <code>core</code> because it was at the center of a large service-oriented architecture. Today, we call it <code>V2</code> because it has now itself been replaced.</p>
+
+<p>It&#8217;s been a year and half. It&#8217;s never too late for a retrospective.</p>
+
+<h2>Launch</h2>
+
+<p>The original site was my first Rails project to work on and V2 was my first one from scratch. Rails 3 wasn&#8217;t yet released so I was nervous to get on that bleeding edge because most of the gems didn&#8217;t work quite yet. I had been immersing myself in Ruby news. In particular, I&#8217;d been listening to <a href="http://ruby5.envylabs.com/">Ruby5</a> and others podcasts and been taking notes about gems/tools that seemed relevant. In hindsight and with experience, it was a problem to rely on gems for fairly simple things, but at the time they seemed sent from heaven to solve my problems.</p>
+
+<p>I started over Christmas at the very beginning.</p>
+
+<div class="jumbotron">
+  <image src="/images/posts/v2-retrospective/tracker2009.png" alternate="Tracker 2009" class="bigPicture" />
+</div>
+
+
+<p>The site was black and white with a simple layout. At some point in January, Leah saw what I was working on. I, of course, discussed with her the notion of rebuilding the site, but I don&#8217;t think the ramifications quite came across until she saw the starkness of that layout. It was probably a huge leap of faith for her at that moment to have the trust in me that she did.</p>
+
+<p>I worked on both sites through January and February, eventually getting to 100% on new stuff. For the most part, I was building a feature-complete version of RunMyErrand with TBD branding and stronger Rails conventions like <a href="http://weblog.jamisbuck.org/2006/10/18/skinny-controller-fat-model">skinny controllers</a> and tests. There were some new features and many minor upgrades from the learnings we&#8217;d had.</p>
+
+<p>By the end of April, it was about ready to go. We had <a href="http://blog.taskrabbit.com/2010/04/08/runmyerrand-is-now-taskrabbit/">picked a name</a>, gotten help from <a href="http://www.mikekivikoski.com/">designers</a> and <a href="https://twitter.com/dpickett">Dan</a>, a great contractor to pull it over the finish line. In one hour on <a href="http://bostinno.streetwise.co/2010/04/13/runmyerrand-relaunches-with-new-name/">April 5th</a>, we launched the new code and rebranded the company.</p>
+
+
+		
+		<a href="/blog/2015/10/06/v2-retrospective/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-09-21T00:00:00-07:00" pubdate data-updated="true">Sep 21<span>st</span>, 2015</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/architecture/'>architecture</a>, <a class='category' href='/blog/categories/ios/'>ios</a>, <a class='category' href='/blog/categories/javascript/'>javascript</a>, <a class='category' href='/blog/categories/react/'>react</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2015/09/21/react-native-example-app/">React Native Example App: Navigation</a></h1>
+	<div class="entry-content">
+		<p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, we have been looking into building an iOS application in <a href="https://facebook.github.io/react-native/">React Native</a>. This is probably the first pure technology that I&#8217;ve been this excited about since moving from C to Ruby.</p>
+
+<p>However, it&#8217;s definitely still in its early days. There are not many examples of how people are doing things out there. To help remedy this and share what we are learning, I made a <a href="https://github.com/taskrabbit/ReactNativeSampleApp">sample React Native application</a>.</p>
+
+<div class="jumbotron">
+  <image src="/images/posts/react-native-navigation/screenshots.png" class="bigPicture" />
+</div>
+
+
+<p>The app itself is vaguely like twitter and/or tumblr. There are users that make posts. They follow other users. You can look at users they follow follows and those users&#8217; posts. And on and on! The features (or styling) isn&#8217;t the main point. At this time, we&#8217;re mostly demonstrating architectural concepts.</p>
+
+<p>The app we&#8217;re working on is a bit ahead of this one, but I think it will be neat to have this one publicly walk through the same steps that we have done privately. Everything is pretty new and the patterns are not established. We&#8217;ll post here about some pattern or refactor and update the app and hopefully start a great conversation.</p>
+
+<h2>Navigation</h2>
+
+<p>The first pattern that I wanted to talk about is navigation. The web has a pretty solid navigation story (with the URLs and such) and some <a href="https://github.com/rackt/react-router">tools</a> to map that to React applications. I think it&#8217;s less clear on the phone.</p>
+
+<p>I&#8217;m not sure why it&#8217;s different, actually, because there is still usually a &#8220;Back&#8221; button and one screen at a time. Yet, iOS development seems to have evolved in another direction. Most apps are all about this <code>NavigationController</code> and we <code>push</code> and <code>pop</code> and stuff like that. Then things get totally weird when we try to put the URLs back in for something like <a href="http://blog.originate.com/blog/2014/04/22/deeplinking-in-ios/">deep linking</a>.</p>
+
+
+		
+		<a href="/blog/2015/09/21/react-native-example-app/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+<nav id="pagenavi">
+    
+    
+        <a href="/blog/page/2/" class="next">Next</a>
+    
+    <div class="center"><a href="/blog/archives">Blog Archives</a></div>
+</nav></div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

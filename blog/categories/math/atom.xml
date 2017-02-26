@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: math | BLog]]></title>
+  <link href="http://bleonard.github.com/blog/categories/math/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.com/"/>
+  <updated>2017-02-25T21:54:36-08:00</updated>
+  <id>http://bleonard.github.com/</id>
+  <author>
+    <name><![CDATA[Brian Leonard]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Big Decimal]]></title>
+    <link href="http://bleonard.github.com/blog/2015/06/04/big-decimal/"/>
+    <updated>2015-06-04T00:00:00-07:00</updated>
+    <id>http://bleonard.github.com/blog/2015/06/04/big-decimal</id>
+    <content type="html"><![CDATA[<p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, people have hourly rates for the tasks that they do. They get paid based on the number of hours that they work.</p>
+
+<p>We try to deal in base units to remove ambiguity. For example, we store the hourly rate in cents as an integer instead of in dollars as a double. Reporting time worked occurs in seconds. When that reporting occurs, there is a calculation to do to understand how much the Tasker needs to be paid. It might go something like this:</p>
+
+<p>```ruby
+class FloatCalculator
+  def initialize(hourly_rate_in_cents)</p>
+
+<pre><code>@hourly_rate_in_cents = hourly_rate_in_cents
+</code></pre>
+
+<p>  end</p>
+
+<p>  def total_in_dollars(seconds_worked)</p>
+
+<pre><code>hours = seconds_worked / 3600.0 # seconds in an hour
+cents = @hourly_rate_in_cents * hours
+dollars = cents / 100 # make it dollars
+dollars.round(2)
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>Over the years, we saw a few errors because of <a href="http://floating-point-gui.de/">limitations of floating point math</a>. Since then, we have switched to using <a href="http://ruby-doc.org/stdlib-2.1.5/libdoc/bigdecimal/rdoc/BigDecimal.html">BigDecimal</a> to prevent these kinds of errors.</p>
+
+<p>There were no visible performance issues, but I recently got curious because all of the docs say that they are substantial. By writing the same calculator using BigDecimal, we can see the difference.</p>
+
+<p>```ruby
+class BigDecimalCalculator
+  def initialize(hourly_rate_in_cents)</p>
+
+<pre><code>@hourly_rate_in_cents = BigDecimal.new(hourly_rate_in_cents)
+</code></pre>
+
+<p>  end</p>
+
+<p>  def total_in_dollars(seconds_worked)</p>
+
+<pre><code>hours = BigDecimal.new(seconds_worked) / BigDecimal.new(3600)
+cents = @hourly_rate_in_cents * BigDecimal.new(hours)
+dollars = cents / BigDecimal.new(100)
+dollars.round(2).to_f
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>This does turn out to be significantly slower, so I also benchmarked marking the constants class level variables.</p>
+
+<!-- more -->
+
+
+<p>```ruby
+class BigDecimalStaticCalculator
+  CONVERSION_RATE = BigDecimal.new(3600) * BigDecimal.new(100)</p>
+
+<p>  def initialize(hourly_rate_in_cents)</p>
+
+<pre><code>@hourly_rate_in_cents = BigDecimal.new(hourly_rate_in_cents)
+</code></pre>
+
+<p>  end</p>
+
+<p>  def total_in_dollars(seconds_worked)</p>
+
+<pre><code>dollars = @hourly_rate_in_cents * BigDecimal.new(seconds_worked) / CONVERSION_RATE
+dollars.round(2).to_f
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<h3>Results</h3>
+
+<p>The results are in!</p>
+
+<p>```</p>
+
+<pre><code>                     user     system      total        real
+</code></pre>
+
+<p>floats               0.220000   0.010000   0.230000 (  0.231120)
+big decimal          4.130000   0.070000   4.200000 (  4.234744)
+big decimal static   2.620000   0.040000   2.660000 (  2.680582)
+```</p>
+
+<p>The cost of using BigDecimal to reduce the error rate is a slowdown of 15x-20x compared to floating point math. This is not a big deal in practice. First of all, we need to get the money correct. Secondly, these are times for 250,000 calculations. Any given request only has 1, which is nothing compared to the other stuff (SQL, template rendering) happening.</p>
+
+<p>It seems that the initialization process takes up a lot of time, though, so one technique to speed it up is to pull out constants in your BigDecimal code to the class level. These would only be initialized once, but may also affect the base memory level.</p>
+
+<p>These classes and the benchmark itself are available as a <a href="https://gist.github.com/bleonard/6d7ffa979e9720baf71b">gist</a> if you are interested.</p>
+]]></content>
+  </entry>
+  
+</feed>

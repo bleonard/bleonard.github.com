@@ -1,0 +1,406 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Offshore: Rails Remote Factories - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="Last year at TaskRabbit, we decided to go headlong into this Service Oriented Architecture thing. We ended up with several Rails and other Ruby apps &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2014/03/16/offshore/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">Offshore: Rails Remote Factories</h1>
+	<div class="entry-content"><p>Last year at <a href="https://www.taskrabbit.com">TaskRabbit</a>, we decided to go headlong into this <a href="http://en.wikipedia.org/wiki/Service-oriented_architecture">Service Oriented Architecture</a> thing. We ended up with several <a href="http://rubyonrails.org/">Rails</a> and <a href="http://www.sinatrarb.com/">other</a> Ruby apps that loosely depended on each other to work. While this was mostly good from a separation of concerns and organizational perspective, we found effective automated testing to be quite difficult.</p>
+
+<p>Specifically, we have one core platform application whose API is the most used. We also allow other apps to have read-only access to its database. Several of the apps are more or less a client to that server. So while the satellite apps have their own test suite, the integration tests can only be correct if they are exercising the core API.</p>
+
+<p>To handle this use case, we created a gem called <a href="https://github.com/taskrabbit/offshore">Offshore</a>. A normal test suite has <a href="https://github.com/thoughtbot/factory_girl">factories</a> and/or <a href="http://guides.rubyonrails.org/testing.html#the-low-down-on-fixtures">fixture data</a> and it uses database <a href="http://api.rubyonrails.org/classes/ActiveRecord/Transactions/ClassMethods.html">transactions</a> to reset the data for every test. Offshore brings this the SOA world by providing the ability to use another application&#8217;s factories from your test suite as well as handling the rollback between tests. Through the actual exercising of the other application as well as a simplified usage pattern, we found that we trusted our integration tests much more that alternative approaches.</p>
+
+<h2>System</h2>
+
+<p>What we have are several apps based on use case, all using a core platform. There are web apps for each of the participants in our marketplace: workers, consumers, and businesses. We also have iPhone and Android apps along those same lines.</p>
+
+<p>The apps communicate in a few ways. All of them use the platform&#8217;s API synchronously. The web apps use <a href="https://github.com/taskrabbit/resque-bus">Resque Bus</a> to subscribe and publish asynchronously. We also allow the web apps to read the platform database, but not write.</p>
+
+<p><img src="/images/posts/offshore/generic_network_map.png" alt="Network Map" /></p>
+
+<h2>Use Case</h2>
+
+<p>The APIs and data involved are basically about tasks and users in the system and their various state transitions. For example, our business app signs up a user and post a tasks using the API. The user will then be on the their dashboard seeing a list of tasks in various states, conversations with the workers, payment details, etc.</p>
+
+<!-- more -->
+
+
+<p>This dashboard has many, many (many) possible combinations of what it can show after factoring in all the types of tasks and their states. To have an effective test suite for this one page, we&#8217;ll need several tests that put it in those various states. The page is mostly <a href="https://github.com/taskrabbit/sudojs">Javascript</a> driven.</p>
+
+<p>The other thing we want to test are flows that got the user into those states. For example, can the user post a task, receive some bids, chat back and forth, select a worker, have the worker mark it complete, pay for it, and rate the worker without any problems?</p>
+
+<p>The first thing that we did was what we would have to do if this was a true &#8220;external&#8221; service. We stubbed the responses. We made our Javascript tests in <a href="https://github.com/jfirebaugh/konacha">Konacha</a> and our Ruby tests used <a href="http://rspec.info/">rspec</a> and <a href="https://github.com/vcr/vcr">vcr</a>. Both used &#8220;recordings&#8221; of API responses to &#8220;stub&#8221; the platform. This had a few problems.</p>
+
+<p>First, there was still the question of what server to use. Should it be the local one or staging one or something else? Second, you kind of had to get it right the first time if there was any state involved in the test. If test signed up a user and then posted a task, for example, and it failed just a bit the first time, then it would fail harder the second time because that database was not reset (and the user existed when it went to sign up). Third, I was concerned that this easily get out of date with our evolving platform. Finally, if anything was read directly from the database, this would not work at all (as the data wouldn&#8217;t actually be there).</p>
+
+<h2>Offshore Pattern</h2>
+
+<p>When using Offshore, we actually run the platform server and the app uses that instead of stubbing. Both have the <code>offshore</code> gem installed.</p>
+
+<p>Before a test, the app tells the platform that it&#8217;s about to start a test. It is then given a token that lets it make other requests to it during the test. It will create objects using factories, make regular API calls, and read/write to the platform database as required. It can do it&#8217;s own checks throughout to see if the test should pass. When it&#8217;s done, it let&#8217;s the platform know.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">describe</span> <span class="s2">&quot;Integration Test&quot;</span><span class="p">,</span> <span class="n">type</span><span class="p">:</span> <span class="ss">:request</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">it</span> <span class="s2">&quot;should work as expected&quot;</span> <span class="k">do</span>
+</span><span class='line'>      <span class="no">Offshore</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">example</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="n">user</span>   <span class="o">=</span> <span class="n">users</span><span class="p">(</span><span class="ss">:billy</span><span class="p">)</span>
+</span><span class='line'>      <span class="n">worker</span> <span class="o">=</span> <span class="n">users</span><span class="p">(</span><span class="ss">:robby</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="n">task</span>   <span class="o">=</span> <span class="no">FactoryOffshore</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="ss">:task_posted</span><span class="p">,</span> <span class="ss">:user_id</span> <span class="o">=&gt;</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span><span class='line'>      <span class="n">offer</span>  <span class="o">=</span> <span class="no">FactoryOffshore</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="ss">:offer</span><span class="p">,</span> <span class="ss">:worker_id</span> <span class="o">=&gt;</span> <span class="n">worker</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="n">task</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">should</span> <span class="o">==</span> <span class="s2">&quot;opened&quot;</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="n">visit</span> <span class="s2">&quot;/tasks&quot;</span>
+</span><span class='line'>      <span class="n">click_on</span> <span class="s2">&quot;Hire!&quot;</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="n">task</span><span class="o">.</span><span class="n">reload</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">should</span> <span class="o">==</span> <span class="s2">&quot;assigned&quot;</span>
+</span><span class='line'>      <span class="n">task</span><span class="o">.</span><span class="n">worker_id</span><span class="o">.</span><span class="n">should</span> <span class="o">==</span> <span class="n">worker</span><span class="o">.</span><span class="n">id</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="no">Offshore</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">stop</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The point is that this is more or less the same test that you&#8217;d write if you were using factories and capybara in a regular test suite.</p>
+
+<h2>Server</h2>
+
+<p>The server app is the one with the factories and the database that your app needs to work. For Rails, add this to your Gemfile:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">group</span> <span class="ss">:test</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">gem</span> <span class="s1">&#39;offshore&#39;</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>We also add the rake tasks to your Rakefile</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">begin</span>
+</span><span class='line'>  <span class="nb">require</span> <span class="s1">&#39;offshore/tasks&#39;</span> <span class="k">if</span> <span class="n">defined?</span><span class="p">(</span><span class="no">Offshore</span><span class="p">)</span>
+</span><span class='line'><span class="k">rescue</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You might need something like this to your test.rb application config:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="no">Offshore</span><span class="o">.</span><span class="n">redis</span> <span class="o">=</span> <span class="s2">&quot;localhost:6379&quot;</span>
+</span><span class='line'><span class="no">Offshore</span><span class="o">.</span><span class="n">enable!</span> <span class="k">if</span> <span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;OFFSHORE&#39;</span><span class="o">]</span> <span class="o">==</span> <span class="s1">&#39;true&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then run something like this on the command line</p>
+
+<pre><code>$ rake offshore:startup
+$ OFFSHORE=true rails s thin -e test -p 6001
+</code></pre>
+
+<p>In you want it anything but a blank database, you must create a rake task called <code>offshore:seed</code> that creates the test database referenced in the database.yml file in the test environment. Something like this would work:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">namespace</span> <span class="ss">:offshore</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">task</span> <span class="ss">:preload</span> <span class="k">do</span>
+</span><span class='line'>    <span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;RAILS_ENV&#39;</span><span class="o">]</span> <span class="o">=</span> <span class="s2">&quot;test&quot;</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>  <span class="n">task</span> <span class="ss">:setup</span> <span class="o">=&gt;</span> <span class="ss">:environment</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">desc</span> <span class="s2">&quot;seeds the db for offshore gem&quot;</span>
+</span><span class='line'>  <span class="n">task</span> <span class="ss">:seed</span> <span class="k">do</span>
+</span><span class='line'>    <span class="no">Rake</span><span class="o">::</span><span class="no">Task</span><span class="o">[</span><span class="s1">&#39;db:migrate&#39;</span><span class="o">].</span><span class="n">invoke</span>
+</span><span class='line'>    <span class="no">Rake</span><span class="o">::</span><span class="no">Task</span><span class="o">[</span><span class="s1">&#39;db:test:prepare&#39;</span><span class="o">].</span><span class="n">invoke</span>
+</span><span class='line'>    <span class="no">Rake</span><span class="o">::</span><span class="no">Task</span><span class="o">[</span><span class="s1">&#39;db:seed&#39;</span><span class="o">].</span><span class="n">invoke</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The <code>:preload</code> and <code>:setup</code> steps will be invoked in that order before your <code>:seed</code> call. They are actually unnecessary here, but shown in case you have something more complex to do.</p>
+
+<h2>Client</h2>
+
+<p>The client app is the one running the tests.</p>
+
+<p>The same thing in the Gemfile:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">group</span> <span class="ss">:test</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">gem</span> <span class="s1">&#39;offshore&#39;</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The Rspec config looks likes this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">config</span><span class="o">.</span><span class="n">before</span><span class="p">(</span><span class="ss">:suite</span><span class="p">)</span> <span class="k">do</span>
+</span><span class='line'>  <span class="no">Offshore</span><span class="o">.</span><span class="n">suite</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="ss">:host</span> <span class="o">=&gt;</span> <span class="s2">&quot;localhost&quot;</span><span class="p">,</span> <span class="ss">:port</span> <span class="o">=&gt;</span> <span class="mi">4111</span><span class="p">)</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">config</span><span class="o">.</span><span class="n">before</span><span class="p">(</span><span class="ss">:each</span><span class="p">)</span> <span class="k">do</span>
+</span><span class='line'>  <span class="no">Offshore</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">example</span><span class="p">)</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">config</span><span class="o">.</span><span class="n">after</span><span class="p">(</span><span class="ss">:each</span><span class="p">)</span> <span class="k">do</span>
+</span><span class='line'>  <span class="no">Offshore</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">stop</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">config</span><span class="o">.</span><span class="n">after</span><span class="p">(</span><span class="ss">:suite</span><span class="p">)</span> <span class="k">do</span>
+</span><span class='line'>  <span class="no">Offshore</span><span class="o">.</span><span class="n">suite</span><span class="o">.</span><span class="n">stop</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You could also do this based on tags if you didn&#8217;t need this behavior in all your tests.</p>
+
+<h2>How It Works</h2>
+
+<p><img src="/images/posts/offshore/offshore_interaction.png" alt="Offshore Interaction" /></p>
+
+<p>The <code>rake offshore:startup</code> calls your seed rake worker and then takes a snapshot of the database. We use fixture data and by making a &#8220;template&#8221; of the database, Offshore is able to copy it into place when needed to create the illusion of &#8220;transactional&#8221; behavior.</p>
+
+<p>So now we run the server and have it enabled. Requiring the gem required a Railtie that added the <code>Offshore::Middleware</code> which will respond to the requests that it serves (<code>factory_create</code>, <code>suite_start</code>, <code>suite_stop</code>, <code>test_start</code>, <code>test_stop</code>). Calling <code>Offshore.enable!</code> will tell it to handle the requests. Note you can just add <code>Offshore::Middleware</code> if you want to use this with Sinatra or other <a href="https://github.com/rack/rack">Rack</a> apps.</p>
+
+<p>When it receives the <code>suite_start</code> command, it sets everything up to run and records who is running. The main things to set up are the database and <a href="http://redis.io/">Redis</a> lock. Offshore uses Redis to make sure only one test is using it&#8217;s database at a time, further simulating the notion of transactions.</p>
+
+<p>The <code>test_start</code> command acquires the lock and copies the template to be the <code>real</code> database. If the lock is not acquired, the server will return an error code to the client to say wait. The client will poll until it&#8217;s available.</p>
+
+<p>The client can now call <code>factory_create</code> or real APIs as much as it wants. The changes are made in the real database.</p>
+
+<p>The <code>test_stop</code> command releases the lock.</p>
+
+<p>We can go through many tests, calling <code>start_test</code> each time to reset the database so we get a fresh copy.</p>
+
+<p>At the end, the <code>suite_stop</code> method notes that this client is no longer running.</p>
+
+<h2>Deployment</h2>
+
+<p>Developers can run this locally fairly easily using the instructions above. We have also deployed this to a server that auto-refreshes based on our <code>master</code> branch. This allows our continuous integration service called <a href="https://www.tddium.com/">Tddium</a> to use Offshore as well. Multiple branches can be building at the same time and it works out because of the locks.</p>
+
+<h2>Summary</h2>
+
+<p>We&#8217;ve gained a lot more confidence in the overall performance of our environment by exercising both the server and client app in parts of our test suites. <a href="https://github.com/taskrabbit/offshore">Offshore</a> makes this possible by enabling factories and database &#8220;transactions&#8221; across apps and threads. There&#8217;s plenty more things to make this even better to improve performance, but we thought it was an interesting pattern. Let us know if you find it helpful.</p>
+
+<p>Note that while this is the best approach we could come up with for multiple apps, in our newer project, we chose to have a single app with <a href="/blog/2014/02/11/rails-4-engines/">multiple engines</a>. This was in part to make tricks like that <a href="https://github.com/taskrabbit/offshore">Offshore</a> does unnecessary.</p>
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+
+<section id="comment">
+    <h1 class="title">Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://bleonard.github.com/blog/2014/03/16/offshore/';
+        var disqus_url = 'http://bleonard.github.com/blog/2014/03/16/offshore/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

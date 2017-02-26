@@ -1,0 +1,395 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>iOS Authentication Blocks - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="In my recent project, Cakewalk, we give the user a fairly complete experience without having to sign up. This seems like the nice thing to do but it &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2014/04/05/ios-auth-blocks/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">iOS Authentication Blocks</h1>
+	<div class="entry-content"><p>In my recent project, <a href="http://www.bleonard.com/blog/2014/04/03/cakewalk/">Cakewalk</a>, we give the user a fairly complete experience without having to sign up. This seems like the nice thing to do but it&#8217;s also in Apple&#8217;s guidelines for app approval. At some point, though, we need to create an account for them. In our case, it&#8217;s when they want to add an idea to their favorites or save their filter preferences. A &#8220;gate&#8221; such as this is something I&#8217;ve done on the web many times but it&#8217;s the first time I&#8217;ve done it an iPhone app. I&#8217;ll describe how I solved it using <a href="https://developer.apple.com/library/ios/documentation/cocoa/Conceptual/Blocks/Articles/bxGettingStarted.html#//apple_ref/doc/uid/TP40007502-CH7-SW1">blocks</a>.</p>
+
+<h2>Web</h2>
+
+<p>On the web, I would usually send them to a URL. If that URL requires a logged in user, then it would redirect to the login/signup URL with a query param. For example, if the page was <code>http://www.example.com/favorite</code>, it would redirect to something like <code>http://www.example.com/login?after_auth=%2Ffavorite</code>. The login/signup form would add this as a hidden parameter that it POSTs. If the action is successful, it will use this url instead of the default one to send the user to next place. In Rails, it would look something like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">def</span> <span class="nf">login</span>
+</span><span class='line'>  <span class="n">user</span> <span class="o">=</span> <span class="no">User</span><span class="o">.</span><span class="n">find_by_email</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:email</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">authenticate</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:password</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>    <span class="c1"># right!</span>
+</span><span class='line'>    <span class="n">log_in!</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">redirect_to</span> <span class="n">params</span><span class="o">[</span><span class="ss">:after_auth</span><span class="o">]</span> <span class="o">||</span> <span class="n">dashboard_path</span>
+</span><span class='line'>  <span class="k">else</span>
+</span><span class='line'>    <span class="c1"># not right!</span>
+</span><span class='line'>    <span class="n">render</span> <span class="ss">:form</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If the site allows the users to switch back and forth between login and signup pages or allows Facebook, Twitter or some other OAuth, it can be easy to lose this parameter. I&#8217;ve seen sites put the value in a cookie for this reason. It can simplify it, but is more likely to have unintended site effects.</p>
+
+<h2>Blocks</h2>
+
+<p>Most of the complexity of the web version is because of the stateless nature of the medium. The query parameter or cookie is an attempt to add that state globally. This is not particularly an issue in an iPhone app. The global state is fairly well known in the view controllers and there is shared memory. The interesting thing that I realized is that it&#8217;s not just data that we can store, but also <a href="https://developer.apple.com/library/ios/documentation/cocoa/Conceptual/Blocks/Articles/bxGettingStarted.html#//apple_ref/doc/uid/TP40007502-CH7-SW1">blocks</a>.</p>
+
+<p>An Objective C block is an inline declaration of a function. It is similar to features available in Ruby and Javascript. Here we use one to change how a sort is done:</p>
+
+<!-- more -->
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="n">NSComparator</span> <span class="n">finderSortBlock</span> <span class="o">=</span> <span class="o">^</span><span class="p">(</span><span class="kt">id</span> <span class="n">string1</span><span class="p">,</span> <span class="kt">id</span> <span class="n">string2</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">NSRange</span> <span class="n">string1Range</span> <span class="o">=</span> <span class="n">NSMakeRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="n">string1</span> <span class="n">length</span><span class="p">]);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="p">[</span><span class="n">string1</span> <span class="nl">compare:</span><span class="n">string2</span> <span class="nl">options:</span><span class="n">comparisonOptions</span> <span class="nl">range:</span><span class="n">string1Range</span> <span class="nl">locale:</span><span class="n">currentLocale</span><span class="p">];</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">NSArray</span> <span class="o">*</span><span class="n">finderSortArray</span> <span class="o">=</span> <span class="p">[</span><span class="n">stringsArray</span> <span class="nl">sortedArrayUsingComparator:</span><span class="n">finderSortBlock</span><span class="p">];</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>I find it a little hard to read when using them like this, so I typedef&#8217;d them as needed:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="c1">// blocks.h</span>
+</span><span class='line'><span class="k">typedef</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="n">MyVoidBlock</span><span class="p">)();</span>
+</span><span class='line'><span class="k">typedef</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="n">MyVoidBlockWithBool</span><span class="p">)(</span><span class="kt">BOOL</span><span class="p">);</span>
+</span><span class='line'><span class="k">typedef</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="n">MyVoidBlockWithString</span><span class="p">)(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">);</span>
+</span><span class='line'><span class="k">typedef</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="n">MyVoidBlockWithDictionary</span><span class="p">)(</span><span class="n">NSDictionary</span> <span class="o">*</span><span class="p">);</span>
+</span><span class='line'><span class="k">typedef</span> <span class="kt">BOOL</span> <span class="p">(</span><span class="o">^</span><span class="n">MyBoolBlockWithString</span><span class="p">)(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This allows us to use them throughout the app to provide more semantics to the block in use. For example, in a method declaration:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="cp">// MyAppDelegate.h</span>
+</span><span class='line'><span class="cp">#import &lt;UIKit/UIKit.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">@interface</span> <span class="nc">MyAppDelegate</span> : <span class="nc">UIResponder</span> <span class="o">&lt;</span><span class="n">UIApplicationDelegate</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="nl">authenticateWithSuccess:</span><span class="p">(</span><span class="n">MyVoidBlock</span><span class="p">)</span><span class="n">success</span><span class="p">;</span>
+</span><span class='line'><span class="k">@end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Use in context</h2>
+
+<p>So most of the time, it does not matter if the user is logged in or not, but then the time comes they hit the &#8220;favorite&#8221; button and we need to make sure.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="c1">// MyIdeaViewController.m</span>
+</span><span class='line'><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="nf">favoriteButtonPressed:</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">MyAppDelegate</span> <span class="o">*</span> <span class="n">delegate</span> <span class="o">=</span> <span class="p">(</span><span class="n">MyAppDelegate</span><span class="o">*</span><span class="p">)</span> <span class="p">[[</span><span class="n">UIApplication</span> <span class="n">sharedApplication</span><span class="p">]</span> <span class="n">delegate</span><span class="p">];</span>
+</span><span class='line'>    <span class="p">[</span><span class="n">delegate</span> <span class="nl">authenticateWithSuccess:</span><span class="o">^</span><span class="p">{</span>
+</span><span class='line'>        <span class="p">[[</span><span class="n">CurrentUser</span> <span class="n">shared</span><span class="p">]</span> <span class="nl">setIdeaAsFavorite:</span> <span class="n">self</span><span class="p">.</span><span class="n">idea</span><span class="p">];</span>
+</span><span class='line'>    <span class="p">}];</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This was the cleanest of several alternatives that I came up with. It just occurred to me, though, that I also could have made a block that passed a user instead of nothing for even better encapsulation.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="c1">// blocks.h</span>
+</span><span class='line'><span class="k">typedef</span> <span class="kt">void</span> <span class="p">(</span><span class="o">^</span><span class="n">MyVoidBlockWithUser</span><span class="p">)(</span><span class="n">CurrentUser</span> <span class="o">*</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// MyAppDelegate.h</span>
+</span><span class='line'><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="nf">authenticateWithSuccess:</span><span class="p">(</span><span class="n">MyVoidBlockWithUser</span><span class="p">)</span><span class="nv">success</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// MyIdeaViewController.m</span>
+</span><span class='line'><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="nf">favoriteButtonPressed:</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">MyAppDelegate</span> <span class="o">*</span> <span class="n">delegate</span> <span class="o">=</span> <span class="p">(</span><span class="n">MyAppDelegate</span><span class="o">*</span><span class="p">)</span> <span class="p">[[</span><span class="n">UIApplication</span> <span class="n">sharedApplication</span><span class="p">]</span> <span class="n">delegate</span><span class="p">];</span>
+</span><span class='line'>    <span class="p">[</span><span class="n">delegate</span> <span class="nl">authenticateWithSuccess:</span><span class="o">^</span><span class="p">(</span><span class="n">CurrentUser</span><span class="o">*</span> <span class="n">user</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="p">[</span><span class="n">user</span> <span class="nl">setIdeaAsFavorite:</span> <span class="n">self</span><span class="p">.</span><span class="n">idea</span><span class="p">];</span>
+</span><span class='line'>    <span class="p">}];</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>I did the earlier version because the app already had that shared user concept. Either way, this technique encapsulates all the logic for getting the user authenticated and lets the feature focus on what happens if it is successful (or already logged in).</p>
+
+<h2>Callbacks</h2>
+
+<p>The system works because the block is passed along much like the web parameter.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="c1">// MyAppDelegate.m</span>
+</span><span class='line'><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="nf">authenticateWithSuccess:</span><span class="p">(</span><span class="n">MyVoidBlock</span><span class="p">)</span><span class="nv">success</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">([</span><span class="n">CurrentUser</span> <span class="n">isLoggedIn</span><span class="p">])</span> <span class="p">{</span>
+</span><span class='line'>        <span class="c1">// return immediately if the user is already logged in</span>
+</span><span class='line'>        <span class="n">success</span><span class="p">();</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>        <span class="c1">// otherwise, launch view that allows login or signup, passing block along</span>
+</span><span class='line'>        <span class="n">MyAuthController</span> <span class="o">*</span> <span class="n">auth</span> <span class="o">=</span> <span class="p">[[</span><span class="n">MyAuthController</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithSuccess:</span><span class="n">success</span><span class="p">];</span>
+</span><span class='line'>        <span class="n">auth</span><span class="p">.</span><span class="n">modalTransitionStyle</span> <span class="o">=</span> <span class="n">UIModalTransitionStyleCoverVertical</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">[</span><span class="n">self</span><span class="p">.</span><span class="n">rootViewController</span> <span class="nl">presentViewController:</span><span class="n">auth</span> <span class="nl">animated:</span><span class="n">YES</span> <span class="nl">completion:</span><span class="nb">nil</span><span class="p">];</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This slides up the authentication controller and most importantly passes along the success callback. Then, if the user does login or signup, the auth controller closes itself, logs the user in, and calls the <code>success</code> block.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="c1">// MyAuthController.m</span>
+</span><span class='line'><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="nf">didSubmitLogin</span> <span class="p">{</span>
+</span><span class='line'>    <span class="p">[</span><span class="n">CurrentUser</span> <span class="nl">loginWithEmail:</span><span class="n">self</span><span class="p">.</span><span class="n">emailField</span><span class="p">.</span><span class="n">text</span> <span class="nl">password:</span><span class="n">self</span><span class="p">.</span><span class="n">passwordField</span><span class="p">.</span><span class="n">text</span> <span class="nl">success:</span><span class="o">^</span><span class="p">{</span>
+</span><span class='line'>        <span class="p">[</span><span class="n">self</span> <span class="nl">closeAuthentication:</span><span class="n">YES</span><span class="p">];</span>
+</span><span class='line'>    <span class="p">}</span> <span class="nl">failure:</span><span class="o">^</span><span class="p">(</span><span class="n">NSError</span> <span class="o">*</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="p">[</span><span class="n">self</span> <span class="nl">showError:</span><span class="n">error</span><span class="p">];</span>
+</span><span class='line'>    <span class="p">}];</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="k">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="nf">didTapCancelButton</span> <span class="p">{</span>
+</span><span class='line'>    <span class="p">[</span><span class="n">self</span> <span class="nl">closeAuthentication:</span><span class="n">NO</span><span class="p">];</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="nf">closeAuthentication:</span><span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nv">authenticated</span> <span class="p">{</span>
+</span><span class='line'>    <span class="p">[</span><span class="n">self</span> <span class="nl">dismissViewControllerAnimated:</span><span class="n">YES</span> <span class="nl">completion:</span><span class="o">^</span><span class="p">{</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">authenticated</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">self</span><span class="p">.</span><span class="n">successBlock</span><span class="p">();</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}];</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If they do hit the cancel, button, it will slide down and everything will be back where it started. However, if they do login, what I think is really cool about this is that it slides down and the originally invoked code is back in the same position as if the user would have been authenticated in the first place.</p>
+
+<h2>Summary</h2>
+
+<p>I hadn&#8217;t used blocks much in Objective C before, so this ability was a new concept to me. The power of it lies in the simplicity of the <code>favoriteButtonPressed</code> code even in the face of handling several varying circumstances. I&#8217;m sure there are other cases like this so it&#8217;s nice to have a new tool in the toolbelt.</p>
+
+<p><a href="https://news.ycombinator.com/item?id=7539649">Discuss on Hacker News</a></p>
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+
+<section id="comment">
+    <h1 class="title">Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://bleonard.github.com/blog/2014/04/05/ios-auth-blocks/';
+        var disqus_url = 'http://bleonard.github.com/blog/2014/04/05/ios-auth-blocks/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

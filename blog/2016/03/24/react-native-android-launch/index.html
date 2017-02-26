@@ -1,0 +1,206 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>React Native Android Launch - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="Yesterday, we launched our updated Tasker app to our Android community. As noted before on the iOS launch, this is the app that Taskers use to get &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2016/03/24/react-native-android-launch/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">React Native Android Launch</h1>
+	<div class="entry-content"><p>Yesterday, we launched our updated Tasker app to our Android community. As noted <a href="/blog/2015/12/17/react-native-launch/">before</a> on the iOS launch, this is the app that Taskers use to get their work done. This completes our migration to <a href="https://facebook.github.io/react-native/">React Native</a>.</p>
+
+<p>All of the credit goes to the team that made this happen, especially <a href="https://twitter.com/jrichardlai">JR</a> and <a href="http://jeremyeaton.co/">Jeremy</a>. It was a lot harder than expected to get everything working on both platforms and they showed great dedication and persistence.</p>
+
+<h2>Approach</h2>
+
+<p>The goal of the last release was for the iOS users to not even notice. Mission (more or less) accomplished! However, for this one, it didn&#8217;t make sense to fork the code by platform without a good reason. So admittedly, the app looks more like an iOS app and than an Android one. However, we did go screen by screen looking for places where Android-specific attention would help the user.</p>
+
+<h2>Differences</h2>
+
+<p>I&#8217;ll let JR do a followup to his <a href="/blog/2016/01/11/react-native-android/">previous post</a> of all the differences, but the biggest ones in my mind were the handling of the hardware back button and different pickers (date, for example) in the forms. The <code>Platform</code> directory strategy we had put in place during the first cycle worked out pretty well.</p>
+
+<p>We also really struggled with getting push notifications right. This is key for our business and there were many more nuances on the Android platform to work out. We hope to publish what we came up with.</p>
+
+<p>Of course, there was also the more extensive testing to do. Our Android pile:</p>
+
+<div class="jumbotron">
+  <img src="/images/posts/react-native-android-launch/pile.jpg" class="bigPicture"/>
+</div>
+
+
+<h2>Stats</h2>
+
+<ul>
+<li>App Javascript: 302 files with 21515 lines of code</li>
+<li>Test Javascript: 47 files with 5708 lines of code</li>
+<li>iOS Javascript: 19 files with 449 lines of code</li>
+<li>Android Javascript: 19 files with 770 lines of code</li>
+<li>Objective C: 17 files with 885 lines of code</li>
+<li>Java: 15 files with 912 lines of code</li>
+<li>iOS Config files: 18 files with 2538 lines of stuff</li>
+<li>Android Config files: 16 files with 1106 lines of stuff</li>
+<li>React Components: 124</li>
+<li>Screens (addressable url patterns): 25</li>
+<li>Avg. components per screen: 5</li>
+<li>Dispatcher Events: 55</li>
+<li>Shared JS (vs. Platform JS) percentage: 94%</li>
+<li>JS (vs. Native ObjC/Java) percentage: 92%</li>
+<li>Total shared code percentage: 87%</li>
+<li>Total shared (including config) percentage: 75%</li>
+</ul>
+
+
+<h2>Next steps</h2>
+
+<p>Now, we certainly didn&#8217;t do this engineering project because the tech was cool (even though it is). We did it to create a foundation that allows us to deliver value more effectively to our community. So that&#8217;s the next order of business. Time to get rolling! I estimate that we can ship features to both platforms at least twice as quickly with half the engineers than we had before.</p>
+
+<p>Too long, but did read anyway: For you execs out there that somehow read this far (even past lines of code counts!), I&#8217;d say that we&#8217;ve found React Native to be at least 5x more productive than traditional mobile development.</p>
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

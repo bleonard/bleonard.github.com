@@ -1,0 +1,779 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Apple TV Dashboard - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="So you have all these screens around and you want to have something awesome like on those one that Panic made. You may also already have Apple TVs on &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2015/02/16/apple-tv-dashboard/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">Apple TV Dashboard</h1>
+	<div class="entry-content"><p>So you have all these screens around and you want to have something awesome like on those one that Panic <a href="http://www.panic.com/blog/panic-status-board-2013-edition/">made</a>. You may also already have Apple TVs on these TVs because AirPlay is an effective way to project screens in an office full of Macs. This is position we were in at <a href="https://www.taskrabbit.com">TaskRabbit</a> and we&#8217;d tried a few things.</p>
+
+<p>The most recent iteration was to have one Mac Mini in a closet and lots of very long wires into the TVs. It displayed a web page that cycled through the content. This wasn&#8217;t bad, but had a few issues. First, the screens all had to show the same thing. I wanted to be able to have different content on each. For example, in addition to key metrics, the conference rooms would have who had the room booked or the one by customer support would have more data on the call volume. But it just isn&#8217;t worth it to have 10 Mac Minis for this purpose. The other issue is that people still wanted to use Airplay, so they would switch the input and then not switch it back to the ambient content.</p>
+
+<p>The solution seemed clear. I needed to get the dashboards to be the screensaver of an Apple TV.</p>
+
+<h2>TLDR</h2>
+
+<p><a href="https://github.com/bleonard/dashing_on_appletv">Here</a> is a sample project to ties all of this up into one package.</p>
+
+<p>It uses the new gems, <a href="https://github.com/taskrabbit/dashing-screenshots">dashing-screenshots</a> and <a href="https://github.com/taskrabbit/icloud-photo">icloud-photo</a>, to take screenshots and upload them to iCloud. These then show up on an Apple TV</p>
+
+<div class="jumbotron">
+<img alt="Sample dashboard on the wall" src="/images/posts/appletv/sampletv.jpg" class="bigPicture" />
+</div>
+
+
+<p>(not actual dashboard)</p>
+
+<p>To make this happen, check out the <a href="https://github.com/bleonard/dashing_on_appletv">project</a> and follow the instructions there.</p>
+
+<h2>Dashboard</h2>
+
+<p>Looking around at <a href="https://ducksboard.com/">various</a> <a href="https://www.geckoboard.com/">dashboard</a> <a href="http://panic.com/statusboard/">apps</a> and having made a few custom solutions, I settled on <a href="http://dashing.io/">Dashing</a> this time. It looked nice by default, had a great model for adding custom content, and is written in the language we tend to use around here (Ruby).</p>
+
+<p>The Dashing <a href="http://dashing.io/#setup">docs</a> are quite good so I won&#8217;t go into detail of how we pulled in our data. The <a href="http://dashing.io/#widgets">samples</a> are actually the best as they show a simple use case of the pattern of how to add <code>jobs</code>. I made some helpers to be able to pull in data from <a href="http://www.looker.com/">Looker</a>. By putting the actual data in Looker, I&#8217;m hoping it will allow others to maintain the metrics definitions. This will hopefully keep the dashboard up to date and relevant. An issue we&#8217;ve had in the past is that the SQL became somewhat stale.</p>
+
+<h2>Screenshots</h2>
+
+<p>I&#8217;d like a fully dynamic dashboard as much as the next guy, but the screensaver of an Apple TV consists only of images. Therefore, the next step was to get a screenshot of all of the dashboards that Dashing has to offer. I have worked on a similar project within our test suite and had great success with <a href="https://rubygems.org/gems/selenium-webdriver">Selenium</a>. I added <code>selenium-webdriver</code> to the Gemfile and this file to <code>lib</code>.</p>
+
+<!-- more -->
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">require</span> <span class="s1">&#39;fileutils&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">module</span> <span class="nn">Dashing</span>
+</span><span class='line'>  <span class="k">class</span> <span class="nc">Screenshot</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kp">nil</span><span class="p">)</span>
+</span><span class='line'>      <span class="vi">@directory</span> <span class="o">=</span> <span class="n">directory</span>
+</span><span class='line'>      <span class="vi">@options</span> <span class="o">=</span> <span class="n">options</span> <span class="o">||</span> <span class="p">{}</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">capture!</span>
+</span><span class='line'>      <span class="nb">require</span> <span class="s1">&#39;selenium-webdriver&#39;</span>
+</span><span class='line'>      <span class="o">::</span><span class="no">FileUtils</span><span class="o">.</span><span class="n">mkdir_p</span><span class="p">(</span><span class="vi">@directory</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="vi">@driver</span> <span class="o">=</span> <span class="no">Selenium</span><span class="o">::</span><span class="no">WebDriver</span><span class="o">.</span><span class="n">for</span> <span class="ss">:firefox</span>
+</span><span class='line'>      <span class="no">Dir</span><span class="o">[</span><span class="s2">&quot;dashboards/**/*.erb&quot;</span><span class="o">].</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">file</span><span class="o">|</span>
+</span><span class='line'>        <span class="n">file</span><span class="o">.</span><span class="n">gsub!</span><span class="p">(</span><span class="sr">/^dashboards\//</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">file</span><span class="o">.</span><span class="n">gsub!</span><span class="p">(</span><span class="sr">/\.erb$/</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">next</span> <span class="k">if</span> <span class="o">[</span><span class="s2">&quot;layout&quot;</span><span class="o">].</span><span class="n">include?</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">snap</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">end</span>
+</span><span class='line'>      <span class="vi">@driver</span><span class="o">.</span><span class="n">quit</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kp">private</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">snap</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span class='line'>      <span class="nb">puts</span> <span class="s2">&quot;Fetching </span><span class="si">#{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="vi">@options</span><span class="o">[</span><span class="ss">:log</span><span class="o">]</span>
+</span><span class='line'>      <span class="vi">@driver</span><span class="o">.</span><span class="n">navigate</span><span class="o">.</span><span class="n">to</span> <span class="s2">&quot;http://localhost:3030/</span><span class="si">#{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span class='line'>      <span class="n">filename</span> <span class="o">=</span> <span class="no">File</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="vi">@directory</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="n">path</span><span class="o">.</span><span class="n">gsub</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;__&quot;</span><span class="p">)</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">)</span>
+</span><span class='line'>      <span class="nb">puts</span> <span class="s2">&quot;  saving: </span><span class="si">#{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="vi">@options</span><span class="o">[</span><span class="ss">:log</span><span class="o">]</span>
+</span><span class='line'>      <span class="nb">sleep</span> <span class="mi">2</span>
+</span><span class='line'>      <span class="vi">@driver</span><span class="o">.</span><span class="n">save_screenshot</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">rescue</span> <span class="no">Exception</span> <span class="o">=&gt;</span> <span class="n">e</span>
+</span><span class='line'>      <span class="nb">puts</span> <span class="s2">&quot;        SCREENSHOT ERROR: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is called by something like this (which I added to the Rakefile):</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">namespace</span> <span class="ss">:dashing</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">desc</span> <span class="s2">&quot;takes screenshots&quot;</span>
+</span><span class='line'>  <span class="n">task</span> <span class="ss">:screenshots</span> <span class="k">do</span>
+</span><span class='line'>    <span class="n">require_relative</span> <span class="s1">&#39;./lib/screenshot&#39;</span> <span class="c1"># now available with require &#39;dashing-screenshots&#39;</span>
+</span><span class='line'>    <span class="no">Dashing</span><span class="o">::</span><span class="no">Screenshot</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;screenshots&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">capture!</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So running <code>bundle exec rake dashing:screenshots</code> will take pictures of all the dashboards that your Dashing project knows about. I picked the folder &#8220;screenshots,&#8221; but that could also take any path in or outside of the project.</p>
+
+<p>There are few gotchas during the process:</p>
+
+<ul>
+<li>I also tried to use <a href="http://phantomjs.org/">PhantomJS</a> and <a href="https://github.com/teampoltergeist/poltergeist">Poltergeist</a>, but these systems both have an issue with <a href="http://www.html5rocks.com/en/tutorials/eventsource/basics/">server-sent events</a> which Dashing uses to update the data.</li>
+<li>For similar updating reasons, I found that the <code>sleep 2</code> or something along those lines was necessary.</li>
+<li>Dashing initially loads with data from <code>history.yml</code> so that is most likely what you&#8217;ll get from this tool. Therefore, it&#8217;s necessary to have Dashing running in the background and be updating to always get &#8220;current&#8221; data.</li>
+</ul>
+
+
+<h2>Apple TV</h2>
+
+<p>I figured I was in the home stretch, but Apple had other plans for me. Other the next day or so, I struggled with ways to get these screenshots updating in (near) real-time onto the TVs. There are several ways to populate the screensaver and I still can&#8217;t believe how hard it turned out to be.</p>
+
+<p>The best chance seemed to the the Flickr option. I knew how to upload photos to Flickr. Apple TV knew how to show photos from Flickr. Done. I made a private photo album for each TV and went about uploading the right screenshots to them. But it turns out that Apple TV doesn&#8217;t poll Flickr to get the updated sets. After several tests of changing the contents of the Flickr albums and waiting for hours, they never updated. Even restarting the device didn&#8217;t seem to help. I wanted these to update on the order of every 10 minutes or so. It just didn&#8217;t work.</p>
+
+<p>I next tried the iTunes feature. iTunes has something called &#8220;Home Sharing&#8221; and the Apple TV knows how to get it&#8217;s photos from there. Home sharing lets you point it at a folder on the system, so I thought that would work. I just had it pointed to the screenshots folder of my Dashing project. Unfortunately, the same issue occurs here where either Apple TV or iTunes does not look for changed content. The same is true of using iPhoto for Home Sharing instead of a simple folder.</p>
+
+<p>The final feasible option for populating the screen saver was iCloud. The Apple TV will read from your Photo Stream or an album in iCloud. I ran a manual test and literally leapt with joy (it had been hours trying all the configurations) when the screensaver updated in real time as I added things to iCloud via iPhoto. It seems that, for whatever reason, the Apple TV is set to poll for changed content in this one case. So that&#8217;s how it had to be then.</p>
+
+<h2>iCloud</h2>
+
+<p>Feeling some momentum, the only task left to complete was to upload the screenshots automatically to the new iCloud account I created. Following the trend, this turned out to be at least 10 times harder than expected.</p>
+
+<p>As far as I can tell, there is no server API for iCloud Photos. I found a few projects that seem to have tried to reverse engineer various protocols, but nothing definitively for photos. There may be an iOS SDK, but that was not going to help me in this case.</p>
+
+<p>Thinking they had figured it out, I spent a long time trying to get the right set up to make <a href="https://ifttt.com/recipes/202630-send-photos-in-dropbox-to-icloud-photo-library">this IFTTT</a> recipe work. I set it up to sync from the computer&#8217;s Dropbox to an <em>always running</em> iOS device also running Dropbox. At this point I was prepared to sacrifice the iPod touch to make it work. But it seems that the recipe is simply misnamed. It puts the photos in your iOS library and not into iCloud.</p>
+
+<h2>Applescript</h2>
+
+<p>Resigned to the fact that the only this that would work is doing it through iPhoto, I set out to learn Applescript to automate that process. Luckily, our new VPE Paul Devine had used it heavily in a past life. We wrote this script:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+</pre></td><td class='code'><pre><code class='applescript'><span class='line'><span class="k">tell</span> <span class="nb">application</span> <span class="s2">&quot;iPhoto&quot;</span>
+</span><span class='line'>  <span class="nb">quit</span>
+</span><span class='line'>  <span class="nb">delay</span> <span class="mi">10</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="nb">activate</span>
+</span><span class='line'>  <span class="nb">delay</span> <span class="mi">1</span>
+</span><span class='line'>  <span class="k">tell</span> <span class="nv">album</span> <span class="s2">&quot;Photos&quot;</span>
+</span><span class='line'>      <span class="k">set</span> <span class="nv">thePhotos</span> <span class="k">to</span> <span class="k">get</span> <span class="nb">every</span> <span class="nv">photo</span>
+</span><span class='line'>      <span class="k">repeat</span> <span class="nv">with</span> <span class="nv">aPhoto</span> <span class="k">in</span> <span class="nv">thePhotos</span>
+</span><span class='line'>          <span class="k">try</span>
+</span><span class='line'>              <span class="c">-- log aPhoto&#39;s name as text</span>
+</span><span class='line'>              <span class="nv">remove</span> <span class="nv">aPhoto</span>
+</span><span class='line'>          <span class="nb">on</span> <span class="k">error</span> <span class="nv">errMsg</span>
+</span><span class='line'>              <span class="nb">log</span> <span class="s2">&quot;ERROR: &quot;</span> <span class="o">&amp;</span> <span class="nv">errMsg</span>
+</span><span class='line'>          <span class="k">end</span> <span class="k">try</span>
+</span><span class='line'>      <span class="k">end</span> <span class="k">repeat</span>
+</span><span class='line'>  <span class="k">end</span> <span class="k">tell</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="k">set</span> <span class="nv">iFolder</span> <span class="k">to</span> <span class="s2">&quot;/Users/dashboard/screenshots&quot;</span>
+</span><span class='line'>  <span class="nv">import</span> <span class="nv">photo</span> <span class="k">from</span> <span class="nv">iFolder</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="nb">delay</span> <span class="mi">2</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="k">tell</span> <span class="k">me</span> <span class="k">to</span> <span class="nv">refreshCloud</span><span class="p">(</span><span class="s2">&quot;dashboard&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;sampletv&quot;</span><span class="p">})</span>
+</span><span class='line'>  
+</span><span class='line'>  <span class="nv">empty</span> <span class="nv">trash</span>
+</span><span class='line'>  <span class="nb">delay</span> <span class="mi">10</span>
+</span><span class='line'>  <span class="nb">quit</span>
+</span><span class='line'><span class="k">end</span> <span class="k">tell</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">on</span> <span class="nv">refreshCloud</span><span class="p">(</span><span class="nv">cloudName</span><span class="p">,</span> <span class="nv">thePhotos</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">tell</span> <span class="nb">application</span> <span class="s2">&quot;iPhoto&quot;</span>
+</span><span class='line'>      <span class="k">set</span> <span class="nv">currentPhotos</span> <span class="k">to</span> <span class="p">{}</span>
+</span><span class='line'>      <span class="k">set</span> <span class="nv">currentSize</span> <span class="k">to</span> <span class="mi">0</span>
+</span><span class='line'>      <span class="k">set</span> <span class="nv">hasHold</span> <span class="k">to</span> <span class="no">false</span>
+</span><span class='line'>      <span class="k">tell</span> <span class="nv">album</span> <span class="nv">cloudName</span>
+</span><span class='line'>          <span class="k">set</span> <span class="nv">cloudPhotos</span> <span class="k">to</span> <span class="k">get</span> <span class="nb">every</span> <span class="nv">photo</span>
+</span><span class='line'>          <span class="k">set</span> <span class="nv">currentSize</span> <span class="k">to</span> <span class="nb">the</span> <span class="nb">count</span> <span class="k">of</span> <span class="nv">cloudPhotos</span>
+</span><span class='line'>          <span class="k">repeat</span> <span class="nv">with</span> <span class="nv">aPhoto</span> <span class="k">in</span> <span class="nv">cloudPhotos</span>
+</span><span class='line'>              <span class="k">if</span> <span class="na">name</span> <span class="k">of</span> <span class="nv">aPhoto</span> <span class="ow">is</span> <span class="s2">&quot;hold&quot;</span> <span class="k">then</span>
+</span><span class='line'>                  <span class="k">set</span> <span class="nv">hasHold</span> <span class="k">to</span> <span class="no">true</span>
+</span><span class='line'>              <span class="k">else</span>
+</span><span class='line'>                  <span class="k">set</span> <span class="nb">the</span> <span class="k">end</span> <span class="k">of</span> <span class="nv">currentPhotos</span> <span class="k">to</span> <span class="nv">aPhoto</span>
+</span><span class='line'>              <span class="k">end</span> <span class="k">if</span>
+</span><span class='line'>          <span class="k">end</span> <span class="k">repeat</span>
+</span><span class='line'>      <span class="k">end</span> <span class="k">tell</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="k">repeat</span> <span class="nv">with</span> <span class="nv">aName</span> <span class="k">in</span> <span class="nv">thePhotos</span>
+</span><span class='line'>          <span class="nb">activate</span>
+</span><span class='line'>          <span class="nb">delay</span> <span class="mi">1</span>
+</span><span class='line'>          
+</span><span class='line'>          <span class="k">tell</span> <span class="nv">album</span> <span class="s2">&quot;Last Import&quot;</span> <span class="k">to</span> <span class="nb">select</span> <span class="nv">photo</span> <span class="nv">aName</span>
+</span><span class='line'>          <span class="nb">delay</span> <span class="mi">1</span>
+</span><span class='line'>          
+</span><span class='line'>          <span class="k">tell</span> <span class="nb">application</span> <span class="s2">&quot;System Events&quot;</span>
+</span><span class='line'>              <span class="k">tell</span> <span class="nv">process</span> <span class="s2">&quot;iPhoto&quot;</span>
+</span><span class='line'>                  <span class="nv">click</span> <span class="na">menu</span> <span class="nb">item</span> <span class="s2">&quot;iCloud…&quot;</span> <span class="k">of</span> <span class="na">menu</span> <span class="s2">&quot;Share&quot;</span> <span class="k">of</span> <span class="na">menu</span> <span class="nv">bar</span> <span class="mi">1</span>
+</span><span class='line'>                  <span class="nb">delay</span> <span class="mi">1</span>
+</span><span class='line'>                  
+</span><span class='line'>                  <span class="nv">keystroke</span> <span class="nv">cloudName</span>
+</span><span class='line'>                  <span class="nb">delay</span> <span class="mi">1</span>
+</span><span class='line'>                  
+</span><span class='line'>                  <span class="nv">keystroke</span> <span class="p">(</span><span class="nb">ASCII character</span> <span class="mi">13</span><span class="p">)</span> <span class="c">-- return</span>
+</span><span class='line'>                  <span class="nb">delay</span> <span class="mi">1</span>
+</span><span class='line'>                  
+</span><span class='line'>                  <span class="nv">keystroke</span> <span class="p">(</span><span class="nb">ASCII character</span> <span class="mi">13</span><span class="p">)</span> <span class="c">-- return</span>
+</span><span class='line'>                  <span class="nb">delay</span> <span class="mi">3</span>
+</span><span class='line'>              <span class="k">end</span> <span class="k">tell</span>
+</span><span class='line'>          <span class="k">end</span> <span class="k">tell</span>
+</span><span class='line'>      <span class="k">end</span> <span class="k">repeat</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="k">if</span> <span class="ow">not</span> <span class="nv">hasHold</span> <span class="k">then</span>
+</span><span class='line'>          <span class="c">-- need to let iCloud catch up</span>
+</span><span class='line'>          <span class="nb">delay</span> <span class="mi">100</span>
+</span><span class='line'>      <span class="k">end</span> <span class="k">if</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="nb">delay</span> <span class="mi">20</span> <span class="c">-- make sure all uploaded and stuff</span>
+</span><span class='line'>      <span class="nb">select</span> <span class="nv">album</span> <span class="nv">cloudName</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="k">set</span> <span class="nv">updatedSize</span> <span class="k">to</span> <span class="nb">the</span> <span class="nb">count</span> <span class="k">of</span> <span class="nb">every</span> <span class="nv">photo</span> <span class="k">in</span> <span class="nv">album</span> <span class="nv">cloudName</span>
+</span><span class='line'>      
+</span><span class='line'>      <span class="k">if</span> <span class="nv">updatedSize</span> <span class="o">&gt;</span> <span class="nv">currentSize</span> <span class="k">then</span>
+</span><span class='line'>          <span class="c">-- for some reason, it doesn&#39;t always actually upload</span>
+</span><span class='line'>          <span class="k">if</span> <span class="p">(</span><span class="nb">count</span> <span class="k">of</span> <span class="nv">currentPhotos</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">then</span>
+</span><span class='line'>              <span class="k">repeat</span> <span class="nv">with</span> <span class="nv">aPhoto</span> <span class="k">in</span> <span class="nv">currentPhotos</span>
+</span><span class='line'>                  <span class="nb">activate</span>
+</span><span class='line'>                  <span class="nb">delay</span> <span class="mi">1</span>
+</span><span class='line'>                  <span class="nb">select</span> <span class="nv">aPhoto</span>
+</span><span class='line'>                  <span class="k">tell</span> <span class="nb">application</span> <span class="s2">&quot;System Events&quot;</span>
+</span><span class='line'>                      <span class="nb">delay</span> <span class="mi">1</span>
+</span><span class='line'>                      <span class="nv">keystroke</span> <span class="p">(</span><span class="nb">ASCII character</span> <span class="mi">127</span><span class="p">)</span> <span class="c">-- delete</span>
+</span><span class='line'>                      <span class="nb">delay</span> <span class="mi">1</span>
+</span><span class='line'>                      <span class="nv">keystroke</span> <span class="s2">&quot;d&quot;</span> <span class="nv">using</span> <span class="nv">command</span> <span class="nv">down</span> <span class="c">-- yes, really</span>
+</span><span class='line'>                      <span class="nb">delay</span> <span class="mi">3</span>
+</span><span class='line'>                  <span class="k">end</span> <span class="k">tell</span>
+</span><span class='line'>              <span class="k">end</span> <span class="k">repeat</span>
+</span><span class='line'>          <span class="k">end</span> <span class="k">if</span>
+</span><span class='line'>      <span class="k">end</span> <span class="k">if</span>
+</span><span class='line'>      
+</span><span class='line'>  <span class="k">end</span> <span class="k">tell</span>
+</span><span class='line'><span class="k">end</span> <span class="nv">refreshCloud</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It does the following:</p>
+
+<ul>
+<li>closes (if necessary) iPhoto</li>
+<li>launches iPhoto</li>
+<li>imports the &#8220;screenshots&#8221; folder into iCloud</li>
+<li>switches to the &#8220;dashboard&#8221; iCloud album</li>
+<li>notes all the photos currently in there</li>
+<li>switches to the &#8220;Last Import&#8221; album</li>
+<li>finds the picture named &#8220;sampletv&#8221;</li>
+<li>click Share&#8230; iCloud and picks the &#8220;dashboard&#8221; and adds it</li>
+<li>waits for a minute</li>
+<li>goes through all the old ones in &#8220;dashboard&#8221; and removes them</li>
+</ul>
+
+
+<p>It waits for a minute because I found that the Apple TV screensaver is not able to recover from an empty set. It will switch permanently to National Geographic photos. I&#8217;m not sure how this is possible other than some sort of lag in iCloud. Another approach that I ended up going with is to use the &#8220;Shifting Tiles&#8221; screensaver and always made sure to always have 1 image that never got removed in the album. I set up the Applescript so that if you make &#8220;hold&#8221; the image&#8217;s name, it will leave it alone. So try that if you keep seeing beautiful whale pictures instead of your dashboard.</p>
+
+<p>Note that is also assumes that the iCloud albums already exist. I made those manually.</p>
+
+<p>It&#8217;s obviously exhausting that this is how it had to be. However, I&#8217;m sure very little resources are being given to Applescript these days and I find it amazing that it&#8217;s still able to automate everything in OS X.</p>
+
+<h2>Gems</h2>
+
+<p>The final step was to automate this in some way. I decided to keep it in Ruby.</p>
+
+<p>To do that and reduce the maintenance of the Applescript, I made it so that the script was more configurable. Maybe it&#8217;s a terrible idea, but it turned out pretty well.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># encoding: utf-8</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;fileutils&#39;</span>
+</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;tempfile&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">module</span> <span class="nn">ICloudPhoto</span>
+</span><span class='line'>  <span class="k">class</span> <span class="nc">Sync</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="no">SCRIPT</span> <span class="o">=</span> <span class="no">File</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="no">File</span><span class="o">.</span><span class="n">expand_path</span><span class="p">(</span><span class="s2">&quot;../../applescript/sync.applescript&quot;</span><span class="p">,</span> <span class="bp">__FILE__</span><span class="p">),</span> <span class="n">encoding</span><span class="p">:</span> <span class="s2">&quot;UTF-8&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+</span><span class='line'>      <span class="vi">@directory</span> <span class="o">=</span> <span class="n">directory</span>
+</span><span class='line'>      <span class="vi">@targets</span> <span class="o">=</span> <span class="o">[]</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">icloud_name</span><span class="p">,</span> <span class="n">image_names</span><span class="p">)</span>
+</span><span class='line'>      <span class="n">image_names</span> <span class="o">=</span> <span class="o">[</span><span class="n">image_names</span><span class="o">].</span><span class="n">flatten</span>
+</span><span class='line'>      <span class="vi">@targets</span> <span class="o">&lt;&lt;</span> <span class="o">[</span><span class="n">icloud_name</span><span class="p">,</span> <span class="n">image_names</span><span class="o">]</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">upload!</span>
+</span><span class='line'>      <span class="n">tmpfile</span> <span class="o">=</span> <span class="kp">nil</span>
+</span><span class='line'>      <span class="n">uploader</span> <span class="o">=</span> <span class="kp">nil</span>
+</span><span class='line'>      <span class="n">script</span> <span class="o">=</span> <span class="no">SCRIPT</span><span class="o">.</span><span class="n">dup</span>
+</span><span class='line'>      <span class="n">script</span><span class="o">.</span><span class="n">gsub!</span><span class="p">(</span><span class="s2">&quot;/Users/dashboard/screenshots&quot;</span><span class="p">,</span> <span class="no">File</span><span class="o">.</span><span class="n">expand_path</span><span class="p">(</span><span class="vi">@directory</span><span class="p">))</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="n">marker</span> <span class="o">=</span> <span class="s1">&#39;tell me to refreshCloud(&quot;dashboard&quot;, {&quot;sampletv&quot;})&#39;</span>
+</span><span class='line'>      <span class="n">index</span> <span class="o">=</span> <span class="n">script</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">marker</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span class='line'>      <span class="n">script</span><span class="o">.</span><span class="n">gsub!</span><span class="p">(</span><span class="n">marker</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="vi">@targets</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">tuple</span><span class="o">|</span>
+</span><span class='line'>        <span class="n">icloud_name</span><span class="p">,</span> <span class="n">image_names</span> <span class="o">=</span> <span class="n">tuple</span>
+</span><span class='line'>        <span class="n">files</span> <span class="o">=</span> <span class="n">image_names</span><span class="o">.</span><span class="n">collect</span><span class="p">{</span> <span class="o">|</span><span class="nb">name</span><span class="o">|</span> <span class="s2">&quot;</span><span class="se">\&quot;</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&quot;</span> <span class="p">}</span>
+</span><span class='line'>        <span class="n">val</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">tell me to refreshCloud(</span><span class="se">\&quot;</span><span class="si">#{</span><span class="n">icloud_name</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">, {</span><span class="si">#{</span><span class="n">files</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">)</span><span class="si">}</span><span class="s2">})</span><span class="se">\n</span><span class="s2">&quot;</span>
+</span><span class='line'>        <span class="n">script</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="n">tmpfile</span> <span class="o">=</span> <span class="no">Tempfile</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;applescript&#39;</span><span class="p">)</span>
+</span><span class='line'>      <span class="n">tmpfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">script</span><span class="p">)</span>
+</span><span class='line'>      <span class="n">tmpfile</span><span class="o">.</span><span class="n">close</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="n">uploader</span> <span class="o">=</span> <span class="no">Tempfile</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;uploader&#39;</span><span class="p">)</span>
+</span><span class='line'>      <span class="n">uploader</span><span class="o">.</span><span class="n">close</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nb">puts</span> <span class="s2">&quot;osacompile -o </span><span class="si">#{</span><span class="n">uploader</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2"> </span><span class="si">#{</span><span class="n">tmpfile</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span class='line'>      <span class="nb">puts</span> <span class="sb">`osacompile -o </span><span class="si">#{</span><span class="n">uploader</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="sb"> </span><span class="si">#{</span><span class="n">tmpfile</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="sb">`</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="nb">puts</span> <span class="s2">&quot;osascript </span><span class="si">#{</span><span class="n">uploader</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span class='line'>      <span class="nb">puts</span> <span class="sb">`osascript </span><span class="si">#{</span><span class="n">uploader</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="sb">`</span>
+</span><span class='line'>    <span class="k">ensure</span>
+</span><span class='line'>      <span class="n">tmpfile</span><span class="o">.</span><span class="n">unlink</span>  <span class="k">if</span> <span class="n">tmpfile</span>
+</span><span class='line'>      <span class="n">uploader</span><span class="o">.</span><span class="n">unlink</span> <span class="k">if</span> <span class="n">uploader</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So the Applescript was checked into the project. This code does the following:</p>
+
+<ul>
+<li>reads the script from the file.</li>
+<li>replaces my directory with the given &#8220;real&#8221; one</li>
+<li>removes this &#8220;dashboard&#8221; and &#8220;sampletv&#8221; business and keeps a marker</li>
+<li>for every iCloud to photo(s) mapping, it adds a line to the script in memory to call the <code>refreshCloud</code> method</li>
+<li>saves that all to a temp file</li>
+<li>compiles the temp file to another temp file</li>
+<li>runs the compiled version</li>
+</ul>
+
+
+<p>It is called like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">namespace</span> <span class="ss">:dashing</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">desc</span> <span class="s2">&quot;takes screenshots&quot;</span>
+</span><span class='line'>  <span class="n">task</span> <span class="ss">:screenshots</span> <span class="k">do</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="s1">&#39;dashing-screenshots&#39;</span>
+</span><span class='line'>    <span class="no">Dashing</span><span class="o">::</span><span class="no">Screenshot</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;screenshots&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">capture!</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">desc</span> <span class="s2">&quot;uploads screenshots to iCloud&quot;</span>
+</span><span class='line'>  <span class="n">task</span> <span class="ss">:upload</span> <span class="k">do</span>
+</span><span class='line'>      <span class="nb">require</span> <span class="s1">&#39;icloud-photo&#39;</span>
+</span><span class='line'>      <span class="n">cloud</span> <span class="o">=</span> <span class="no">ICloudPhoto</span><span class="o">::</span><span class="no">Sync</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;screenshots&quot;</span><span class="p">)</span>
+</span><span class='line'>      <span class="c1"># put the sampletv image in the dashboard album</span>
+</span><span class='line'>      <span class="n">cloud</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;dashboard&quot;</span><span class="p">,</span> <span class="o">[</span><span class="s2">&quot;sampletv&quot;</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>      <span class="n">cloud</span><span class="o">.</span><span class="n">upload!</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">desc</span> <span class="s2">&quot;record and upload dashboards&quot;</span>
+</span><span class='line'>  <span class="n">task</span> <span class="n">cron</span><span class="p">:</span> <span class="o">[</span><span class="ss">:screenshots</span><span class="p">,</span> <span class="ss">:upload</span><span class="o">]</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then it can be automated using the <a href="https://github.com/javan/whenever">whenever</a> gem and running <code>whenever -w</code></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">every</span> <span class="mi">10</span><span class="o">.</span><span class="n">minutes</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">rake</span> <span class="s2">&quot;dashing:cron&quot;</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It&#8217;s important to be sure to be running <code>dashing start</code> as well.
+I also found it helpful to use <a href="http://semaja2.net/projects/insomniaxinfo/">Insomnia X</a> to not go to sleep when the laptop lid is shut.</p>
+
+<h2>Apple TV setup</h2>
+
+<p>Just a few notes on the settings I used when configuring the Apple TV</p>
+
+<p><em>Restore to newest software</em></p>
+
+<p><em>General</em></p>
+
+<ul>
+<li>Set up keyboard</li>
+<li>Set name</li>
+<li>Sleep after: never</li>
+<li>Software updates - Update automatically: on</li>
+</ul>
+
+
+<p><em>Screensaver</em></p>
+
+<ul>
+<li>Start after: 2 minutes</li>
+<li>Photos - iCloud photos - Login - Pick &#8220;dashboard&#8221; album</li>
+<li>Classic  - Fade through black - 20 seconds</li>
+</ul>
+
+
+<p><em>AirPlay</em></p>
+
+<ul>
+<li>Conference room display - off</li>
+<li>Play iTunes from the cloud - off</li>
+</ul>
+
+
+<p>The &#8220;Classic&#8221; screensaver will show one image at a time. This works pretty well if you are taking a picture of the whole dashboard. I&#8217;ve also had success making a &#8220;dashboard&#8221; out of each widget and taking several screenshots and uploading all of them. In this case, I would use the &#8220;Shifting Tiles&#8221; noted above to solve the iCloud empty issue. This ends up looking like the original dashboard but it moves around a bit.</p>
+
+<h2>It works</h2>
+
+<p>We now have an old laptop with the Dashing project and iPhoto. Every ten minutes, the screen flashes and firefox pops up and takes some screenshots. Then iPhoto pops up and things start moving around. Within a few minutes of that, the screensaver on all the Apple TVs automatically refresh to the new content.</p>
+
+<p>It&#8217;s not pretty, but it does work. One of my fears (and hopes) is that somebody emails me a better way to make this happen. I spent about three days figuring this out but would gladly throw it away for a better solution. Ideally, there would be one that did not involved this running laptop and especially not this Applescript business.</p>
+
+<p>To be clear, though, I don&#8217;t see it as time wasted. I believe it&#8217;s exceptionally important to increase visibility about the health of the business. By doing so in the most pervasive way I could think of, it may help set the context for people as they make decisions throughout the day. I&#8217;d say that&#8217;s worth one old laptop and some janky Applescript.</p>
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

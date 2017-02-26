@@ -1,0 +1,327 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>React Native Integration Tests - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="Coming from a Rails background, we are very familiar with testing our code. While writing our new React Native app, we found ourself missing a way to &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2015/11/08/react-native-integration-tests/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">React Native Integration Tests</h1>
+	<div class="entry-content"><p>Coming from a Rails <a href="http://guides.rubyonrails.org/testing.html">background</a>, we are very familiar with testing our code. While writing our new <a href="/blog/2015/09/21/react-native-example-app/">React Native app</a>, we found ourself missing a way to test it and ship with confidence. I&#8217;ve updated the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">sample app</a> with the approach we are using for integration tests.</p>
+
+<h2>Test Levels</h2>
+
+<p>When thinking about what and how to test a React Native app, a few levels come to mind:</p>
+
+<ul>
+<li>Unit: Testing some pure Javascript object and it&#8217;s methods. Just run in Javascript.</li>
+<li>Component: Testing a React component in isolation. You&#8217;d want to check its reaction to various state and props. Maybe run just in Javascript with heavy stubbing or in the simulator.</li>
+<li>Integration: Testing a single screen or workflow in the &#8220;real&#8221; app. Run in the simulator or on the device.</li>
+</ul>
+
+
+<p>The approach shown here is the last one: integration testing. We did this one first because if you are only going to do one of the above, it is probably your best bet. By actually testing out what the user does, you get the highest level of &#8220;don&#8217;t screw it up&#8221; coverage.</p>
+
+<p>There are some tradeoffs in this choice. They mostly stem from the fact that it&#8217;s the slowest (runtime) approach. Because of that, to test many edges cases takes f-o-r-e-v-e-r to actually run the tests. Something lower-level without the simulator would be much faster.</p>
+
+<h2>Running Tests</h2>
+
+<p>In the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">sample app</a>, you follow these steps:</p>
+
+<ul>
+<li>Make sure you have the 9.0 simulators installed in XCode</li>
+<li>Compile app for the test environment: <code>npm run compile:test</code></li>
+<li>Launch simulator and tests: <code>npm test</code></li>
+</ul>
+
+
+<p>Running <code>npm test</code> will launch the simulator and the robots take over.</p>
+
+<div class="jumbotron">
+  <image src="/images/posts/react-native-integration-tests/follows.gif" class="bigPicture" />
+</div>
+
+
+
+
+<!-- more -->
+
+
+<h2>Plumbing</h2>
+
+<p>The tests are written in Javascript using the <a href="https://mochajs.org/">mocha</a> testing framework. This allows you to declare your cases much like <a href="http://rspec.info/">rspec</a> does in Ruby. It gives you hooks to run things before and after as well.</p>
+
+<p>The simulator is run and controlled using <a href="http://appium.io/">Appium</a>. This is some serious magic that implements the <a href="http://www.seleniumhq.org/">Selenium</a> web testing framework but for iOS and Android.</p>
+
+<p>The compile step is important because it compiles the iOS code with a slightly different environment.</p>
+
+<p>The environment lets the iOS code knows to talk to a different port to get it&#8217;s code. The React Native <a href="https://github.com/facebook/react-native/tree/master/packager">packager</a> needs to be running on that port so the test suite launches it automatically. This means you don&#8217;t have to recompile the <code>jsbundle</code> each time you make a JS change - jsut like on the simulator with Command+R. In the same way, this is a tremendous improvement to the development process.</p>
+
+<p>The environment also lets the the JS code do a few things differently. For example, it talks to a different localhost API port than the development app. The test suite launches a small <a href="http://koajs.com/#introduction">koa</a> server on that port. This allows any given test to specify exactly what the server should return for any given API call so we can test the app in a known state.</p>
+
+<p>When in test mode, the <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/9863a1037b2eb2259518c62d37cd50840790e099/App/Root.js#L87">Root</a> component also adds in a <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/9863a1037b2eb2259518c62d37cd50840790e099/App/Root/TestRunner.js#L19">TestRunner</a> component at the top. But giving Appium buttons, it allows the suite to reset the test each time and bootstrap the app. It gets it&#8217;s bootstrap commands from the koa server. It also hooks logging so that all the <code>console.log</code> calls are sent to the koa server so everything can be logged in the test terminal. In both these, it&#8217;s the koa server that is the &#8220;bridge&#8221; between the tests and the simulator.</p>
+
+<p>Putting it all together:</p>
+
+<ul>
+<li><code>npm test</code> runs mocha</li>
+<li>mocha <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/9863a1037b2eb2259518c62d37cd50840790e099/test/helpers/driver.js">spawns</a> an Appium driver process (which launches the simulator)</li>
+<li>mocha <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/9863a1037b2eb2259518c62d37cd50840790e099/test/helpers/packager.js">spawns</a> a React Native Packager process</li>
+<li>mocha <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/9863a1037b2eb2259518c62d37cd50840790e099/test/helpers/server.js">spawns</a> a koa server process</li>
+<li>the test starts</li>
+<li>the test clicks &#8220;ResetTest&#8221; to be sure to start over (which sends a message to the iOS code to delete some documents)</li>
+<li>the test clicks &#8220;Bootstrap&#8221; to get setup instructions.</li>
+<li>the test uses the Appium API (<code>driver.findElementById('Log in').click()</code>) to do stuff and see how it goes</li>
+</ul>
+
+
+<h2>Bootstrap</h2>
+
+<p>The concept of &#8220;Bootstrap&#8221; might warrant a little more explanation.</p>
+
+<p>The sample app has been set up to use the <a href="https://facebook.github.io/react/docs/flux-overview.html">flux pattern</a> and <a href="/blog/2015/09/21/react-native-example-app/">url-based routing</a>. These two things allow a test to put the world in the state it needs to check the behavior.</p>
+
+<p>When writing Appium tests on our Objective-C app, to test an acount management feature, it would log in, tap the sidebar, tap the gear, then tap &#8220;Change Password&#8221; or whatever. Then the test really starts. This time really adds up.</p>
+
+<p>It gets easier with flux and routes. For example, because everything in our React Native app is based on events from the dispatcher, we don&#8217;t have to <em>actually</em> log in. We can just dispatch the <code>LOGIN_USER</code> action with the right properties.</p>
+
+<p>Then, because it&#8217;s based on URLs, we don&#8217;t have to navigate to the spot we want. We can just dispatch the <code>LAUNCH_ROUTE_PATH</code> with the appropriate URL and go right to the screen under test.</p>
+
+<p>All of this saves a tremendous amount of time and headache when things change.</p>
+
+<p>So how does this work? The test says what it wants to do to set up the world. That might look like this: <code>yield bootstrap().login().nav("dashboard/follows/friend").launch(driver);</code>. This registers actions (login, navigate) with the koa server.</p>
+
+<p>Then when the test clicks &#8220;Bootstrap&#8221; on the app, it fetches a particular url form the koa server to get its intructions. In this case, it will dispatch the <code>LOGIN_USER</code> action, followed by the <code>LAUNCH_ROUTE_PATH</code> action. Any arbitrary action could be set, but these are the most common.</p>
+
+<h2>Example</h2>
+
+<p>This is what it looks like:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'>  <span class="c1">// name the test something relevant</span>
+</span><span class='line'>  <span class="nx">it</span><span class="p">(</span><span class="s2">&quot;should create a new post&quot;</span><span class="p">,</span> <span class="kd">function</span><span class="o">*</span> <span class="p">(</span><span class="nx">driver</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// stub the fetch request to get the initial lists of posts with commonly used json</span>
+</span><span class='line'>    <span class="nx">server</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s2">&quot;/api/posts/tester&quot;</span><span class="p">,</span> <span class="nx">fixtures</span><span class="p">.</span><span class="nx">home</span><span class="p">());</span>
+</span><span class='line'>    <span class="c1">// stub creation and set expectations of endpoint to create new post</span>
+</span><span class='line'>    <span class="nx">server</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s2">&quot;/api/posts&quot;</span><span class="p">,</span>
+</span><span class='line'>      <span class="p">{</span><span class="nx">id</span><span class="o">:</span> <span class="mi">100</span><span class="p">,</span> <span class="nx">content</span><span class="o">:</span> <span class="s1">&#39;new post here&#39;</span><span class="p">,</span> <span class="nx">username</span><span class="o">:</span> <span class="s1">&#39;tester&#39;</span><span class="p">},</span> <span class="c1">// return this content</span>
+</span><span class='line'>      <span class="p">{</span><span class="nx">content</span><span class="o">:</span> <span class="s1">&#39;new post here&#39;</span><span class="p">}</span>                               <span class="c1">// expect this content</span>
+</span><span class='line'>    <span class="p">);</span>
+</span><span class='line'>    <span class="c1">// automatically log the test user in</span>
+</span><span class='line'>    <span class="nx">yield</span> <span class="nx">bootstrap</span><span class="p">().</span><span class="nx">login</span><span class="p">().</span><span class="nx">launch</span><span class="p">(</span><span class="nx">driver</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// tap the upper right to create a new post</span>
+</span><span class='line'>    <span class="nx">yield</span> <span class="nx">driver</span><span class="p">.</span><span class="nx">elementById</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">).</span><span class="nx">click</span><span class="p">();</span>
+</span><span class='line'>    <span class="c1">// make sure the screen when there</span>
+</span><span class='line'>    <span class="nx">yield</span> <span class="nx">driver</span><span class="p">.</span><span class="nx">elementById</span><span class="p">(</span><span class="s1">&#39;New Post&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="c1">// type in some stuff</span>
+</span><span class='line'>    <span class="nx">yield</span> <span class="nx">driver</span><span class="p">.</span><span class="nx">execute</span><span class="p">(</span><span class="s2">&quot;target.frontMostApp().keyboard().typeString(&#39;new post here&#39;)&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="c1">// tap the submit button</span>
+</span><span class='line'>    <span class="nx">yield</span> <span class="nx">driver</span><span class="p">.</span><span class="nx">elementById</span><span class="p">(</span><span class="s1">&#39;Submit&#39;</span><span class="p">).</span><span class="nx">click</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// check that we are back on the dashboard</span>
+</span><span class='line'>    <span class="nx">yield</span> <span class="nx">driver</span><span class="p">.</span><span class="nx">elementById</span><span class="p">(</span><span class="s1">&#39;Dashboard&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="c1">// make sure the new post is there</span>
+</span><span class='line'>    <span class="nx">yield</span> <span class="nx">driver</span><span class="p">.</span><span class="nx">elementById</span><span class="p">(</span><span class="s1">&#39;new post here&#39;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// all done!</span>
+</span><span class='line'>    <span class="nx">done</span><span class="p">();</span>
+</span><span class='line'>  <span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here it is running:</p>
+
+<div class="jumbotron">
+  <image src="/images/posts/react-native-integration-tests/new_post.gif" class="bigPicture" />
+</div>
+
+
+<p>I find all the <code>yield</code> stuff kind of annoying but it also prevents the <a href="http://www.joshwright.com/tips/javascript-christmas-trees-promises-and-event-emitters">christmas tree of doom</a> situation.</p>
+
+<h2>Test On!</h2>
+
+<p>Now that we&#8217;ve written the integration tests, we can run them on a CI service like <a href="https://travis-ci.org/">Travis</a>.</p>
+
+<p>I set up a <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/9863a1037b2eb2259518c62d37cd50840790e099/.travis.yml">.travis.yml</a> file in the sample app and it&#8217;s <a href="https://travis-ci.org/taskrabbit/ReactNativeSampleApp">green</a>!</p>
+
+<p>Well, that&#8217;s it. This is a very new space and we didn&#8217;t see a great way out there to do this kind of testing in a painless-as-possible kind of way. Hopefully, what we&#8217;ve done here can be useful for you in your own journey towards React Native apps that work as expected.</p>
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

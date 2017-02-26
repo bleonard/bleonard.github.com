@@ -1,0 +1,359 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Building React Native Apps - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="We&#8217;ve been using and loving React Native as noted in my previous post. As we are working towards rolling out a fully-featured app, one thing &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2015/10/18/building-react-native-apps/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">Building React Native Apps</h1>
+	<div class="entry-content"><p>We&#8217;ve been using and loving React Native as noted in my <a href="/blog/2015/09/21/react-native-example-app">previous post</a>. As we are working towards rolling out a fully-featured app, one thing that needed solved was how we should build the app for different environments. For example, how can we make (slightly different) development, staging, and production builds?</p>
+
+<p>In a <a href="https://github.com/facebook/react-native/issues/2246">Github issue</a>, I ran into a few other people also wondering how to do this, so I&#8217;ve added a few ways to the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">Example App</a> to show the approaches we are using.</p>
+
+<p>The three approaches we are trying out are:</p>
+
+<ul>
+<li>Configurations</li>
+<li>Compile Flags</li>
+<li>Run Variables</li>
+</ul>
+
+
+<h2>Environments</h2>
+
+<p>I had already added the <code>Environment</code> <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/2cf43f3ce17f830ff17065d6b4d973ac85043b05/App/Models/Environment.js">model</a> and <code>EnvironmentStore</code> <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/2cf43f3ce17f830ff17065d6b4d973ac85043b05/App/Stores/EnvironmentStore.js">store</a> to the project. However, I just added actual dynamic configurations to the XCode project and the <code>EnvironmentManager</code> <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/2cf43f3ce17f830ff17065d6b4d973ac85043b05/ios/Sample/EnvironmentManager.m">code</a> is using that.</p>
+
+<!-- more -->
+
+
+<p>Here is the staging config:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>#include "Pods/Target Support Files/Pods/Pods.staging.xcconfig"
+</span><span class='line'>
+</span><span class='line'>GCC_PREPROCESSOR_DEFINITIONS = $(inherited) kEnvironment="@\"staging\""</span></code></pre></td></tr></table></div></figure>
+
+
+<p>That gets used by the <code>EnvironmentManager</code> to send that, along with other data, over to JS land.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="n">RCT_EXPORT_METHOD</span><span class="p">(</span><span class="nl">get:</span><span class="p">(</span><span class="n">RCTResponseSenderBlock</span><span class="p">)</span><span class="n">callback</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">NSString</span> <span class="o">*</span><span class="n">locale</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSLocale</span> <span class="n">currentLocale</span><span class="p">]</span> <span class="n">localeIdentifier</span><span class="p">];</span>
+</span><span class='line'>  <span class="n">locale</span> <span class="o">=</span> <span class="p">[</span><span class="n">locale</span> <span class="nl">stringByReplacingOccurrencesOfString:</span><span class="s">@&quot;_&quot;</span> <span class="nl">withString:</span><span class="s">@&quot;-&quot;</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">NSNumber</span> <span class="o">*</span> <span class="n">simulator</span> <span class="o">=</span> <span class="err">@</span><span class="n">NO</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">NSString</span> <span class="o">*</span> <span class="n">version</span> <span class="o">=</span> <span class="p">[[[</span><span class="n">NSBundle</span> <span class="n">mainBundle</span><span class="p">]</span> <span class="n">infoDictionary</span><span class="p">]</span> <span class="nl">objectForKey:</span><span class="s">@&quot;CFBundleShortVersionString&quot;</span><span class="p">];</span>
+</span><span class='line'>  <span class="n">NSString</span> <span class="o">*</span> <span class="n">buildCode</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSBundle</span> <span class="n">mainBundle</span><span class="p">]</span> <span class="nl">objectForInfoDictionaryKey:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="n">kCFBundleVersionKey</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">NSString</span> <span class="o">*</span> <span class="n">envName</span> <span class="o">=</span> <span class="n">kEnvironment</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">NSDictionary</span> <span class="o">*</span><span class="n">passed</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSProcessInfo</span> <span class="n">processInfo</span><span class="p">]</span> <span class="n">environment</span><span class="p">];</span>
+</span><span class='line'>  <span class="n">NSString</span> <span class="o">*</span><span class="n">override</span> <span class="o">=</span> <span class="p">[</span><span class="n">passed</span> <span class="nl">valueForKey:</span><span class="s">@&quot;SAMPLE_ENV&quot;</span><span class="p">];</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">override</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">envName</span> <span class="o">=</span> <span class="n">override</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="cp">#ifdef TEST_ENVIRONMENT</span>
+</span><span class='line'>  <span class="n">envName</span> <span class="o">=</span> <span class="s">@&quot;test&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span><span class='line'><span class="cp">#ifdef STAGING_ENVIRONMENT</span>
+</span><span class='line'>  <span class="n">envName</span> <span class="o">=</span> <span class="s">@&quot;staging&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span><span class='line'><span class="cp">  </span>
+</span><span class='line'><span class="cp">  </span>
+</span><span class='line'><span class="cp">#if TARGET_IPHONE_SIMULATOR</span>
+</span><span class='line'>  <span class="n">simulator</span> <span class="o">=</span> <span class="err">@</span><span class="n">YES</span><span class="p">;</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">callback</span><span class="p">(</span><span class="err">@</span><span class="p">[</span> <span class="err">@</span><span class="p">{</span>
+</span><span class='line'>                <span class="s">@&quot;name&quot;</span><span class="o">:</span> <span class="n">envName</span><span class="p">,</span>
+</span><span class='line'>                <span class="s">@&quot;buildCode&quot;</span><span class="o">:</span> <span class="n">buildCode</span><span class="p">,</span>
+</span><span class='line'>                <span class="s">@&quot;simulator&quot;</span><span class="o">:</span> <span class="n">simulator</span><span class="p">,</span>
+</span><span class='line'>                <span class="s">@&quot;version&quot;</span><span class="o">:</span> <span class="n">version</span><span class="p">,</span>
+</span><span class='line'>                <span class="s">@&quot;locale&quot;</span><span class="o">:</span> <span class="n">locale</span>
+</span><span class='line'>            <span class="p">}]);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>By naming a scheme, that uses this config, we can launch the app knowing that its world is slightly different as determined by the <code>Environment</code> model. For example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">Model</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">getApiHost</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">switch</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">case</span> <span class="s1">&#39;test&#39;</span><span class="o">:</span>
+</span><span class='line'>      <span class="k">return</span> <span class="s1">&#39;http://localhost:3001&#39;</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">case</span> <span class="s1">&#39;debug&#39;</span><span class="o">:</span>
+</span><span class='line'>      <span class="k">return</span> <span class="s1">&#39;http://localhost:3000&#39;</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">case</span> <span class="s1">&#39;staging&#39;</span><span class="o">:</span>
+</span><span class='line'>      <span class="k">return</span> <span class="s1">&#39;https://someday.herokuapp.com&#39;</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">default</span><span class="o">:</span>
+</span><span class='line'>      <span class="k">throw</span><span class="p">(</span><span class="s2">&quot;Unknown Environment.getApiHost: &quot;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>By the way, I also added some of the other information from Objective-C like the version, build code, locale, and whether we&#8217;re running in the simulator. We&#8217;ve found a use for all of those in our Javascript code.</p>
+
+<h3>Configurations</h3>
+
+<p>This new build is using the <code>kEnvironment</code> from our custom <code>xcconfig</code> files as seen above. So we can pass in the environment name via configuration.</p>
+
+<p>XCode has these schemes that set up the configurations. The <a href="https://github.com/facebook/react-native/issues/2246">issue</a> I wrote up was lamenting the fact that all the of the child projects (like React Native) have the use the same name (&#8220;Debug&#8221; or &#8220;Release&#8221;) for it to work as expected. For example, I can&#8217;t really have a configuration called &#8220;Staging&#8221; that gets all the good stuff from the &#8220;Debug&#8221; configurations.</p>
+
+<p>I&#8217;ve more or less just accepted this and moved on. Our &#8220;Staging&#8221; and &#8220;Production&#8221; configurations just end up using the default (&#8220;Release&#8221;) configurations from all the children. That&#8217;s working well enough. The the other two approaches are ways to mitigate this issue, though. So when I said I accepted it, I guess that&#8217;s not quite true.</p>
+
+<p>As a side-note, I&#8217;ve now realized one piece of magic that <a href="https://cocoapods.org/">CocoaPods</a> has. It does all this stuff for you somehow and that&#8217;s probably why there is a different configuration that it makes for each of mine. Should React Native be on CocoaPods? I don&#8217;t know.</p>
+
+<h3>Compile Flags</h3>
+
+<p>But I want the &#8220;test&#8221; build to run in &#8220;Debug&#8221; mode. Or maybe I need to debug the &#8220;Staging&#8221; build on the phone. In these cases, I&#8217;ve shown how are are compiling the app via the command line. This allows us to define extra, non-configuration variables. Therefore, we can use the regular ones like &#8220;Debug.&#8221;</p>
+
+<p>There is a new <code>Compiler</code> <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/2cf43f3ce17f830ff17065d6b4d973ac85043b05/tasks/compiler.js">class</a> that pulls it all together. it basically uses <code>xcodebuild</code> to compile it and adds extra info like <code>TEST_ENVIRONMENT=1</code>, which the <code>EnvironmentManager</code> can then use to override the environment name.</p>
+
+<p>It also uses the <code>ios-deploy</code> <a href="https://github.com/phonegap/ios-deploy">tool</a> to put it on the phone if you ask it to do so. Try this out: <code>npm run install:staging</code></p>
+
+<h3>Run Variables</h3>
+
+<p>When setting up schemes, I found that I could pass environment variables in the &#8220;Run&#8221; section of &#8220;Edit Scheme.&#8221; Then I&#8217;m using this to allow a &#8220;staging&#8221; name even though I&#8217;m in running the &#8220;Debug&#8221; configuration. This is then available as seen in the <code>[[NSProcessInfo processInfo] environment]</code> code above.</p>
+
+<p>However, there is a fatal flaw. This is a run-time argument that is only used once. You lose that data if you launch the app again. It is, however, the best way that I&#8217;ve found to debug the &#8220;Staging&#8221; build in XCode.</p>
+
+<h2>Auto-Compile</h2>
+
+<p>So now there are lots of ways to launch and run this app, but I kept forgetting to bundle the new Javascript code when launching it from XCode onto the phone. There&#8217;s nothing worse than working on something and realizing 10 minutes later, the code on the phone is not the newest build.</p>
+
+<p>The <code>Compiler</code> class does this automatically, but I looked for a way to automate the instructions in the <code>AppDelegate</code>. It wants you to run with localhost when in the simulator and run <code>react-native bundle --minify</code> when putting it on the phone.</p>
+
+<p>So let&#8217;s automatically make those decisions based on the target runtime:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='objectivec'><span class='line'><span class="cp">#if TARGET_IPHONE_SIMULATOR</span>
+</span><span class='line'>  <span class="n">jsCodeLocation</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSURL</span> <span class="nl">URLWithString:</span><span class="s">@&quot;http://localhost:8081/index.ios.bundle?platform=ios&quot;</span><span class="p">];</span>
+</span><span class='line'><span class="cp">#else</span>
+</span><span class='line'>  <span class="n">jsCodeLocation</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSBundle</span> <span class="n">mainBundle</span><span class="p">]</span> <span class="nl">URLForResource:</span><span class="s">@&quot;main&quot;</span> <span class="nl">withExtension:</span><span class="s">@&quot;jsbundle&quot;</span><span class="p">];</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This automatically causes it to use the bundle when running on the phone, but we still need to remember to compile it. So I added a &#8220;Run Script&#8221; build phase to do the bundle command:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;${PLATFORM_NAME}&quot;</span> !<span class="o">=</span> <span class="s2">&quot;iphonesimulator&quot;</span> <span class="o">]</span>; <span class="k">then</span>
+</span><span class='line'><span class="k">    </span><span class="nb">source</span> ~/.nvm/nvm.sh
+</span><span class='line'>    <span class="nb">cd</span> <span class="k">${</span><span class="nv">PROJECT_DIR</span><span class="k">}</span>/.. <span class="o">&amp;&amp;</span> react-native bundle --minify
+</span><span class='line'><span class="k">fi</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This assumes that you are using <a href="https://github.com/creationix/nvm">nvm</a>.</p>
+
+<p>Now it&#8217;s impossible to forget and everything is always based on the target. Nice.</p>
+
+<h2>Summary</h2>
+
+<p>I&#8217;ve updated the code of the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">Example App</a> to have a few ways to build a React Native app with environment nuances. We&#8217;re mainly using the Configurations approach but the others have come in handy a few times. I hope that is helpful.</p>
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

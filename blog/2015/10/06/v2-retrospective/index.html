@@ -1,0 +1,996 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>V2 - Retrospective - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="TaskRabbit began as RunMyErrand in 2008 when Leah had the idea and coded up the first version of the site. In 2009, I had the opportunity to help out &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2015/10/06/v2-retrospective/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">V2 - Retrospective</h1>
+	<div class="entry-content"><p>TaskRabbit began as <a href="http://www.boston.com/business/technology/articles/2009/07/05/web_start_up_takes_entrepreneurs_idea_and_runs_with_it/">RunMyErrand</a> in 2008 when Leah had the <a href="http://techli.com/2011/09/taskrabbit-interview-leah-busque/">idea</a> and coded up the first version of the site. In 2009, I had the opportunity to help out in little ways like adding Facebook Connect support just after it launched and Leah got into <a href="http://techcrunch.com/2009/05/28/facebook-names-first-class-of-fbfund-rev-its-new-incubator/">Facebook Fund</a>. From there, she raised a <a href="http://www.xconomy.com/boston/2009/10/30/runmyerrand-picks-up-1-million-from-west-coast-venture-firms/">seed round</a> and I came on full-time.</p>
+
+<p>For a few weeks after starting, I worked on the RunMyErrand codebase, adding features and fixing bugs. Quickly, though, a few things became clear. First, we were probably going to change our name. RunMyErrand made people think only about laundry. Second, the changes we wanted to make drastic and hard to make with confidence in a codebase with no tests. I was hoping to work and live with this code for several years and we did not have the foundation that would make that a productive and enjoyable experience.</p>
+
+<p>So around Christmas 2009, I started a new Rails project. It was still called <code>runmyerrand</code> because we still didn&#8217;t have a new name. For a while at the end we called it <code>core</code> because it was at the center of a large service-oriented architecture. Today, we call it <code>V2</code> because it has now itself been replaced.</p>
+
+<p>It&#8217;s been a year and half. It&#8217;s never too late for a retrospective.</p>
+
+<h2>Launch</h2>
+
+<p>The original site was my first Rails project to work on and V2 was my first one from scratch. Rails 3 wasn&#8217;t yet released so I was nervous to get on that bleeding edge because most of the gems didn&#8217;t work quite yet. I had been immersing myself in Ruby news. In particular, I&#8217;d been listening to <a href="http://ruby5.envylabs.com/">Ruby5</a> and others podcasts and been taking notes about gems/tools that seemed relevant. In hindsight and with experience, it was a problem to rely on gems for fairly simple things, but at the time they seemed sent from heaven to solve my problems.</p>
+
+<p>I started over Christmas at the very beginning.</p>
+
+<div class="jumbotron">
+  <image src="/images/posts/v2-retrospective/tracker2009.png" alternate="Tracker 2009" class="bigPicture" />
+</div>
+
+
+<p>The site was black and white with a simple layout. At some point in January, Leah saw what I was working on. I, of course, discussed with her the notion of rebuilding the site, but I don&#8217;t think the ramifications quite came across until she saw the starkness of that layout. It was probably a huge leap of faith for her at that moment to have the trust in me that she did.</p>
+
+<p>I worked on both sites through January and February, eventually getting to 100% on new stuff. For the most part, I was building a feature-complete version of RunMyErrand with TBD branding and stronger Rails conventions like <a href="http://weblog.jamisbuck.org/2006/10/18/skinny-controller-fat-model">skinny controllers</a> and tests. There were some new features and many minor upgrades from the learnings we&#8217;d had.</p>
+
+<p>By the end of April, it was about ready to go. We had <a href="http://blog.taskrabbit.com/2010/04/08/runmyerrand-is-now-taskrabbit/">picked a name</a>, gotten help from <a href="http://www.mikekivikoski.com/">designers</a> and <a href="https://twitter.com/dpickett">Dan</a>, a great contractor to pull it over the finish line. In one hour on <a href="http://bostinno.streetwise.co/2010/04/13/runmyerrand-relaunches-with-new-name/">April 5th</a>, we launched the new code and rebranded the company.</p>
+
+<!-- more -->
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Controllers          |  1848 |  1483 |      32 |     174 |   5 |     6 |
+</span><span class='line'>| Helpers              |  2257 |  1892 |      45 |     245 |   5 |     5 |
+</span><span class='line'>| Jobs                 |   399 |   295 |      11 |      33 |   3 |     6 |
+</span><span class='line'>| Models               |  4584 |  3509 |      61 |     526 |   8 |     4 |
+</span><span class='line'>| Observers            |    42 |    22 |       2 |       5 |   2 |     2 |
+</span><span class='line'>| Libraries            |  2987 |  2272 |      30 |     287 |   9 |     5 |
+</span><span class='line'>| Configuration        |  1233 |   669 |       4 |      17 |   4 |    37 |
+</span><span class='line'>| Spec Support         |  1416 |  1152 |       4 |      30 |   7 |    36 |
+</span><span class='line'>| Integration Tests    |    91 |    73 |       0 |       1 |   0 |    71 |
+</span><span class='line'>| Lib Tests            |   101 |    83 |       0 |       1 |   0 |    81 |
+</span><span class='line'>| Model Tests          |  3397 |  2522 |       0 |      18 |   0 |   138 |
+</span><span class='line'>| Cucumber Support     |   739 |   521 |       0 |       1 |   0 |   519 |
+</span><span class='line'>| Cucumber Features    |  2711 |  2487 |      29 |     145 |   5 |    15 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Total                | 21805 | 16980 |     218 |    1483 |   6 |     9 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>  Code LOC: 10142     Test LOC: 6838     Code to Test Ratio: 1:0.7
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Iteration</h2>
+
+<p>In the three or so years that followed, we <a href="http://www.bizjournals.com/boston/blog/mass-high-tech/2010/03/web-startup-runmyerrand-to-move-execs-west.html?page=all">moved to San Francisco</a>, worked at <a href="http://fourhourworkweek.com/2011/06/07/whats-your-start-up-bus-count-7-myths-of-entrepreneurship-and-programming/">Pivotal Labs</a> a bit, grew the team, <a href="http://techcrunch.com/2011/07/28/taskrabbit-drops-its-amazing-iphone-app/">launched a mobile app</a>, and kept building things in the codebase. It held up fairly well. The test suite gave us the confidence that we weren&#8217;t breaking anything and we forged ahead. What follows are some of the quirks and learnings from that time.</p>
+
+<h3>Timeline Events</h3>
+
+<p>One of the major new changes in the TaskRabbit site was the idea of the timeline. Facebook&#8217;s news feed was sort of a new thing and lots of people were showing activity in that way. We also wanted to show people that things were actually being done on the site. I used and adapted version of <a href="https://github.com/jamesgolick/timeline_fu">timeline_fu</a> to record all of these events.</p>
+
+<p>Fairly soon, everything revolved around this concept. It was just me making a fairly full-featured site so I made it very easy to show lists of objects or timeline events that pointed to objects. There were various helper functions and something like <a href="http://robertomurray.co.uk/blog/2014/decorators-presenters-delegators-rails/">presenters</a> before I knew to call it that. These facilitated handling rendering of <a href="http://railscasts.com/episodes/154-polymorphic-association">polymorphic</a> lists in a seamless way.</p>
+
+<p>I was (am) also a fan of modeling everything strictly as a state machine. The site used <a href="https://github.com/aasm/aasm">aasm</a> with several additions. One of them came out of the understanding that the most interesting times in the system were when state changed. One of the additions was to automatically create a timeline event on that transition. It would be hard to count the number of times over those 4 years that I was glad we did that. It&#8217;s a lot. It is useful because it provides a history of the lifecycle of every object in the system.</p>
+
+<p>The next thing I noticed was that these were the same times that we wanted to send notifications like email or SMS. Because of that, as the timeline event was being saved, it checked if there were messages to send to the people associated and queued up workers to do that. The result of this was more or less magic when, for example, a Task was assigned. The <code>task_assigned</code> timeline event would be saved, it would show up on the global timeline and the one for that city as well as the one for that task, and two mails and/or push notifications would be sent. If you wanted to send a new mail that had nothing to do with state changes (5%), then you&#8217;d make a timeline event. This turned out to be a great record as well to note things that were happening.</p>
+
+<p>Eventually, as the ecosystem grew to disparate systems, we also added publishing to <a href="https://github.com/taskrabbit/resque-bus">Resque Bus</a> to the list so those systems could subscribe to be notified of the changes as they occurred. Overall, this is great pattern. Being event-driven is very effective in a lot of cases and is the reason V3 still uses Resque Bus for all the reasons I talked about in <a href="/blog/2013/09/28/resque-bus/">that article</a>. Having strong patterns like this is also important. Once you understand the pattern and have the mental model, you can easily grasp most concepts in the system.</p>
+
+<p>However, few things easily stand the test of time and evolving requirements. It seems possible that the stronger the pattern, the less likely it will hold up because it made some assumptions about the older world. As more and more features and nuance we added to the system, those helpers got crazier and crazier with <code>if</code> or <code>case</code> statements about exactly what kind of task we were trying to show (for example). Also, not every event should be public, different people should see different events, or the same same events but with different content. This, along with the polymorphic nature to begin with, really hurt performance because we couldn&#8217;t cache it very well. Over time, we relied less and less on the actual display of timeline. Each list became more custom for the case at hand. That was probably a good thing, but it was a good crutch at the beginning.</p>
+
+<p>The events themselves were still there, of course. Which was good. There were a lot of them though and the list was growing exponentially. In V3, we have the same concept, but it subscribes to the Resque Bus instead doing the publishing and stores them in <a href="http://www.elasticsearch.org/">Elastic Search</a> instead of <a href="http://www.mysql.com/">MySQL</a>.</p>
+
+<h3>API</h3>
+
+<p>A similar type of tradeoff was made when developing the API. That is, we made choices that made it very easy to handle requests and respond with JSON, but it had nuances and performance implications that ultimately led to us abandoning the approach.</p>
+
+<p>The system had several primary objects like Task, User, Location, and Offer. Any given call had a response of some combination of these objects and their relationships. A User had posted Tasks or was doing Tasks. Tasks had Locations and Offers. And so on. At the time, it seemed fairly obvious to have a standard JSON representation of these things and piece them together.</p>
+
+<p>The standard at the time was to use the <code>to_json</code> (or maybe <code>as_json</code>) method on the object, but I found that to be quite messy. It did not elevate the API to a first class citizen or allow much flexibility. So I made a presenter object sort of thing for each that produced a <code>Hash</code> to output as JSON. For example there was a <code>UserHash</code> class that was instantiated with a User object. Calling <code>to_h</code> on it would output what should be in the JSON. It was used something like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">def</span> <span class="nf">show</span>
+</span><span class='line'>  <span class="vi">@hash</span> <span class="o">=</span> <span class="no">Api</span><span class="o">::</span><span class="no">V1</span><span class="o">::</span><span class="no">UserHash</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="vi">@user</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">render</span> <span class="n">json</span><span class="p">:</span> <span class="vi">@hash</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This seemed much better than <code>to_json</code> and it was. Whatever logic that needed to determine what to show could go in these objects and patterns could be shared between them all. They could also be reused. For example, the <code>TaskHash</code> had two user involved and could just use the <code>UserHash</code> to show more info about them. It was very DRY. And it worked.</p>
+
+<p>I think the primary mistake was still being somewhat in the mindset of the <code>to_json</code> pattern. That is, that every object type had a single JSON representation. That is just not the case. The information that is needed about a User is different when it is a child of a Task and not a specific fetch of the User. Thinking about that after the fact, you end up with all these little nuances about what to display from the presenter.</p>
+
+<p>Even that wasn&#8217;t totally crazy. If I was on that path again, I&#8217;d probably just have a <code>SimpleUserHash</code> or something like that instead of passing <code>{simple: true}</code> to the regular <code>UserHash</code>. The main issue was that, because of this single representation notion, I made it really easy to nest these objects and provide that full presentation. The goal should have been providing explicitly what was needed by the consumer.</p>
+
+<p>Because of the completeness, performance really suffered. The requests themselves were slow for two reasons. The first was all the various SQL fetches and string rendering to just make it happen. The hidden issue was around garbage collection. Because of all these objects being created, which created hashes, which got rendered to strings, the number of Ruby Objects created in each request was massive. This led to frequent garbage collection, which led to wildly varying (and often very high) request times.</p>
+
+<p>Our V3 API is much more use case driven and uses <a href="https://github.com/rails/jbuilder">jbuilder</a> to render the JSON. By focusing on what the clients actually need, we minimize the data needed and request time. Jbuilder templates are much easier to understand and focused. We have noticed that jbuilder is the slowest part of that request, so maybe there will be changes there too. Interestingly, the most recent option we&#8217;ve been trying is <a href="https://github.com/rails-api/active_model_serializers">serializers</a>. It seems a lot like the earlier approach by using these presenter objects. Maybe there&#8217;s just a trick in there that we missed.</p>
+
+<h3>Feature Set</h3>
+
+<p>TaskRabbit is a simple idea that is difficult to execute. There are lots of people and factors involved. Also, there are lots of different product choices that could be made about how the work gets done. If you&#8217;ve heard of TaskRabbit and had an idea about how it could work, we&#8217;ve probably talked about it and/or tried it.</p>
+
+<p>I&#8217;ve learned that combinatorics can be the death of a product.</p>
+
+<p>There was a great <a href="http://firstround.com/article/the-one-cost-engineers-and-product-managers-dont-consider">article</a> that spoke to this a while ago. It was about the hidden cost of adding features because of their maintenance and cognitive overhead. The more options we add into our product, the more paths there are through the code and experience flowchart. This slows down all future development. Even the 2010 launch of TaskRabbit had these branches. The primary one was the choice when you posted your task for it be auto-assigned or receive offers. Over the years, the options expanded in pricing (named by client, fixed, market bid), pricing units (project, hourly), number of taskers (single, team, multiple asynchronously), type of assignment (direct hire, immediate, consideration, bid, from a favorites list), recurring (yes, no). These along with different categories and A/B tests combinatorially to thousands of types of tasks.</p>
+
+<p>Many of these options affected any given task at any given point in it&#8217;s lifecycle. That caused much time in design/development to consider these cases. Or it led to bugs when they were not considered. At the very least, it led to many tests for the interplay between the options. Projected out a few more options, something major had to change to get this under control or progress would grind to a halt.</p>
+
+<h3>God Models</h3>
+
+<p>In a system trying to follow the conventional &#8220;fat model, skinny controllers&#8221; paradigm, all of these options made the models morbidly obese. In particular, the Task and User models were huge.</p>
+
+<p>We did our best to keep it clean, mostly by putting functionality related to the above characteristics into their own modules. This did a reasonably good job of keeping related functionality together and you could even test it in isolation. However, it was still hard to reason about the whole system.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Task</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Rabbit</span><span class="o">::</span><span class="no">HasMoney</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Rabbit</span><span class="o">::</span><span class="no">HasVehicles</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Rabbit</span><span class="o">::</span><span class="no">StateTransition</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Rabbit</span><span class="o">::</span><span class="no">WithGeography</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Rabbit</span><span class="o">::</span><span class="no">Cached</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Task</span><span class="o">::</span><span class="no">Properties</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Task</span><span class="o">::</span><span class="no">MultiLocation</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Task</span><span class="o">::</span><span class="no">TaskProgress</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Task</span><span class="o">::</span><span class="no">WithPromotion</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Task</span><span class="o">::</span><span class="no">Recurring</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Task</span><span class="o">::</span><span class="no">Multi</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Task</span><span class="o">::</span><span class="no">Runners</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Task</span><span class="o">::</span><span class="no">Times</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Task</span><span class="o">::</span><span class="no">Counting</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Task</span><span class="o">::</span><span class="no">Pricing</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Task</span><span class="o">::</span><span class="no">Timing</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Task</span><span class="o">::</span><span class="no">PriceComponents</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Task</span><span class="o">::</span><span class="no">Hourly</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Task</span><span class="o">::</span><span class="no">HasLocations</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Task</span><span class="o">::</span><span class="no">HasTaskType</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Task</span><span class="o">::</span><span class="no">HasStore</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># and on and on...</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It became doubly-complicated when each of these modules added their own callbacks. ActiveRecord callbacks are a powerful thing but we&#8217;ve found that they can easily get out of control. Based on our current thinking, they were already being used for too many things such as enqueuing background workers. When you add in all of these different modules injecting their own behavior in the middle of the save process, it became very difficult to track down where things happened.</p>
+
+<p>That being said, it almost always worked quite well. Once someone understood the system, it did become fairly clear and it was very well tested. The real issue was in making fast progress and introducing new team members to the beast we had created.</p>
+
+<h3>Gem Usage</h3>
+
+<p>V2 was my first Rails project and I was (and continue to be) amazed by the Ruby community. Everything that I wanted to do had already been done, more or less, before. I now realize that will probably always be the case. There are only so many patterns out there and building just about any app is probably about putting them together for a specific purpose. The amazing thing (and the trap) of the Ruby community is that there is already a <a href="http://rubygems.org/">gem</a> or ten available for each of those patterns.</p>
+
+<div class="jumbotron">
+  <image src="/images/posts/v2-retrospective/trap.jpg" alternate="It's a trap!" class="bigPicture" />
+</div>
+
+
+<p>I used (and continue to use) lots of gems. However, in retrospect, I was a bit too enthralled with leveraging work that already been done. There probably are really perfect use cases out there that truly cut across all apps. Building blocks like <a href="https://github.com/intridea/omniauth">authentication</a>, <a href="https://github.com/resque/resque">background processing</a>, <a href="https://github.com/lostisland/faraday">http libraries</a>, <a href="https://github.com/mperham/dalli">and</a> <a href="https://github.com/elasticsearch/elasticsearch-ruby">other</a> <a href="https://github.com/redis/redis-rb">data</a> or <a href="https://github.com/twilio/twilio-ruby">external</a> gems seem like obvious candidates. But things start getting weird when you depend on gems for your core functionality.</p>
+
+<p>At the time, <code>acts_as_x</code> gems where very popular. This pattern was (usually) about factoring out common model behaviors into gems. Instead of building a commenting system for example, you would include <code>acts_as_commentor</code> gem and call specific methods on the <code>User</code> and the <code>Comment</code> models. This has more or less fallen out of favor as far as I can tell. I think it&#8217;s because it&#8217;s important for the app itself to own its business logic. In any given case, the value added by the gem will likely be negated that first time you need to customize the behavior to provide more value in your specific app. As a rule of thumb, I am very skeptical of any gem that includes it&#8217;s own migrations.</p>
+
+<p>The main mistake that comes to mind was using a <a href="https://github.com/edgarjs/ajaxful-rating">gem</a> to handle our ratings system. There were <a href="https://www.ruby-toolbox.com/categories/rails_ratings">many</a> options available, but what I didn&#8217;t consider is that it&#8217;s just not that complicated.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Task</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'>  <span class="n">ajaxful_rateable</span> <span class="ss">:stars</span> <span class="o">=&gt;</span> <span class="mi">5</span><span class="p">,</span> <span class="ss">:dimensions</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:poster</span><span class="p">,</span> <span class="ss">:tasker</span><span class="o">]</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">User</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'>  <span class="n">ajaxful_rater</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In the end, this just created more technical debt. We ended up switching to our own after a while just so we could have a better handle on performance and customize the behaviors a bit.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Task</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'>  <span class="n">has_many</span> <span class="ss">:rates</span>
+</span><span class='line'>  <span class="n">has_many</span> <span class="ss">:runner_rates</span><span class="p">,</span> <span class="ss">:class_name</span> <span class="o">=&gt;</span> <span class="s2">&quot;Rate&quot;</span><span class="p">,</span> <span class="ss">:conditions</span> <span class="o">=&gt;</span> <span class="p">{</span><span class="ss">:dimension</span> <span class="o">=&gt;</span> <span class="s2">&quot;runner&quot;</span><span class="p">}</span>
+</span><span class='line'>  <span class="n">has_many</span> <span class="ss">:poster_rates</span><span class="p">,</span> <span class="ss">:class_name</span> <span class="o">=&gt;</span> <span class="s2">&quot;Rate&quot;</span><span class="p">,</span> <span class="ss">:conditions</span> <span class="o">=&gt;</span> <span class="p">{</span><span class="ss">:dimension</span> <span class="o">=&gt;</span> <span class="s2">&quot;poster&quot;</span><span class="p">}</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">Rate</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'>  <span class="n">belongs_to</span> <span class="ss">:task</span>
+</span><span class='line'>  <span class="n">belongs_to</span> <span class="ss">:ratee</span><span class="p">,</span> <span class="ss">:class_name</span> <span class="o">=&gt;</span> <span class="s2">&quot;User&quot;</span>
+</span><span class='line'>  <span class="n">belongs_to</span> <span class="ss">:rater</span><span class="p">,</span> <span class="ss">:class_name</span> <span class="o">=&gt;</span> <span class="s2">&quot;User&quot;</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">User</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'>  <span class="n">has_many</span> <span class="ss">:poster_rates</span><span class="p">,</span> <span class="ss">:class_name</span> <span class="o">=&gt;</span> <span class="s1">&#39;Rate&#39;</span><span class="p">,</span> <span class="ss">:foreign_key</span> <span class="o">=&gt;</span> <span class="ss">:ratee_id</span><span class="p">,</span> <span class="ss">:conditions</span> <span class="o">=&gt;</span> <span class="s2">&quot;rates.dimension = &#39;poster&#39;&quot;</span>
+</span><span class='line'>  <span class="n">has_many</span> <span class="ss">:rabbit_rates</span><span class="p">,</span> <span class="ss">:class_name</span> <span class="o">=&gt;</span> <span class="s1">&#39;Rate&#39;</span><span class="p">,</span> <span class="ss">:foreign_key</span> <span class="o">=&gt;</span> <span class="ss">:ratee_id</span><span class="p">,</span> <span class="ss">:conditions</span> <span class="o">=&gt;</span> <span class="s2">&quot;rates.dimension = &#39;rabbit&#39;&quot;</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Using lots of gems also made upgrading Rails more difficult and well as dependency management. We ended up creating our own gem server just to handle the minor changes that we made to gems for these reasons. In the upgrade case, maybe there was something deprecated or just not working in the next version of Rails. In the management case, it was usually a stricter dependency on something very common, like only allowing a specific version of <a href="https://github.com/intridea/multi_json">multi_json</a> that we had to loosen up.</p>
+
+<h3>Tests</h3>
+
+<p>Part of the reason of starting over to create V2 was to bake in really good test coverage. On launch, it had model, controller, and request <a href="http://rspec.info/">rspec</a> tests as well as <a href="http://cukes.info/">Cucumber</a> integration tests. Cucumber was the new hotness at the time and I remember going to a workshop in Boston extolling it&#8217;s many virtues.</p>
+
+<p>I never kidded myself into thinking that some &#8220;business owner&#8221; would write the features for me and it would add massive value in that way. Obviously, the syntax was just too specific with all the regular expressions and such. But what I did like was that it was as close to the user experience as possible, which is the ultimate point of the system. Those tests gave me the confidence to know everything was working well.</p>
+
+<p>Over the years, the whole suite (and especially the Cucumber tests) took longer and longer. Some improvements over time included:</p>
+
+<ul>
+<li><a href="https://github.com/vcr/vcr">vcr</a> to remove all external dependencies</li>
+<li><a href="https://github.com/rdy/fixture_builder">fixture_builder</a> to prevent having to fully use <a href="https://github.com/thoughtbot/factory_girl">factory_girl</a> to create basic objects each test</li>
+<li><a href="https://github.com/grosser/parallel_tests">parallel_tests</a> on a beefy local jenkins box to be able to run 8 threads at once</li>
+<li>porting Cucumber tests over to <a href="https://github.com/jnicklas/capybara">Capybara</a></li>
+<li><a href="https://www.tddium.com/">tddium</a> on its remote servers to be able to run 15 threads at once and have multiple builds going in parallel</li>
+</ul>
+
+
+<p>Each of the tactics showing major gains. The most laborious was porting the Cucumber tests over to Capybara. At some point, we got tired of the interpretation layer between the &#8220;test&#8221; and the code and started writing new tests in rspec/capybara. It was just more straightforward. It also seemed better at handling the Javascript on the page. Eventually, we bit the bullet and ported over the Cukes to new rspec files. This gave about a 2x improvement in running time and simplified the testing stack as well.</p>
+
+<p>At the end of it&#8217;s life, the suite on tddium was running in 50 minutes. That was on 15 threads, so the actual running time was probably more like 12 hours. Obviously that is absurd. Making major improvements at that point would have been very difficult. It would have been about finding the slowest tests and making sure we really needed it or rewriting it. There was probably a lot of double coverage. We could have used more stubbing, but I tend to be fairly skeptical of that. It has often turned out to be quite implementation dependent and more brittle.</p>
+
+<p>At launch, the V3 test suite was running 2 minutes on tddium. As such things happen, it&#8217;s now at 10. Will we ever learn? I&#8217;ve seen a huge organization-wide boost with the difference between a 15 (not to mention 50) minute build and a 2 minute build. In the longer case, you tend to break the flow and work on something else to stay productive (or go play ping pong). At 2 minutes, the flow seems to continue. I obviously wish it was just a few seconds locally, but we haven&#8217;t been able to hit those times and get the coverage we are looking for.</p>
+
+<h3>Delayed Job</h3>
+
+<p>Another major change during this time was switching from <a href="https://github.com/collectiveidea/delayed_job">Delayed Job</a> to <a href="https://github.com/resque/resque">Resque</a>. We had started to see our MySQL server resources being used up from all the Delayed Job queries and sometimes emails would send multiple times. We never could quite figure out how it was misconfigured. By that time, though, Resque was a very popular solution with plenty of helpful plugins that added value to the system.</p>
+
+<p>In particular, I am a big fan of the the locking mechanisms that we can use in Resque because of Redis. We used various plugins to make sure there was only one job of a certain type in the queue, or that only one was running at the a time for a certain set of inputs. That kind of thing.</p>
+
+<p>Another issue we had in both system was about class existence and method signatures. Delayed Job had a <code>struct</code> with certain inputs and Resque had a <code>perform</code> method. When queueing up a job, you would send the inputs to those spots. The gotcha in that is around what to do when changes occur. For example, when adding a new input to the job, you have to remember that there may be jobs queued with one less input and handle that gracefully. Also, when you no longer need a worker, you can&#8217;t just delete it because there may still be some in the queue that will try to initialize it. In both systems and both cases, we found that the whole thread would go down and not work any more jobs. Bad news.</p>
+
+<p>Towards the end of V2 and now in V3, we mix(ed) in a module into our workers that standardizes these benefits and issues. Instead of using several plugins, it makes it really easy to do the locking stuff from the <a href="http://redis.io/commands/setnx">examples</a> as well as scheduling. It also makes it so that we enqueue the workers with a hash instead of a list of arguments. This has made minor signature changes much easier.</p>
+
+<h3>A/B Testing</h3>
+
+<p>At the top of every agile playbook is the A/B test. V2 had a system in place that worked fairly well. It would bucket new users into 100 groups. At at any given time, a group be assigned into a single test (or control). A set of the groups were also always in the control for a pure baseline. When you wanted to run a test (say &#8220;blue_botton&#8221;), you would reserve the number of groups that got you the percentage that you needed. In the Ruby or Javascript code, you could then see if that user was in the &#8220;blue_button&#8221; group.</p>
+
+<p>This worked out fairly well, especially for the simple A/B cases like showing a blue button instead of a orange one. Marketplace dynamics proved very difficult though when the test was something much bigger. This was especially true if the test produced a new variant of task as that drastically effected both the client and the tasker and goal was to see the overall effectiveness through to completion.</p>
+
+<p>In that case, the task itself was marked as being inside the test, not just the user and now the tasker had to do something differently as well. Maybe they were bidding hourly instead of by project. At the point, you have to decide if the test is still valid if one side of the marketplace gets both the A and the B. There are cases where that would make the test invalid. So then, it&#8217;s really more about lining up the clients in the A group with the taskers in the A group and the same with the B group (with no cross-over). Then the marketplace is much less efficient so there is a high cost to that test and my mind is a little too blown to be sure of what&#8217;s happening in the first place. The really troublesome part of these kinds of tests that affect the task dynamics is that it&#8217;s really hard to end that test. Most of the code for all those tests stayed in V2 permanently (or at least a very long time) because some of the tasks posted under some test lingered in the marketplace or became weekly tasks, or whatever.</p>
+
+<p>All of this led to a much higher bar for doing really important tests than I would have liked to do. And when we did do them, they were often less clear that I had hoped. I&#8217;m sure there are techniques that make this kind of thing easier, but I don&#8217;t think we&#8217;ve quite found them yet.</p>
+
+<h3>Summary</h3>
+
+<p>This post has trended towards saying things that were wrong with the code or approach, but that is mostly just me trying to capture the learnings that we had. Overall, the code was working well. Strong patterns were put in place and followed. Once learned, it was easy to add new features and things were where you expected them to be.</p>
+
+<p>There was the one codebase that some, including us, would have called a <a href="http://en.wikipedia.org/wiki/Monolithic_application">monolith</a>. I&#8217;d say this era lasted until about the end of September 2012. That&#8217;s when we started building out new apps.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="o">+----------------------+-------+-------+---------+---------+-----+-------+</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Name</span>                 <span class="o">|</span> <span class="no">Lines</span> <span class="o">|</span>   <span class="no">LOC</span> <span class="o">|</span> <span class="no">Classes</span> <span class="o">|</span> <span class="no">Methods</span> <span class="o">|</span> <span class="n">M</span><span class="o">/</span><span class="n">C</span> <span class="o">|</span> <span class="no">LOC</span><span class="o">/</span><span class="n">M</span> <span class="o">|</span>
+</span><span class='line'><span class="o">+----------------------+-------+-------+---------+---------+-----+-------+</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Awards</span>               <span class="o">|</span>   <span class="mi">470</span> <span class="o">|</span>   <span class="mi">354</span> <span class="o">|</span>      <span class="mi">18</span> <span class="o">|</span>      <span class="mi">57</span> <span class="o">|</span>   <span class="mi">3</span> <span class="o">|</span>     <span class="mi">4</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Commands</span>             <span class="o">|</span>   <span class="mi">220</span> <span class="o">|</span>   <span class="mi">149</span> <span class="o">|</span>       <span class="mi">3</span> <span class="o">|</span>      <span class="mi">28</span> <span class="o">|</span>   <span class="mi">9</span> <span class="o">|</span>     <span class="mi">3</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Controllers</span>          <span class="o">|</span>  <span class="mi">9732</span> <span class="o">|</span>  <span class="mi">7826</span> <span class="o">|</span>     <span class="mi">123</span> <span class="o">|</span>     <span class="mi">880</span> <span class="o">|</span>   <span class="mi">7</span> <span class="o">|</span>     <span class="mi">6</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Filters</span>              <span class="o">|</span>  <span class="mi">1556</span> <span class="o">|</span>  <span class="mi">1276</span> <span class="o">|</span>      <span class="mi">10</span> <span class="o">|</span>     <span class="mi">137</span> <span class="o">|</span>  <span class="mi">13</span> <span class="o">|</span>     <span class="mi">7</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Helpers</span>              <span class="o">|</span>  <span class="mi">9359</span> <span class="o">|</span>  <span class="mi">7830</span> <span class="o">|</span>     <span class="mi">105</span> <span class="o">|</span>     <span class="mi">978</span> <span class="o">|</span>   <span class="mi">9</span> <span class="o">|</span>     <span class="mi">6</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Jobs</span>                 <span class="o">|</span>  <span class="mi">1936</span> <span class="o">|</span>  <span class="mi">1523</span> <span class="o">|</span>      <span class="mi">75</span> <span class="o">|</span>     <span class="mi">219</span> <span class="o">|</span>   <span class="mi">2</span> <span class="o">|</span>     <span class="mi">4</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Mailers</span>              <span class="o">|</span>  <span class="mi">1059</span> <span class="o">|</span>   <span class="mi">844</span> <span class="o">|</span>       <span class="mi">8</span> <span class="o">|</span>     <span class="mi">118</span> <span class="o">|</span>  <span class="mi">14</span> <span class="o">|</span>     <span class="mi">5</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Models</span>               <span class="o">|</span> <span class="mi">26014</span> <span class="o">|</span> <span class="mi">20161</span> <span class="o">|</span>     <span class="mi">243</span> <span class="o">|</span>    <span class="mi">2771</span> <span class="o">|</span>  <span class="mi">11</span> <span class="o">|</span>     <span class="mi">5</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Observers</span>            <span class="o">|</span>    <span class="mi">95</span> <span class="o">|</span>    <span class="mi">74</span> <span class="o">|</span>       <span class="mi">4</span> <span class="o">|</span>       <span class="mi">9</span> <span class="o">|</span>   <span class="mi">2</span> <span class="o">|</span>     <span class="mi">6</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Syncs</span>                <span class="o">|</span>   <span class="mi">369</span> <span class="o">|</span>   <span class="mi">308</span> <span class="o">|</span>       <span class="mi">9</span> <span class="o">|</span>      <span class="mi">35</span> <span class="o">|</span>   <span class="mi">3</span> <span class="o">|</span>     <span class="mi">6</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Validators</span>           <span class="o">|</span>    <span class="mi">47</span> <span class="o">|</span>    <span class="mi">42</span> <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>       <span class="mi">4</span> <span class="o">|</span>   <span class="mi">4</span> <span class="o">|</span>     <span class="mi">8</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Webhooks</span>             <span class="o">|</span>    <span class="mi">47</span> <span class="o">|</span>    <span class="mi">33</span> <span class="o">|</span>       <span class="mi">2</span> <span class="o">|</span>       <span class="mi">6</span> <span class="o">|</span>   <span class="mi">3</span> <span class="o">|</span>     <span class="mi">3</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Libraries</span>            <span class="o">|</span>  <span class="mi">8006</span> <span class="o">|</span>  <span class="mi">6511</span> <span class="o">|</span>     <span class="mi">170</span> <span class="o">|</span>     <span class="mi">786</span> <span class="o">|</span>   <span class="mi">4</span> <span class="o">|</span>     <span class="mi">6</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Configuration</span>        <span class="o">|</span>  <span class="mi">5100</span> <span class="o">|</span>  <span class="mi">3676</span> <span class="o">|</span>      <span class="mi">20</span> <span class="o">|</span>      <span class="mi">96</span> <span class="o">|</span>   <span class="mi">4</span> <span class="o">|</span>    <span class="mi">36</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Spec</span> <span class="no">Support</span>         <span class="o">|</span>  <span class="mi">4531</span> <span class="o">|</span>  <span class="mi">3477</span> <span class="o">|</span>      <span class="mi">18</span> <span class="o">|</span>     <span class="mi">147</span> <span class="o">|</span>   <span class="mi">8</span> <span class="o">|</span>    <span class="mi">21</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Other</span> <span class="no">Tests</span>          <span class="o">|</span> <span class="mi">28476</span> <span class="o">|</span> <span class="mi">18543</span> <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>     <span class="mi">168</span> <span class="o">|</span> <span class="mi">168</span> <span class="o">|</span>   <span class="mi">108</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Award</span> <span class="no">Tests</span>          <span class="o">|</span>   <span class="mi">561</span> <span class="o">|</span>   <span class="mi">461</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Command</span> <span class="no">Tests</span>        <span class="o">|</span>   <span class="mi">306</span> <span class="o">|</span>   <span class="mi">218</span> <span class="o">|</span>       <span class="mi">2</span> <span class="o">|</span>       <span class="mi">4</span> <span class="o">|</span>   <span class="mi">2</span> <span class="o">|</span>    <span class="mi">52</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Controller</span> <span class="no">Tests</span>     <span class="o">|</span> <span class="mi">11246</span> <span class="o">|</span>  <span class="mi">9144</span> <span class="o">|</span>      <span class="mi">10</span> <span class="o">|</span>      <span class="mi">91</span> <span class="o">|</span>   <span class="mi">9</span> <span class="o">|</span>    <span class="mi">98</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Helper</span> <span class="no">Tests</span>         <span class="o">|</span>   <span class="mi">645</span> <span class="o">|</span>   <span class="mi">526</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">2</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>   <span class="mi">261</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Integration</span> <span class="no">Tests</span>    <span class="o">|</span>    <span class="mi">55</span> <span class="o">|</span>    <span class="mi">35</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>    <span class="mi">33</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Job</span> <span class="no">Tests</span>            <span class="o">|</span>  <span class="mi">3310</span> <span class="o">|</span>  <span class="mi">2563</span> <span class="o">|</span>       <span class="mi">4</span> <span class="o">|</span>      <span class="mi">14</span> <span class="o">|</span>   <span class="mi">3</span> <span class="o">|</span>   <span class="mi">181</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Lib</span> <span class="no">Tests</span>            <span class="o">|</span>  <span class="mi">8809</span> <span class="o">|</span>  <span class="mi">7126</span> <span class="o">|</span>      <span class="mi">20</span> <span class="o">|</span>      <span class="mi">29</span> <span class="o">|</span>   <span class="mi">1</span> <span class="o">|</span>   <span class="mi">243</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Model</span> <span class="no">Tests</span>          <span class="o">|</span> <span class="mi">28178</span> <span class="o">|</span> <span class="mi">22837</span> <span class="o">|</span>      <span class="mi">12</span> <span class="o">|</span>      <span class="mi">42</span> <span class="o">|</span>   <span class="mi">3</span> <span class="o">|</span>   <span class="mi">541</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Request</span> <span class="no">Tests</span>        <span class="o">|</span>  <span class="mi">1098</span> <span class="o">|</span>   <span class="mi">865</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">6</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>   <span class="mi">142</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Routing</span> <span class="no">Tests</span>        <span class="o">|</span>   <span class="mi">297</span> <span class="o">|</span>   <span class="mi">233</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">3</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>    <span class="mi">75</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Sync</span> <span class="no">Tests</span>           <span class="o">|</span>   <span class="mi">382</span> <span class="o">|</span>   <span class="mi">303</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Webhook</span> <span class="no">Tests</span>        <span class="o">|</span>    <span class="mi">40</span> <span class="o">|</span>    <span class="mi">35</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">+----------------------+-------+-------+---------+---------+-----+-------+</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Total</span>                <span class="o">|</span> <span class="mi">151944</span><span class="o">|</span> <span class="mi">116973</span><span class="o">|</span>     <span class="mi">858</span> <span class="o">|</span>    <span class="mi">6631</span> <span class="o">|</span>   <span class="mi">7</span> <span class="o">|</span>    <span class="mi">15</span> <span class="o">|</span>
+</span><span class='line'><span class="o">+----------------------+-------+-------+---------+---------+-----+-------+</span>
+</span><span class='line'>  <span class="no">Code</span> <span class="no">LOC</span><span class="p">:</span> <span class="mi">50607</span>     <span class="no">Test</span> <span class="no">LOC</span><span class="p">:</span> <span class="mi">66366</span>     <span class="no">Code</span> <span class="n">to</span> <span class="no">Test</span> <span class="no">Ratio</span><span class="p">:</span> <span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="o">.</span><span class="mi">3</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Service-Oriented</h2>
+
+<p>The codebase evolved in a major way during the year that followed. We started creating satellite apps with the V2 codebase as the &#8220;core&#8221; in the center.</p>
+
+<p>The main experiences shifted to apps targeting the primary user segments:</p>
+
+<ul>
+<li>Business clients</li>
+<li>Taskers browsing for tasks to do</li>
+<li>Consumer clients</li>
+<li>People applying to be taskers</li>
+<li>Admin tools</li>
+<li>Static site for high-traffic marketing pages</li>
+</ul>
+
+
+<p>Additionally, there were several apps for specific functionality defined as &#8220;Bus Apps&#8221; in the <a href="/blog/2013/09/28/resque-bus/">Resque Bus post</a>:</p>
+
+<ul>
+<li>Sending emails, text messages, and push messages</li>
+<li>Recording metrics</li>
+<li>Fraud analysis</li>
+<li>Determining and tagging category of a task</li>
+</ul>
+
+
+<p>Finally, there were several specific apps that were <a href="http://en.wikipedia.org/wiki/Microsite">microsites</a> or for a partnership agreement that used the API.</p>
+
+<p>It was fun and somewhat liberating to say &#8220;Make a new app!&#8221; when there was a new problem domain to tackle. We also used it as a way to handle our growing organization. We could ask Team A to work on App A and know that they could run faster by understanding the scope was limited to that. As a side-note and in retrospect, we probably let organizational factors affect architecture way more than appropriate.</p>
+
+<h3>Gems</h3>
+
+<p>One great thing was the gem situation was more under control because any given app had less dependencies. App B could upgrade Rack (or whatever) because it did not depend on the crazy thing that App A depended on. App C had the terrible native code-dependent gem and we only had to put that on the App C servers. Memory usage was kept lower, allowing us to run more background workers and unicorn threads.</p>
+
+<p>To coordinate common behaviors across the apps, we made several internal gems. For example, there we gems that handled data access, deployment, authentication, shared assets, and things like that. It was sometimes a full-time job to change these shared gems. You have to bump the version of the gem, then either tag it or put it on an internal gem server, go through each of the apps and bump the version in those gem files, and then install, test, and deploy each of them in some coordinated way.</p>
+
+<p>Eventually, a meta-app that knew about all of other other apps. One of the things that it knew how to do was upgrade a gem in all of the apps. It would check them all out locally, create a new branch, edit the Gemfile, <code>bundle install</code>, check in the changes, push to the git server (which ran the tests), and created a pull request on <a href="https://help.github.com/articles/using-pull-requests/">Github</a>. Collectively, this saved us a ton of time as the process is very tedious.</p>
+
+<h3>Routing</h3>
+
+<p>I&#8217;m not actually sure if &#8220;Service-Oriented&#8221; is the right description of this setup. Yes, there were a few &#8220;pure services&#8221; that I didn&#8217;t mention, but many of these apps were directly user facing. Maybe I should call it &#8220;modular&#8221; or something like that. Anyway, in this modular approach, all of the user segments had their own app but they still had to be on the same (taskrabbit.com) domain. Because of this, it was important to put a routing scheme in place.</p>
+
+<p>Each of the apps was given a primary namespace. For example, the business app had the namespace <code>business</code>. Most of its routes went under that path. These namespaces were them codified in our load balancer. So if the load balancer received a request to <code>/business/anything</code>, it would know to route it to the business app.</p>
+
+<p>One easy thing to forget is to also put the assets under that namespace. This is done in the application config:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="n">config</span><span class="o">.</span><span class="n">assets</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;/business/assets&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>We conformed to the single namespace as much as possible, but there were always exceptions. It was usually for SEO reasons or because the URL had to be particularly easy to remember. For example, the static page app had mostly root-level pages such as <code>/how-it-works</code>. These each also had to be added to the load balancer rules. The meta-app knew about these routes as well and another one it its tricks was to be able to generate the rule definition that the load balancer needed.</p>
+
+<h3>Data</h3>
+
+<p>All of the apps used APIs to write anything to the core app that was not in their own databases. They were allowed read-only access to the core database. They used <a href="https://github.com/taskrabbit/resque-bus">Resque Bus</a> to know about relevant changes.</p>
+
+<p>I realize this direct database access is a failure of the service-oriented mindset, but it seemed necessary. It allowed development to go much faster by preventing creation of many GET endpoints and new possible points of failure. We had started down that road and the endpoints looked like direct table reads anyway, so we just allowed that access. I believe it was the right call.</p>
+
+<p>Some reads and all writes used the API. There were gems to standardize this interaction. They used local (intra-network) IP addresses. To our knowledge, the sites were not down, but we still got HTTP issues between the apps every now and then and never fully figured out why.</p>
+
+<p>Each app could have its own database. These used the standard Active Record pattern. These database had somewhat tertiary information but sometimes we wanted to analyze it in combination with the core database. We learned all about joining across databases. We also dumped them all into one database using <a href="https://github.com/taskrabbit/forklift">Forklift</a>, a tool we created to snapshot and transform data.</p>
+
+<h3>Development</h3>
+
+<p>Setting up a development environment was considerably more complicated than back in the monolith days.</p>
+
+<p>Having everything up to date is the first step. At any given time, someone was usually working on something that needed one satellite app and the core one. So first, you had to make sure each was rebased, bundled, and migrated. Then you&#8217;d launch the core app first (because it&#8217;s important but also because it took twice as long to start up). Then you&#8217;d launch the app you&#8217;re working on.</p>
+
+<p>Each had it&#8217;s own port. We standardized so that we could set up YML files and such. We found it was best to override the default port so each just had to run <code>rails s</code> locally. Here is the business app on port <code>5002</code>.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># script/rails</span>
+</span><span class='line'><span class="c1">#!/usr/bin/env ruby</span>
+</span><span class='line'>
+</span><span class='line'><span class="no">APP_PATH</span> <span class="o">=</span> <span class="no">File</span><span class="o">.</span><span class="n">expand_path</span><span class="p">(</span><span class="s1">&#39;../../config/application&#39;</span><span class="p">,</span>  <span class="bp">__FILE__</span><span class="p">)</span>
+</span><span class='line'><span class="nb">require</span> <span class="no">File</span><span class="o">.</span><span class="n">expand_path</span><span class="p">(</span><span class="s1">&#39;../../config/boot&#39;</span><span class="p">,</span>  <span class="bp">__FILE__</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;rails/commands/server&#39;</span>
+</span><span class='line'><span class="k">module</span> <span class="nn">Rails</span>
+</span><span class='line'>  <span class="k">class</span> <span class="nc">Server</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">default_options</span>
+</span><span class='line'>      <span class="k">super</span><span class="o">.</span><span class="n">merge</span><span class="p">({</span> <span class="ss">:Port</span> <span class="o">=&gt;</span> <span class="mi">5002</span> <span class="p">})</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;rails/commands&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This would be enough if you were just working on one app. You would work on <code>http://localhost:5002/yourapp</code> and it would read the core database and/or use the API right to its port. However, if the flow you were working on redirected between apps, you&#8217;d want to run them all in a mounted fashion similar to the production load balancer environment. One example would be updated the home page. This was in the static app that used the core API via Javascript. Filling out an email address would use the API and the redirect to signup in the consumer app. So what we&#8217;d want to do is mount them all under <code>http://localhost:5000</code>. This was accomplished using nginx serving that port and mimicking the load balancer rules to delegate to ports 5001+.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># nginx.conf</span>
+</span><span class='line'><span class="n">server</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">listen</span>       <span class="mi">5000</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">server_name</span>  <span class="n">localhost</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">location</span> <span class="o">~*</span> <span class="sr">/business(/</span><span class="o">.</span><span class="n">*</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="sr">/|$) {</span>
+</span><span class='line'><span class="sr">        proxy_pass  http:/</span><span class="o">/</span><span class="n">localhost</span><span class="p">:</span><span class="mi">5002</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">proxy_buffering</span> <span class="n">off</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">tcp_nodelay</span> <span class="n">on</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="err">$</span> <span class="n">nginx</span> <span class="o">-</span><span class="n">c</span> <span class="sr">/path/</span><span class="n">to</span><span class="o">/</span><span class="n">nginx</span><span class="o">.</span><span class="n">conf</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This will route <code>/business</code> and <code>/business/anything</code> to port 5002 locally. Of course, setting up this situation was pretty tedious too and we already had a place that knew all the routes. So the meta-app could also generate nginx configurations. It had a command line script that would allow you to launch everything in one go via a command like <code>trdev core business static</code>. This would generate a configuration file and run nginx and give instructions to launch each app such as <code>cd /path/to/business &amp;&amp; rails s -p 5002</code>.</p>
+
+<p>The goal was to have minimal dependencies (and frustrations) of course. When you are working on some app, you&#8217;d have to run core. That&#8217;s just how it is. But I don&#8217;t think you should have to run the static app just to not 404 when you go to root or some other app just to be able to login. The goal was to work just on that one app and this modularization was supposed to keep us focused. So I made a middleware that was automatically inserted in development mode to handle really important paths.</p>
+
+<p>With that, if you did hit <code>http://localhost:5002/login</code> just in your app, it would serve a bootstrap-looking login experience. Or if you hit root, it would redirect to <code>/dashboard</code> if you were logged in, just like the Javascript from the static app did. It also served <code>/dashboard</code>. One interesting thing is that each app had the ability to override what was shown on root and dashboard so that it could give helpful links to the developer to the main spots in this app. All of this was possible on things that were handled in middleware such as authentication.</p>
+
+<p>This setup prevented having to do the whole nginx thing very often and a developer could just focus on running the one app and getting things done.</p>
+
+<h3>Tests</h3>
+
+<p>When testing a Rails app, it is very common to use a gem like <a href="https://github.com/vcr/vcr">vcr</a> to record the external interactions. Usually these external interactions are somewhat inconsequential in the grand scheme of things. They are also usually stateless. Examples that come to mind are geocoding an address or sending an SMS.</p>
+
+<p>With one of these satellite apps, the core app was the opposite. It is quite important and quite stateful. The whole app depended on the current state of things and needed it to change. It was also complicated by the direct database access which generally had to line up with what the API was returning. I spent some time stubbing ActiveRecord/MySQL and that was somewhat interesting, but in the end, it was not a stable combination. It also did not fully inspire confidence about the whole system and the interplay between services. To be clear, there were several stubbed (internal) services, but we decided that core one should be tested in tandem.</p>
+
+<p>To solve this problem, we created <a href="https://github.com/taskrabbit/offshore">offshore</a> which I have <a href="/blog/2014/03/16/offshore/">written about before</a>. It ran and refreshed a fixtured and factory-able version of the core platform for the satellite apps to use which testing. It clearly added overhead, but was the best combination of confidence, running time, and maintainability that we found.</p>
+
+<p>The core test suite itself was more standard. It simulated the various requests that external and internal components made to it and checked the results. Of course, the suite itself was taking an hour to run, even when in parallel.</p>
+
+<h3>Denormalized Experiences</h3>
+
+<p>Splitting up the apps into specific user experiences had an interesting side effect that I did not predict. Because each app did a few very specific things and served very specific pages, we ended up really optimizing those experiences. Of course, there&#8217;s no reason that we couldn&#8217;t have done this in the monolithic app, but the focus seemed to empower us to customize.</p>
+
+<p>The improved experience usually came from a specific focus on the data that targeted the use case instead of &#8220;proper&#8221; storage. For example, the primary driver of the tasker application was an <a href="http://www.elasticsearch.org/">ElasticSearch</a> index that contained all tasks currently available. It was all the same data that was somewhere in the core database, but it was stored in a way to optimize the tasker browsing experience. I&#8217;m not sure why did didn&#8217;t add this early to the core app. It&#8217;s probably because all the data was already there and we could get by with SQL queries. Or maybe adding <em>yet another</em> thing to the app was too much to think about. But in it&#8217;s own app, it was liberating.</p>
+
+<p>The app would subscribe to the <a href="/blog/2013/09/28/resque-bus/">bus</a> to get changes and keep it&#8217;s index up to to date. It served it&#8217;s own API that the app used. This API mostly just hit the ElasticSearch index. I believe it also did a quick sanity check against the task state by checking ids in SQL just to make sure the data was not stale as the tasks got picked up quickly and the bus could take a few seconds.</p>
+
+<h3>Back Together</h3>
+
+<p>This is the kind of thing that&#8217;s exciting about making new apps. The plumbing was exhausting and we never really got it to a spot without friction, but we did end up creating better user experiences because of the focus. Of course, we retreated almost completely from this approach with the creation of V3. A few <a href="/blog/2013/09/28/resque-bus/">bus apps</a> exist but the whole experience in now in one app/codebase.</p>
+
+<p>The main trick was to drastically simply what the app did in the first place by limiting feature set. On the technical level, the primary goal is to still feel that same freedom and focus when developing the features you do build. We&#8217;ve primarily done this through the use of <a href="/blog/2014/02/11/rails-4-engines/">engines</a>.</p>
+
+<h2>Final Words</h2>
+
+<p>So there you go: a (short - ha) blog post about four years of my technical life.</p>
+
+<p>My colleagues and I poured our hearts into that code. There were many great pieces and if I&#8217;ve left them out it&#8217;s either because it was too much to explain, I&#8217;ve already forgotten, or that I was mostly hoping to point out various problems we encountered along the way. It&#8217;s not often when there is a such a clear start and beginning to an era of a company and even less so when the codebase clearly reflects it. We have that case here and I hope the journey is helpful to others.</p>
+
+<p>So farewell <code>runmyerrand</code>. One day, years from now, I will find the DVD with you on it and smile. I hope I can still find a DVD drive so I can copy and paste that code I&#8217;m sure I&#8217;ll be looking for.</p>
+
+<p>Numbers just before it went to the DVD:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="no">Core</span>
+</span><span class='line'><span class="o">+----------------------+-------+-------+---------+---------+-----+-------+</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Name</span>                 <span class="o">|</span> <span class="no">Lines</span> <span class="o">|</span>   <span class="no">LOC</span> <span class="o">|</span> <span class="no">Classes</span> <span class="o">|</span> <span class="no">Methods</span> <span class="o">|</span> <span class="n">M</span><span class="o">/</span><span class="n">C</span> <span class="o">|</span> <span class="no">LOC</span><span class="o">/</span><span class="n">M</span> <span class="o">|</span>
+</span><span class='line'><span class="o">+----------------------+-------+-------+---------+---------+-----+-------+</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Apis</span>                 <span class="o">|</span>  <span class="mi">2523</span> <span class="o">|</span>  <span class="mi">1806</span> <span class="o">|</span>      <span class="mi">61</span> <span class="o">|</span>     <span class="mi">192</span> <span class="o">|</span>   <span class="mi">3</span> <span class="o">|</span>     <span class="mi">7</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Awards</span>               <span class="o">|</span>   <span class="mi">488</span> <span class="o">|</span>   <span class="mi">351</span> <span class="o">|</span>      <span class="mi">19</span> <span class="o">|</span>      <span class="mi">57</span> <span class="o">|</span>   <span class="mi">3</span> <span class="o">|</span>     <span class="mi">4</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Controllers</span>          <span class="o">|</span>  <span class="mi">9890</span> <span class="o">|</span>  <span class="mi">7777</span> <span class="o">|</span>     <span class="mi">126</span> <span class="o">|</span>     <span class="mi">880</span> <span class="o">|</span>   <span class="mi">6</span> <span class="o">|</span>     <span class="mi">6</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Filters</span>              <span class="o">|</span>  <span class="mi">1563</span> <span class="o">|</span>  <span class="mi">1274</span> <span class="o">|</span>      <span class="mi">10</span> <span class="o">|</span>     <span class="mi">136</span> <span class="o">|</span>  <span class="mi">13</span> <span class="o">|</span>     <span class="mi">7</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Helpers</span>              <span class="o">|</span>  <span class="mi">9890</span> <span class="o">|</span>  <span class="mi">8107</span> <span class="o">|</span>      <span class="mi">93</span> <span class="o">|</span>     <span class="mi">984</span> <span class="o">|</span>  <span class="mi">10</span> <span class="o">|</span>     <span class="mi">6</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Inputs</span>               <span class="o">|</span>   <span class="mi">111</span> <span class="o">|</span>    <span class="mi">95</span> <span class="o">|</span>       <span class="mi">5</span> <span class="o">|</span>       <span class="mi">6</span> <span class="o">|</span>   <span class="mi">1</span> <span class="o">|</span>    <span class="mi">13</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Mailers</span>              <span class="o">|</span>  <span class="mi">1034</span> <span class="o">|</span>   <span class="mi">784</span> <span class="o">|</span>       <span class="mi">9</span> <span class="o">|</span>      <span class="mi">99</span> <span class="o">|</span>  <span class="mi">11</span> <span class="o">|</span>     <span class="mi">5</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Models</span>               <span class="o">|</span> <span class="mi">28708</span> <span class="o">|</span> <span class="mi">21854</span> <span class="o">|</span>     <span class="mi">258</span> <span class="o">|</span>    <span class="mi">2914</span> <span class="o">|</span>  <span class="mi">11</span> <span class="o">|</span>     <span class="mi">5</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Observers</span>            <span class="o">|</span>   <span class="mi">244</span> <span class="o">|</span>   <span class="mi">172</span> <span class="o">|</span>       <span class="mi">9</span> <span class="o">|</span>      <span class="mi">29</span> <span class="o">|</span>   <span class="mi">3</span> <span class="o">|</span>     <span class="mi">3</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Presenters</span>           <span class="o">|</span>   <span class="mi">193</span> <span class="o">|</span>   <span class="mi">136</span> <span class="o">|</span>       <span class="mi">5</span> <span class="o">|</span>      <span class="mi">29</span> <span class="o">|</span>   <span class="mi">5</span> <span class="o">|</span>     <span class="mi">2</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Services</span>             <span class="o">|</span>  <span class="mi">1034</span> <span class="o">|</span>   <span class="mi">864</span> <span class="o">|</span>       <span class="mi">7</span> <span class="o">|</span>      <span class="mi">84</span> <span class="o">|</span>  <span class="mi">12</span> <span class="o">|</span>     <span class="mi">8</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Syncs</span>                <span class="o">|</span>  <span class="mi">1042</span> <span class="o">|</span>   <span class="mi">849</span> <span class="o">|</span>      <span class="mi">23</span> <span class="o">|</span>      <span class="mi">94</span> <span class="o">|</span>   <span class="mi">4</span> <span class="o">|</span>     <span class="mi">7</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Validators</span>           <span class="o">|</span>   <span class="mi">277</span> <span class="o">|</span>   <span class="mi">195</span> <span class="o">|</span>       <span class="mi">9</span> <span class="o">|</span>      <span class="mi">27</span> <span class="o">|</span>   <span class="mi">3</span> <span class="o">|</span>     <span class="mi">5</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Widgets</span>              <span class="o">|</span>   <span class="mi">560</span> <span class="o">|</span>   <span class="mi">447</span> <span class="o">|</span>      <span class="mi">13</span> <span class="o">|</span>      <span class="mi">60</span> <span class="o">|</span>   <span class="mi">4</span> <span class="o">|</span>     <span class="mi">5</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Workers</span>              <span class="o">|</span>  <span class="mi">2036</span> <span class="o">|</span>  <span class="mi">1515</span> <span class="o">|</span>      <span class="mi">81</span> <span class="o">|</span>     <span class="mi">237</span> <span class="o">|</span>   <span class="mi">2</span> <span class="o">|</span>     <span class="mi">4</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Javascripts</span>          <span class="o">|</span> <span class="mi">47956</span> <span class="o">|</span> <span class="mi">30588</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>    <span class="mi">3275</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">7</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Adapters</span>             <span class="o">|</span>   <span class="mi">535</span> <span class="o">|</span>   <span class="mi">429</span> <span class="o">|</span>      <span class="mi">12</span> <span class="o">|</span>      <span class="mi">39</span> <span class="o">|</span>   <span class="mi">3</span> <span class="o">|</span>     <span class="mi">9</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Libraries</span>            <span class="o">|</span>  <span class="mi">8193</span> <span class="o">|</span>  <span class="mi">6591</span> <span class="o">|</span>     <span class="mi">170</span> <span class="o">|</span>     <span class="mi">771</span> <span class="o">|</span>   <span class="mi">4</span> <span class="o">|</span>     <span class="mi">6</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Configuration</span>        <span class="o">|</span>  <span class="mi">5453</span> <span class="o">|</span>  <span class="mi">3837</span> <span class="o">|</span>      <span class="mi">21</span> <span class="o">|</span>     <span class="mi">103</span> <span class="o">|</span>   <span class="mi">4</span> <span class="o">|</span>    <span class="mi">35</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Gems</span>                 <span class="o">|</span>   <span class="mi">863</span> <span class="o">|</span>   <span class="mi">672</span> <span class="o">|</span>      <span class="mi">15</span> <span class="o">|</span>      <span class="mi">93</span> <span class="o">|</span>   <span class="mi">6</span> <span class="o">|</span>     <span class="mi">5</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Other</span> <span class="no">Tests</span>          <span class="o">|</span> <span class="mi">26052</span> <span class="o">|</span> <span class="mi">17280</span> <span class="o">|</span>      <span class="mi">23</span> <span class="o">|</span>     <span class="mi">167</span> <span class="o">|</span>   <span class="mi">7</span> <span class="o">|</span>   <span class="mi">101</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Spec</span> <span class="no">Support</span>         <span class="o">|</span>  <span class="mi">4987</span> <span class="o">|</span>  <span class="mi">3707</span> <span class="o">|</span>      <span class="mi">19</span> <span class="o">|</span>     <span class="mi">215</span> <span class="o">|</span>  <span class="mi">11</span> <span class="o">|</span>    <span class="mi">15</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Api</span> <span class="no">Tests</span>            <span class="o">|</span>  <span class="mi">8650</span> <span class="o">|</span>  <span class="mi">6909</span> <span class="o">|</span>       <span class="mi">7</span> <span class="o">|</span>      <span class="mi">55</span> <span class="o">|</span>   <span class="mi">7</span> <span class="o">|</span>   <span class="mi">123</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Widget</span> <span class="no">Tests</span>         <span class="o">|</span>   <span class="mi">812</span> <span class="o">|</span>   <span class="mi">608</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Award</span> <span class="no">Tests</span>          <span class="o">|</span>   <span class="mi">541</span> <span class="o">|</span>   <span class="mi">437</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Controller</span> <span class="no">Tests</span>     <span class="o">|</span>  <span class="mi">6405</span> <span class="o">|</span>  <span class="mi">5135</span> <span class="o">|</span>       <span class="mi">8</span> <span class="o">|</span>      <span class="mi">40</span> <span class="o">|</span>   <span class="mi">5</span> <span class="o">|</span>   <span class="mi">126</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Model</span> <span class="no">Tests</span>          <span class="o">|</span> <span class="mi">31273</span> <span class="o">|</span> <span class="mi">24952</span> <span class="o">|</span>      <span class="mi">10</span> <span class="o">|</span>      <span class="mi">46</span> <span class="o">|</span>   <span class="mi">4</span> <span class="o">|</span>   <span class="mi">540</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Helper</span> <span class="no">Tests</span>         <span class="o">|</span>   <span class="mi">816</span> <span class="o">|</span>   <span class="mi">651</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">2</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>   <span class="mi">323</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Lib</span> <span class="no">Tests</span>            <span class="o">|</span>  <span class="mi">4695</span> <span class="o">|</span>  <span class="mi">3677</span> <span class="o">|</span>       <span class="mi">4</span> <span class="o">|</span>      <span class="mi">33</span> <span class="o">|</span>   <span class="mi">8</span> <span class="o">|</span>   <span class="mi">109</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Observer</span> <span class="no">Tests</span>       <span class="o">|</span>   <span class="mi">299</span> <span class="o">|</span>   <span class="mi">219</span> <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Request</span> <span class="no">Tests</span>        <span class="o">|</span>  <span class="mi">4472</span> <span class="o">|</span>  <span class="mi">3400</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>      <span class="mi">11</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>   <span class="mi">307</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Service</span> <span class="no">Tests</span>        <span class="o">|</span>   <span class="mi">635</span> <span class="o">|</span>   <span class="mi">487</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>      <span class="mi">11</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>    <span class="mi">42</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Presenter</span> <span class="no">Tests</span>      <span class="o">|</span>    <span class="mi">12</span> <span class="o">|</span>     <span class="mi">9</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Routing</span> <span class="no">Tests</span>        <span class="o">|</span>   <span class="mi">269</span> <span class="o">|</span>   <span class="mi">202</span> <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>       <span class="mi">3</span> <span class="o">|</span>   <span class="mi">3</span> <span class="o">|</span>    <span class="mi">65</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Sync</span> <span class="no">Tests</span>           <span class="o">|</span>  <span class="mi">1274</span> <span class="o">|</span>   <span class="mi">988</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>   <span class="mi">986</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Validator</span> <span class="no">Tests</span>      <span class="o">|</span>    <span class="mi">78</span> <span class="o">|</span>    <span class="mi">61</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Worker</span> <span class="no">Tests</span>         <span class="o">|</span>  <span class="mi">2911</span> <span class="o">|</span>  <span class="mi">2161</span> <span class="o">|</span>       <span class="mi">7</span> <span class="o">|</span>      <span class="mi">14</span> <span class="o">|</span>   <span class="mi">2</span> <span class="o">|</span>   <span class="mi">152</span> <span class="o">|</span>
+</span><span class='line'><span class="o">+----------------------+-------+-------+---------+---------+-----+-------+</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Total</span>                <span class="o">|</span> <span class="mi">216774</span><span class="o">|</span> <span class="mi">159226</span><span class="o">|</span>    <span class="mi">1026</span> <span class="o">|</span>   <span class="mi">10707</span> <span class="o">|</span>  <span class="mi">10</span> <span class="o">|</span>    <span class="mi">12</span> <span class="o">|</span>
+</span><span class='line'><span class="o">+----------------------+-------+-------+---------+---------+-----+-------+</span>
+</span><span class='line'>  <span class="no">Code</span> <span class="no">LOC</span><span class="p">:</span> <span class="mi">88343</span>     <span class="no">Test</span> <span class="no">LOC</span><span class="p">:</span> <span class="mi">70883</span>     <span class="no">Code</span> <span class="n">to</span> <span class="no">Test</span> <span class="no">Ratio</span><span class="p">:</span> <span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="o">.</span><span class="mi">8</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="no">Other</span> <span class="no">Rails</span> <span class="no">Apps</span>
+</span><span class='line'><span class="o">+----------------------+-------+-------+---------+---------+-----+-------+</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Name</span>                 <span class="o">|</span> <span class="no">Lines</span> <span class="o">|</span>   <span class="no">LOC</span> <span class="o">|</span> <span class="no">Classes</span> <span class="o">|</span> <span class="no">Methods</span> <span class="o">|</span> <span class="n">M</span><span class="o">/</span><span class="n">C</span> <span class="o">|</span> <span class="no">LOC</span><span class="o">/</span><span class="n">M</span> <span class="o">|</span>
+</span><span class='line'><span class="o">+----------------------+-------+-------+---------+---------+-----+-------+</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Controllers</span>          <span class="o">|</span>  <span class="mi">5457</span> <span class="o">|</span>  <span class="mi">4138</span> <span class="o">|</span>      <span class="mi">98</span> <span class="o">|</span>     <span class="mi">463</span> <span class="o">|</span>   <span class="mi">4</span> <span class="o">|</span>     <span class="mi">6</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Helpers</span>              <span class="o">|</span>  <span class="mi">2336</span> <span class="o">|</span>  <span class="mi">1787</span> <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>     <span class="mi">250</span> <span class="o">|</span> <span class="mi">250</span> <span class="o">|</span>     <span class="mi">5</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Models</span>               <span class="o">|</span> <span class="mi">12440</span> <span class="o">|</span>  <span class="mi">9359</span> <span class="o">|</span>     <span class="mi">245</span> <span class="o">|</span>    <span class="mi">1054</span> <span class="o">|</span>   <span class="mi">4</span> <span class="o">|</span>     <span class="mi">6</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Javascripts</span>          <span class="o">|</span> <span class="mi">54742</span> <span class="o">|</span> <span class="mi">35636</span> <span class="o">|</span>       <span class="mi">2</span> <span class="o">|</span>    <span class="mi">4357</span> <span class="o">|</span> <span class="mi">2178</span> <span class="o">|</span>     <span class="mi">6</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Processors</span>           <span class="o">|</span>   <span class="mi">142</span> <span class="o">|</span>    <span class="mi">70</span> <span class="o">|</span>       <span class="mi">4</span> <span class="o">|</span>       <span class="mi">9</span> <span class="o">|</span>   <span class="mi">2</span> <span class="o">|</span>     <span class="mi">5</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Workers</span>              <span class="o">|</span>   <span class="mi">273</span> <span class="o">|</span>   <span class="mi">203</span> <span class="o">|</span>      <span class="mi">12</span> <span class="o">|</span>      <span class="mi">31</span> <span class="o">|</span>   <span class="mi">2</span> <span class="o">|</span>     <span class="mi">4</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Widgets</span>              <span class="o">|</span>   <span class="mi">432</span> <span class="o">|</span>   <span class="mi">314</span> <span class="o">|</span>       <span class="mi">9</span> <span class="o">|</span>      <span class="mi">49</span> <span class="o">|</span>   <span class="mi">5</span> <span class="o">|</span>     <span class="mi">4</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Forms</span>                <span class="o">|</span>   <span class="mi">192</span> <span class="o">|</span>   <span class="mi">149</span> <span class="o">|</span>       <span class="mi">4</span> <span class="o">|</span>      <span class="mi">27</span> <span class="o">|</span>   <span class="mi">6</span> <span class="o">|</span>     <span class="mi">3</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Interactions</span>         <span class="o">|</span>   <span class="mi">627</span> <span class="o">|</span>   <span class="mi">442</span> <span class="o">|</span>      <span class="mi">20</span> <span class="o">|</span>      <span class="mi">70</span> <span class="o">|</span>   <span class="mi">3</span> <span class="o">|</span>     <span class="mi">4</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Apis</span>                 <span class="o">|</span>   <span class="mi">542</span> <span class="o">|</span>   <span class="mi">324</span> <span class="o">|</span>      <span class="mi">13</span> <span class="o">|</span>      <span class="mi">46</span> <span class="o">|</span>   <span class="mi">3</span> <span class="o">|</span>     <span class="mi">5</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Decorators</span>           <span class="o">|</span>    <span class="mi">92</span> <span class="o">|</span>    <span class="mi">78</span> <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>      <span class="mi">13</span> <span class="o">|</span>  <span class="mi">13</span> <span class="o">|</span>     <span class="mi">4</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">External</span> <span class="no">Services</span>    <span class="o">|</span>   <span class="mi">712</span> <span class="o">|</span>   <span class="mi">527</span> <span class="o">|</span>      <span class="mi">13</span> <span class="o">|</span>      <span class="mi">98</span> <span class="o">|</span>   <span class="mi">7</span> <span class="o">|</span>     <span class="mi">3</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Geography</span> <span class="no">Models</span>     <span class="o">|</span>    <span class="mi">18</span> <span class="o">|</span>    <span class="mi">15</span> <span class="o">|</span>       <span class="mi">4</span> <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>    <span class="mi">13</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Notifiers</span>            <span class="o">|</span>   <span class="mi">474</span> <span class="o">|</span>   <span class="mi">368</span> <span class="o">|</span>      <span class="mi">12</span> <span class="o">|</span>      <span class="mi">52</span> <span class="o">|</span>   <span class="mi">4</span> <span class="o">|</span>     <span class="mi">5</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Policies</span>             <span class="o">|</span>   <span class="mi">128</span> <span class="o">|</span>    <span class="mi">91</span> <span class="o">|</span>       <span class="mi">7</span> <span class="o">|</span>      <span class="mi">23</span> <span class="o">|</span>   <span class="mi">3</span> <span class="o">|</span>     <span class="mi">1</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Remote</span> <span class="no">Models</span>        <span class="o">|</span>   <span class="mi">707</span> <span class="o">|</span>   <span class="mi">557</span> <span class="o">|</span>      <span class="mi">36</span> <span class="o">|</span>      <span class="mi">55</span> <span class="o">|</span>   <span class="mi">1</span> <span class="o">|</span>     <span class="mi">8</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Services</span>             <span class="o">|</span>   <span class="mi">948</span> <span class="o">|</span>   <span class="mi">802</span> <span class="o">|</span>      <span class="mi">12</span> <span class="o">|</span>      <span class="mi">75</span> <span class="o">|</span>   <span class="mi">6</span> <span class="o">|</span>     <span class="mi">8</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Uploaders</span>            <span class="o">|</span>    <span class="mi">28</span> <span class="o">|</span>    <span class="mi">20</span> <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>       <span class="mi">3</span> <span class="o">|</span>   <span class="mi">3</span> <span class="o">|</span>     <span class="mi">4</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Validators</span>           <span class="o">|</span>    <span class="mi">36</span> <span class="o">|</span>    <span class="mi">27</span> <span class="o">|</span>       <span class="mi">3</span> <span class="o">|</span>       <span class="mi">3</span> <span class="o">|</span>   <span class="mi">1</span> <span class="o">|</span>     <span class="mi">7</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Modules</span>              <span class="o">|</span>    <span class="mi">43</span> <span class="o">|</span>    <span class="mi">31</span> <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>       <span class="mi">6</span> <span class="o">|</span>   <span class="mi">6</span> <span class="o">|</span>     <span class="mi">3</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Repos</span>                <span class="o">|</span>    <span class="mi">90</span> <span class="o">|</span>    <span class="mi">72</span> <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>      <span class="mi">10</span> <span class="o">|</span>  <span class="mi">10</span> <span class="o">|</span>     <span class="mi">5</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Concerns</span>             <span class="o">|</span>    <span class="mi">23</span> <span class="o">|</span>    <span class="mi">20</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">3</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">4</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Jobs</span>                 <span class="o">|</span>   <span class="mi">154</span> <span class="o">|</span>   <span class="mi">109</span> <span class="o">|</span>       <span class="mi">7</span> <span class="o">|</span>      <span class="mi">20</span> <span class="o">|</span>   <span class="mi">2</span> <span class="o">|</span>     <span class="mi">3</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Presenters</span>           <span class="o">|</span>   <span class="mi">153</span> <span class="o">|</span>   <span class="mi">118</span> <span class="o">|</span>       <span class="mi">2</span> <span class="o">|</span>      <span class="mi">26</span> <span class="o">|</span>  <span class="mi">13</span> <span class="o">|</span>     <span class="mi">2</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Mailers</span>              <span class="o">|</span>    <span class="mi">25</span> <span class="o">|</span>    <span class="mi">21</span> <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>       <span class="mi">3</span> <span class="o">|</span>   <span class="mi">3</span> <span class="o">|</span>     <span class="mi">5</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Gems</span>                 <span class="o">|</span>  <span class="mi">3879</span> <span class="o">|</span>  <span class="mi">2814</span> <span class="o">|</span>      <span class="mi">29</span> <span class="o">|</span>     <span class="mi">348</span> <span class="o">|</span>  <span class="mi">12</span> <span class="o">|</span>     <span class="mi">6</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Controller</span> <span class="no">Tests</span>     <span class="o">|</span>  <span class="mi">3422</span> <span class="o">|</span>  <span class="mi">2604</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">7</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>   <span class="mi">370</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Spec</span> <span class="no">Support</span>         <span class="o">|</span>  <span class="mi">3368</span> <span class="o">|</span>  <span class="mi">2518</span> <span class="o">|</span>      <span class="mi">30</span> <span class="o">|</span>     <span class="mi">250</span> <span class="o">|</span>   <span class="mi">8</span> <span class="o">|</span>     <span class="mi">8</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Helper</span> <span class="no">Tests</span>         <span class="o">|</span>   <span class="mi">248</span> <span class="o">|</span>   <span class="mi">147</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Integration</span> <span class="no">Tests</span>    <span class="o">|</span>   <span class="mi">307</span> <span class="o">|</span>   <span class="mi">229</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Model</span> <span class="no">Tests</span>          <span class="o">|</span>  <span class="mi">8841</span> <span class="o">|</span>  <span class="mi">6868</span> <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>       <span class="mi">3</span> <span class="o">|</span>   <span class="mi">3</span> <span class="o">|</span>  <span class="mi">2287</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Other</span> <span class="no">Tests</span>          <span class="o">|</span>  <span class="mi">1597</span> <span class="o">|</span>  <span class="mi">1257</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">2</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>   <span class="mi">626</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Request</span> <span class="no">Tests</span>        <span class="o">|</span>  <span class="mi">1496</span> <span class="o">|</span>  <span class="mi">1198</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Feature</span> <span class="no">Tests</span>        <span class="o">|</span>  <span class="mi">6388</span> <span class="o">|</span>  <span class="mi">5082</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>      <span class="mi">15</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>   <span class="mi">336</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Form</span> <span class="no">Tests</span>           <span class="o">|</span>    <span class="mi">74</span> <span class="o">|</span>    <span class="mi">53</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Interaction</span> <span class="no">Tests</span>    <span class="o">|</span>   <span class="mi">831</span> <span class="o">|</span>   <span class="mi">586</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">External</span> <span class="no">Service</span> <span class="no">Test</span><span class="o">|</span>   <span class="mi">907</span> <span class="o">|</span>   <span class="mi">650</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Notifier</span> <span class="no">Tests</span>       <span class="o">|</span>  <span class="mi">1172</span> <span class="o">|</span>   <span class="mi">938</span> <span class="o">|</span>       <span class="mi">2</span> <span class="o">|</span>       <span class="mi">3</span> <span class="o">|</span>   <span class="mi">1</span> <span class="o">|</span>   <span class="mi">310</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Policy</span> <span class="no">Tests</span>         <span class="o">|</span>    <span class="mi">27</span> <span class="o">|</span>    <span class="mi">20</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Service</span> <span class="no">Tests</span>        <span class="o">|</span>   <span class="mi">727</span> <span class="o">|</span>   <span class="mi">563</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Worker</span> <span class="no">Tests</span>         <span class="o">|</span>   <span class="mi">252</span> <span class="o">|</span>   <span class="mi">182</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Lib</span> <span class="no">Tests</span>            <span class="o">|</span>   <span class="mi">727</span> <span class="o">|</span>   <span class="mi">572</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>   <span class="mi">570</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Concern</span> <span class="no">Tests</span>        <span class="o">|</span>    <span class="mi">15</span> <span class="o">|</span>    <span class="mi">12</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Job</span> <span class="no">Tests</span>            <span class="o">|</span>   <span class="mi">129</span> <span class="o">|</span>    <span class="mi">93</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Presenter</span> <span class="no">Tests</span>      <span class="o">|</span>   <span class="mi">144</span> <span class="o">|</span>   <span class="mi">114</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Remote</span> <span class="no">Model</span> <span class="no">Tests</span>   <span class="o">|</span>   <span class="mi">386</span> <span class="o">|</span>   <span class="mi">305</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Validator</span> <span class="no">Tests</span>      <span class="o">|</span>    <span class="mi">21</span> <span class="o">|</span>    <span class="mi">16</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Decorator</span> <span class="no">Tests</span>      <span class="o">|</span>   <span class="mi">154</span> <span class="o">|</span>   <span class="mi">130</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>   <span class="mi">128</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Mailer</span> <span class="no">Tests</span>         <span class="o">|</span>     <span class="mi">5</span> <span class="o">|</span>     <span class="mi">4</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">+----------------------+-------+-------+---------+---------+-----+-------+</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Total</span>                <span class="o">|</span> <span class="mi">115931</span><span class="o">|</span> <span class="mi">82233</span> <span class="o">|</span>     <span class="mi">571</span> <span class="o">|</span>    <span class="mi">7377</span> <span class="o">|</span>  <span class="mi">12</span> <span class="o">|</span>     <span class="mi">9</span> <span class="o">|</span>
+</span><span class='line'><span class="o">+----------------------+-------+-------+---------+---------+-----+-------+</span>
+</span><span class='line'>  <span class="no">Code</span> <span class="no">LOC</span><span class="p">:</span> <span class="mi">58092</span>     <span class="no">Test</span> <span class="no">LOC</span><span class="p">:</span> <span class="mi">24141</span>     <span class="no">Code</span> <span class="n">to</span> <span class="no">Test</span> <span class="no">Ratio</span><span class="p">:</span> <span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="o">.</span><span class="mi">4</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="no">Shared</span> <span class="no">Gems</span>
+</span><span class='line'><span class="o">+----------------------+-------+-------+---------+---------+-----+-------+</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Name</span>                 <span class="o">|</span> <span class="no">Lines</span> <span class="o">|</span>   <span class="no">LOC</span> <span class="o">|</span> <span class="no">Classes</span> <span class="o">|</span> <span class="no">Methods</span> <span class="o">|</span> <span class="n">M</span><span class="o">/</span><span class="n">C</span> <span class="o">|</span> <span class="no">LOC</span><span class="o">/</span><span class="n">M</span> <span class="o">|</span>
+</span><span class='line'><span class="o">+----------------------+-------+-------+---------+---------+-----+-------+</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Controllers</span>          <span class="o">|</span>   <span class="mi">736</span> <span class="o">|</span>   <span class="mi">576</span> <span class="o">|</span>      <span class="mi">17</span> <span class="o">|</span>      <span class="mi">82</span> <span class="o">|</span>   <span class="mi">4</span> <span class="o">|</span>     <span class="mi">5</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Helpers</span>              <span class="o">|</span>   <span class="mi">238</span> <span class="o">|</span>   <span class="mi">167</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>      <span class="mi">17</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">7</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Models</span>               <span class="o">|</span>   <span class="mi">491</span> <span class="o">|</span>   <span class="mi">387</span> <span class="o">|</span>      <span class="mi">13</span> <span class="o">|</span>      <span class="mi">59</span> <span class="o">|</span>   <span class="mi">4</span> <span class="o">|</span>     <span class="mi">4</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Widgets</span>              <span class="o">|</span>   <span class="mi">220</span> <span class="o">|</span>   <span class="mi">175</span> <span class="o">|</span>       <span class="mi">8</span> <span class="o">|</span>      <span class="mi">22</span> <span class="o">|</span>   <span class="mi">2</span> <span class="o">|</span>     <span class="mi">5</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Javascripts</span>          <span class="o">|</span> <span class="mi">12695</span> <span class="o">|</span>  <span class="mi">7840</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>     <span class="mi">819</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">7</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Adapters</span>             <span class="o">|</span>    <span class="mi">69</span> <span class="o">|</span>    <span class="mi">51</span> <span class="o">|</span>       <span class="mi">1</span> <span class="o">|</span>       <span class="mi">8</span> <span class="o">|</span>   <span class="mi">8</span> <span class="o">|</span>     <span class="mi">4</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Gems</span>                 <span class="o">|</span> <span class="mi">10310</span> <span class="o">|</span>  <span class="mi">7982</span> <span class="o">|</span>     <span class="mi">153</span> <span class="o">|</span>    <span class="mi">1034</span> <span class="o">|</span>   <span class="mi">6</span> <span class="o">|</span>     <span class="mi">5</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Other</span> <span class="no">Tests</span>          <span class="o">|</span>  <span class="mi">2244</span> <span class="o">|</span>  <span class="mi">1712</span> <span class="o">|</span>      <span class="mi">17</span> <span class="o">|</span>      <span class="mi">30</span> <span class="o">|</span>   <span class="mi">1</span> <span class="o">|</span>    <span class="mi">55</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Spec</span> <span class="no">Support</span>         <span class="o">|</span>   <span class="mi">619</span> <span class="o">|</span>   <span class="mi">374</span> <span class="o">|</span>      <span class="mi">11</span> <span class="o">|</span>      <span class="mi">31</span> <span class="o">|</span>   <span class="mi">2</span> <span class="o">|</span>    <span class="mi">10</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Lib</span> <span class="no">Tests</span>            <span class="o">|</span>   <span class="mi">619</span> <span class="o">|</span>   <span class="mi">498</span> <span class="o">|</span>      <span class="mi">14</span> <span class="o">|</span>      <span class="mi">14</span> <span class="o">|</span>   <span class="mi">1</span> <span class="o">|</span>    <span class="mi">33</span> <span class="o">|</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Model</span> <span class="no">Tests</span>          <span class="o">|</span>    <span class="mi">15</span> <span class="o">|</span>    <span class="mi">13</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>       <span class="mi">0</span> <span class="o">|</span>   <span class="mi">0</span> <span class="o">|</span>     <span class="mi">0</span> <span class="o">|</span>
+</span><span class='line'><span class="o">+----------------------+-------+-------+---------+---------+-----+-------+</span>
+</span><span class='line'><span class="o">|</span> <span class="no">Total</span>                <span class="o">|</span> <span class="mi">28256</span> <span class="o">|</span> <span class="mi">19775</span> <span class="o">|</span>     <span class="mi">234</span> <span class="o">|</span>    <span class="mi">2116</span> <span class="o">|</span>   <span class="mi">9</span> <span class="o">|</span>     <span class="mi">7</span> <span class="o">|</span>
+</span><span class='line'><span class="o">+----------------------+-------+-------+---------+---------+-----+-------+</span>
+</span><span class='line'>  <span class="no">Code</span> <span class="no">LOC</span><span class="p">:</span> <span class="mi">17178</span>     <span class="no">Test</span> <span class="no">LOC</span><span class="p">:</span> <span class="mi">2597</span>     <span class="no">Code</span> <span class="n">to</span> <span class="no">Test</span> <span class="no">Ratio</span><span class="p">:</span> <span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="o">.</span><span class="mi">2</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<div class="jumbotron">
+  <image src="/images/posts/v2-retrospective/dvd.jpg" alternate="BL DVD" class="bigPicture" />
+</div>
+
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+
+<section id="comment">
+    <h1 class="title">Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://bleonard.github.com/blog/2015/10/06/v2-retrospective/';
+        var disqus_url = 'http://bleonard.github.com/blog/2015/10/06/v2-retrospective/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

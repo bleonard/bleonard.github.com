@@ -1,0 +1,633 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: ios | BLog]]></title>
+  <link href="http://bleonard.github.com/blog/categories/ios/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.com/"/>
+  <updated>2017-02-25T21:54:36-08:00</updated>
+  <id>http://bleonard.github.com/</id>
+  <author>
+    <name><![CDATA[Brian Leonard]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[React Native Launch]]></title>
+    <link href="http://bleonard.github.com/blog/2015/12/17/react-native-launch/"/>
+    <updated>2015-12-17T00:00:00-08:00</updated>
+    <id>http://bleonard.github.com/blog/2015/12/17/react-native-launch</id>
+    <content type="html"><![CDATA[<p>This week, we launched our updated Tasker app to the community. This is not the app on the app store, but rather the one the Taskers use to get their work done. Functionally, not much has changed since the last release. But underneath, the app has been completely rewritten in <a href="https://facebook.github.io/react-native/">React Native</a>.</p>
+
+<p>First and foremost, a huge congratulations needs to go out to the team, especially <a href="https://twitter.com/jrichardlai">JR</a>. I've never been on an engineering project that went as smoothly or was as fun as this one. So good!</p>
+
+<h2>Prototype</h2>
+
+<p>I started looking into React Native in the beginning of August. It's a really great story. First of all, it's <a href="https://facebook.github.io/react/">React</a>. I've now decided that's just about the best thing out there. Secondly, I was 10x more productive than when developing a regular iOS app. Finally, there was a decent chance much of the code could be reused on Android. If every feature did not have to be developed twice, we could choose to develop twice as many features or have half the engineers work on something else.</p>
+
+<p>I created a prototype to see if I thought it could work. The main concerns I had we around navigation, push notifications, other native features, data storage, and just getting the right project structure. More or less, I ended up with the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">React Native Sample App</a> that we published. All of those things showed great promise or at least that they were possible.</p>
+
+<!-- more -->
+
+
+<p>The community was also evolving rapidly. It's super exciting to be working at the beginning of a technology that shows great promise. Each week, there would be a new thing on github that solved one of our needs. Our strategy was to put off a feature to see if the core team or community would make something available. If they did not, we went ahead and <a href="https://github.com/taskrabbit/react-native-parsed-text">wrote</a> it. I'm sure everyone was doing something similar. Let's call it bootstrap chicken.</p>
+
+<p>The prototype was enough to convince me and enough to get people excited about it. Towards the end of September, JR started working full-time on it. My time in greenfield projects had to come to a close. Back to real life, but I stayed involved as the Product Manager.</p>
+
+<h2>Product Management</h2>
+
+<p>I can't imagine anyone saying that I'm a very good PM. In particular, my story acceptance followup is horrendous. Fortunately, <a href="https://twitter.com/pdevine">Paul</a> helped me out. I did do a pretty good job of writing the stories and putting them in the right order.</p>
+
+<p>One decision made this project work, though. It was to acknowledge that this is an engineering project, not a product one. It's so very tempting to update the functionality of the app "while you're at it." But opening that door would have doubled the length of the project. Those discussions with design and others would eat up the development time. It would have made the rollout harder. We could do a soft release because it's basically the same app. I've written about <a href="/blog/2015/10/26/rewrite/">rewrites</a> before, but that was to drastically change the product. If you can get away with it, do it in place and keep it the same. At least we followed one of those.</p>
+
+<p>So I dragged stories around while JR worked his butt off. This is not a small app and we hit critical functional parity (with many UI tweaks needed) at the beginning of October. We put this in the hands of some Taskers and got their feedback. From there it was getting the less critical features done, getting feedback, shipping new builds, making it prettier, and fixing bugs.</p>
+
+<h2>Shipping</h2>
+
+<p>By last week, we felt really good about it but needed to buckle down to get the release out. We'd been working so quickly that it was hard to slow down and be more methodical in the final run up. We felt good because <a href="http://jeremyeaton.co/">Jeremy</a> joined the team, we had great <a href="/blog/2015/11/08/react-native-integration-tests/">test coverage</a>, and real Taskers in multiple countries were actually using the thing.</p>
+
+<p>We put out another release to a wider audience and incorporated a few final items. Then... ship it. The reception has been neutral. Nothing good or bad. This is amazing! That means success in a technology project with no new features except all of the old ones.</p>
+
+<h2>Notes</h2>
+
+<p>I just wanted to note a few interesting things that we did or encountered.</p>
+
+<ul>
+<li><p>We have been beta testing React Native integration from <a href="https://realm.io">Realm</a>. All of our lists (non-singletons) stores are backed by a Realm database. For example, we use this for storing tasks. The various lists and drill-down screens all use the same data. That means its very likely to be always up to date. If you're interested in trying it out, sign up <a href="http://goo.gl/forms/UvS8ZM9LOA">here</a>.</p></li>
+<li><p>Be careful about the JS runtime (iOS version). We've been testing in iOS 9. Right before release, we realized a library we use was using <code>new Symbol()</code>. It works in 9.0+ but not in 8.x versions of the OS.</p></li>
+<li><p>Our navigation scheme really is awesome. It makes everything easier. Check out more information <a href="/blog/2015/09/21/react-native-example-app/">here</a>.</p></li>
+<li><p>Internationalization was really interesting. I'll write up more on this topic but, briefly: each component declares its own words and we have code to go through all the components and collect them up. Then we can send that off for translation.</p></li>
+<li><p><a href="https://facebook.github.io/react/docs/flux-overview.html">Flux</a> and event dispatching in general really worked out well. Just having minor piece of indirection reduces coupling and leads to great results</p></li>
+<li><p>JR is trying to convert me to ES2015 and also away from <a href="https://facebook.github.io/react/docs/reusable-components.html#mixins">mixins</a>. He did this <a href="https://github.com/taskrabbit/react-component-extension">extension</a> thing. He's probably right.</p></li>
+<li><p>I think there's a missing pattern for how to run things in the "background" in these apps. For example, maybe we're supposed to sync something with the server every hour or so. We made something up but I haven't seen anything else about it.</p></li>
+<li><p>Everything that is iOS specific is in one directory right now and it's not much. I'm really looking forward to the Android build.</p></li>
+</ul>
+
+
+<h2>Stats</h2>
+
+<ul>
+<li>Javascript: 351 files with 37168 lines of code</li>
+<li>Objective C: 12 files with 1029 lines of code</li>
+<li>React Components: 112</li>
+<li>Screens (addressable url patterns): 25</li>
+<li>Dispatcher Events: 52</li>
+<li>Platform (iOS specific): 18 files with 605 lines of code</li>
+<li>JS / C percentage: 97%</li>
+<li>Shareable code percentage: 93% (so far - we'll see with Android)</li>
+<li>Avg. components per screen: 4.5</li>
+</ul>
+
+
+<h2>Next steps</h2>
+
+<p>Now we are going to fix up a few minor things and on to Android. How exciting!</p>
+
+<p>Ok, this video is a bit of a lie because it's the old app. But the main point was that the React app looks just like this one. So to get an idea of the functionality we've implemented in React Native...</p>
+
+<iframe src="https://player.vimeo.com/video/148648842" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[React Native Integration Tests]]></title>
+    <link href="http://bleonard.github.com/blog/2015/11/08/react-native-integration-tests/"/>
+    <updated>2015-11-08T00:00:00-08:00</updated>
+    <id>http://bleonard.github.com/blog/2015/11/08/react-native-integration-tests</id>
+    <content type="html"><![CDATA[<p>Coming from a Rails <a href="http://guides.rubyonrails.org/testing.html">background</a>, we are very familiar with testing our code. While writing our new <a href="/blog/2015/09/21/react-native-example-app/">React Native app</a>, we found ourself missing a way to test it and ship with confidence. I've updated the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">sample app</a> with the approach we are using for integration tests.</p>
+
+<h2>Test Levels</h2>
+
+<p>When thinking about what and how to test a React Native app, a few levels come to mind:</p>
+
+<ul>
+<li>Unit: Testing some pure Javascript object and it's methods. Just run in Javascript.</li>
+<li>Component: Testing a React component in isolation. You'd want to check its reaction to various state and props. Maybe run just in Javascript with heavy stubbing or in the simulator.</li>
+<li>Integration: Testing a single screen or workflow in the "real" app. Run in the simulator or on the device.</li>
+</ul>
+
+
+<p>The approach shown here is the last one: integration testing. We did this one first because if you are only going to do one of the above, it is probably your best bet. By actually testing out what the user does, you get the highest level of "don't screw it up" coverage.</p>
+
+<p>There are some tradeoffs in this choice. They mostly stem from the fact that it's the slowest (runtime) approach. Because of that, to test many edges cases takes f-o-r-e-v-e-r to actually run the tests. Something lower-level without the simulator would be much faster.</p>
+
+<h2>Running Tests</h2>
+
+<p>In the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">sample app</a>, you follow these steps:</p>
+
+<ul>
+<li>Make sure you have the 9.0 simulators installed in XCode</li>
+<li>Compile app for the test environment: <code>npm run compile:test</code></li>
+<li>Launch simulator and tests: <code>npm test</code></li>
+</ul>
+
+
+<p>Running <code>npm test</code> will launch the simulator and the robots take over.</p>
+
+<div class="jumbotron">
+  <image src="http://bleonard.github.com/images/posts/react-native-integration-tests/follows.gif" class="bigPicture" />
+</div>
+
+
+
+
+<!-- more -->
+
+
+<h2>Plumbing</h2>
+
+<p>The tests are written in Javascript using the <a href="https://mochajs.org/">mocha</a> testing framework. This allows you to declare your cases much like <a href="http://rspec.info/">rspec</a> does in Ruby. It gives you hooks to run things before and after as well.</p>
+
+<p>The simulator is run and controlled using <a href="http://appium.io/">Appium</a>. This is some serious magic that implements the <a href="http://www.seleniumhq.org/">Selenium</a> web testing framework but for iOS and Android.</p>
+
+<p>The compile step is important because it compiles the iOS code with a slightly different environment.</p>
+
+<p>The environment lets the iOS code knows to talk to a different port to get it's code. The React Native <a href="https://github.com/facebook/react-native/tree/master/packager">packager</a> needs to be running on that port so the test suite launches it automatically. This means you don't have to recompile the <code>jsbundle</code> each time you make a JS change - jsut like on the simulator with Command+R. In the same way, this is a tremendous improvement to the development process.</p>
+
+<p>The environment also lets the the JS code do a few things differently. For example, it talks to a different localhost API port than the development app. The test suite launches a small <a href="http://koajs.com/#introduction">koa</a> server on that port. This allows any given test to specify exactly what the server should return for any given API call so we can test the app in a known state.</p>
+
+<p>When in test mode, the <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/9863a1037b2eb2259518c62d37cd50840790e099/App/Root.js#L87">Root</a> component also adds in a <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/9863a1037b2eb2259518c62d37cd50840790e099/App/Root/TestRunner.js#L19">TestRunner</a> component at the top. But giving Appium buttons, it allows the suite to reset the test each time and bootstrap the app. It gets it's bootstrap commands from the koa server. It also hooks logging so that all the <code>console.log</code> calls are sent to the koa server so everything can be logged in the test terminal. In both these, it's the koa server that is the "bridge" between the tests and the simulator.</p>
+
+<p>Putting it all together:</p>
+
+<ul>
+<li><code>npm test</code> runs mocha</li>
+<li>mocha <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/9863a1037b2eb2259518c62d37cd50840790e099/test/helpers/driver.js">spawns</a> an Appium driver process (which launches the simulator)</li>
+<li>mocha <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/9863a1037b2eb2259518c62d37cd50840790e099/test/helpers/packager.js">spawns</a> a React Native Packager process</li>
+<li>mocha <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/9863a1037b2eb2259518c62d37cd50840790e099/test/helpers/server.js">spawns</a> a koa server process</li>
+<li>the test starts</li>
+<li>the test clicks "ResetTest" to be sure to start over (which sends a message to the iOS code to delete some documents)</li>
+<li>the test clicks "Bootstrap" to get setup instructions.</li>
+<li>the test uses the Appium API (<code>driver.findElementById('Log in').click()</code>) to do stuff and see how it goes</li>
+</ul>
+
+
+<h2>Bootstrap</h2>
+
+<p>The concept of "Bootstrap" might warrant a little more explanation.</p>
+
+<p>The sample app has been set up to use the <a href="https://facebook.github.io/react/docs/flux-overview.html">flux pattern</a> and <a href="/blog/2015/09/21/react-native-example-app/">url-based routing</a>. These two things allow a test to put the world in the state it needs to check the behavior.</p>
+
+<p>When writing Appium tests on our Objective-C app, to test an acount management feature, it would log in, tap the sidebar, tap the gear, then tap "Change Password" or whatever. Then the test really starts. This time really adds up.</p>
+
+<p>It gets easier with flux and routes. For example, because everything in our React Native app is based on events from the dispatcher, we don't have to <em>actually</em> log in. We can just dispatch the <code>LOGIN_USER</code> action with the right properties.</p>
+
+<p>Then, because it's based on URLs, we don't have to navigate to the spot we want. We can just dispatch the <code>LAUNCH_ROUTE_PATH</code> with the appropriate URL and go right to the screen under test.</p>
+
+<p>All of this saves a tremendous amount of time and headache when things change.</p>
+
+<p>So how does this work? The test says what it wants to do to set up the world. That might look like this: <code>yield bootstrap().login().nav("dashboard/follows/friend").launch(driver);</code>. This registers actions (login, navigate) with the koa server.</p>
+
+<p>Then when the test clicks "Bootstrap" on the app, it fetches a particular url form the koa server to get its intructions. In this case, it will dispatch the <code>LOGIN_USER</code> action, followed by the <code>LAUNCH_ROUTE_PATH</code> action. Any arbitrary action could be set, but these are the most common.</p>
+
+<h2>Example</h2>
+
+<p>This is what it looks like:</p>
+
+<p>```javascript
+  // name the test something relevant
+  it("should create a new post", function* (driver, done) {</p>
+
+<pre><code>// stub the fetch request to get the initial lists of posts with commonly used json
+server.get("/api/posts/tester", fixtures.home());
+// stub creation and set expectations of endpoint to create new post
+server.post("/api/posts",
+  {id: 100, content: 'new post here', username: 'tester'}, // return this content
+  {content: 'new post here'}                               // expect this content
+);
+// automatically log the test user in
+yield bootstrap().login().launch(driver);
+
+// tap the upper right to create a new post
+yield driver.elementById('+').click();
+// make sure the screen when there
+yield driver.elementById('New Post');
+// type in some stuff
+yield driver.execute("target.frontMostApp().keyboard().typeString('new post here')");
+// tap the submit button
+yield driver.elementById('Submit').click();
+
+// check that we are back on the dashboard
+yield driver.elementById('Dashboard');
+// make sure the new post is there
+yield driver.elementById('new post here');
+
+// all done!
+done();
+</code></pre>
+
+<p>  });</p>
+
+<p>```</p>
+
+<p>Here it is running:</p>
+
+<div class="jumbotron">
+  <image src="http://bleonard.github.com/images/posts/react-native-integration-tests/new_post.gif" class="bigPicture" />
+</div>
+
+
+<p>I find all the <code>yield</code> stuff kind of annoying but it also prevents the <a href="http://www.joshwright.com/tips/javascript-christmas-trees-promises-and-event-emitters">christmas tree of doom</a> situation.</p>
+
+<h2>Test On!</h2>
+
+<p>Now that we've written the integration tests, we can run them on a CI service like <a href="https://travis-ci.org/">Travis</a>.</p>
+
+<p>I set up a <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/9863a1037b2eb2259518c62d37cd50840790e099/.travis.yml">.travis.yml</a> file in the sample app and it's <a href="https://travis-ci.org/taskrabbit/ReactNativeSampleApp">green</a>!</p>
+
+<p>Well, that's it. This is a very new space and we didn't see a great way out there to do this kind of testing in a painless-as-possible kind of way. Hopefully, what we've done here can be useful for you in your own journey towards React Native apps that work as expected.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Building React Native Apps]]></title>
+    <link href="http://bleonard.github.com/blog/2015/10/18/building-react-native-apps/"/>
+    <updated>2015-10-18T00:00:00-07:00</updated>
+    <id>http://bleonard.github.com/blog/2015/10/18/building-react-native-apps</id>
+    <content type="html"><![CDATA[<p>We've been using and loving React Native as noted in my <a href="/blog/2015/09/21/react-native-example-app">previous post</a>. As we are working towards rolling out a fully-featured app, one thing that needed solved was how we should build the app for different environments. For example, how can we make (slightly different) development, staging, and production builds?</p>
+
+<p>In a <a href="https://github.com/facebook/react-native/issues/2246">Github issue</a>, I ran into a few other people also wondering how to do this, so I've added a few ways to the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">Example App</a> to show the approaches we are using.</p>
+
+<p>The three approaches we are trying out are:</p>
+
+<ul>
+<li>Configurations</li>
+<li>Compile Flags</li>
+<li>Run Variables</li>
+</ul>
+
+
+<h2>Environments</h2>
+
+<p>I had already added the <code>Environment</code> <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/2cf43f3ce17f830ff17065d6b4d973ac85043b05/App/Models/Environment.js">model</a> and <code>EnvironmentStore</code> <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/2cf43f3ce17f830ff17065d6b4d973ac85043b05/App/Stores/EnvironmentStore.js">store</a> to the project. However, I just added actual dynamic configurations to the XCode project and the <code>EnvironmentManager</code> <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/2cf43f3ce17f830ff17065d6b4d973ac85043b05/ios/Sample/EnvironmentManager.m">code</a> is using that.</p>
+
+<!-- more -->
+
+
+<p>Here is the staging config:</p>
+
+<p>```</p>
+
+<h1>include "Pods/Target Support Files/Pods/Pods.staging.xcconfig"</h1>
+
+<p>GCC_PREPROCESSOR_DEFINITIONS = $(inherited) kEnvironment="@\"staging\""
+```</p>
+
+<p>That gets used by the <code>EnvironmentManager</code> to send that, along with other data, over to JS land.</p>
+
+<p>```objectivec</p>
+
+<p>RCT_EXPORT_METHOD(get:(RCTResponseSenderBlock)callback)
+{
+  NSString *locale = [[NSLocale currentLocale] localeIdentifier];
+  locale = [locale stringByReplacingOccurrencesOfString:@"_" withString:@"-"];</p>
+
+<p>  NSNumber * simulator = @NO;
+  NSString * version = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
+  NSString * buildCode = [[NSBundle mainBundle] objectForInfoDictionaryKey:(NSString *)kCFBundleVersionKey];</p>
+
+<p>  NSString * envName = kEnvironment;
+  NSDictionary <em>passed = [[NSProcessInfo processInfo] environment];
+  NSString </em>override = [passed valueForKey:@"SAMPLE_ENV"];
+  if (override) {</p>
+
+<pre><code>envName = override;
+</code></pre>
+
+<p>  }</p>
+
+<h1>ifdef TEST_ENVIRONMENT</h1>
+
+<p>  envName = @"test";</p>
+
+<h1>endif</h1>
+
+<h1>ifdef STAGING_ENVIRONMENT</h1>
+
+<p>  envName = @"staging";</p>
+
+<h1>endif</h1>
+
+<h1>if TARGET_IPHONE_SIMULATOR</h1>
+
+<p>  simulator = @YES;</p>
+
+<h1>endif</h1>
+
+<p>  callback(@[ @{</p>
+
+<pre><code>            @"name": envName,
+            @"buildCode": buildCode,
+            @"simulator": simulator,
+            @"version": version,
+            @"locale": locale
+        }]);
+</code></pre>
+
+<p>}
+```</p>
+
+<p>By naming a scheme, that uses this config, we can launch the app knowing that its world is slightly different as determined by the <code>Environment</code> model. For example:</p>
+
+<p>```javascript
+Model.prototype.getApiHost = function() {
+  switch(this.data.name) {</p>
+
+<pre><code>case 'test':
+  return 'http://localhost:3001';
+case 'debug':
+  return 'http://localhost:3000';
+case 'staging':
+  return 'https://someday.herokuapp.com';
+default:
+  throw("Unknown Environment.getApiHost: " + this.data.name);
+</code></pre>
+
+<p>  }
+};
+```</p>
+
+<p>By the way, I also added some of the other information from Objective-C like the version, build code, locale, and whether we're running in the simulator. We've found a use for all of those in our Javascript code.</p>
+
+<h3>Configurations</h3>
+
+<p>This new build is using the <code>kEnvironment</code> from our custom <code>xcconfig</code> files as seen above. So we can pass in the environment name via configuration.</p>
+
+<p>XCode has these schemes that set up the configurations. The <a href="https://github.com/facebook/react-native/issues/2246">issue</a> I wrote up was lamenting the fact that all the of the child projects (like React Native) have the use the same name ("Debug" or "Release") for it to work as expected. For example, I can't really have a configuration called "Staging" that gets all the good stuff from the "Debug" configurations.</p>
+
+<p>I've more or less just accepted this and moved on. Our "Staging" and "Production" configurations just end up using the default ("Release") configurations from all the children. That's working well enough. The the other two approaches are ways to mitigate this issue, though. So when I said I accepted it, I guess that's not quite true.</p>
+
+<p>As a side-note, I've now realized one piece of magic that <a href="https://cocoapods.org/">CocoaPods</a> has. It does all this stuff for you somehow and that's probably why there is a different configuration that it makes for each of mine. Should React Native be on CocoaPods? I don't know.</p>
+
+<h3>Compile Flags</h3>
+
+<p>But I want the "test" build to run in "Debug" mode. Or maybe I need to debug the "Staging" build on the phone. In these cases, I've shown how are are compiling the app via the command line. This allows us to define extra, non-configuration variables. Therefore, we can use the regular ones like "Debug."</p>
+
+<p>There is a new <code>Compiler</code> <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/2cf43f3ce17f830ff17065d6b4d973ac85043b05/tasks/compiler.js">class</a> that pulls it all together. it basically uses <code>xcodebuild</code> to compile it and adds extra info like <code>TEST_ENVIRONMENT=1</code>, which the <code>EnvironmentManager</code> can then use to override the environment name.</p>
+
+<p>It also uses the <code>ios-deploy</code> <a href="https://github.com/phonegap/ios-deploy">tool</a> to put it on the phone if you ask it to do so. Try this out: <code>npm run install:staging</code></p>
+
+<h3>Run Variables</h3>
+
+<p>When setting up schemes, I found that I could pass environment variables in the "Run" section of "Edit Scheme." Then I'm using this to allow a "staging" name even though I'm in running the "Debug" configuration. This is then available as seen in the <code>[[NSProcessInfo processInfo] environment]</code> code above.</p>
+
+<p>However, there is a fatal flaw. This is a run-time argument that is only used once. You lose that data if you launch the app again. It is, however, the best way that I've found to debug the "Staging" build in XCode.</p>
+
+<h2>Auto-Compile</h2>
+
+<p>So now there are lots of ways to launch and run this app, but I kept forgetting to bundle the new Javascript code when launching it from XCode onto the phone. There's nothing worse than working on something and realizing 10 minutes later, the code on the phone is not the newest build.</p>
+
+<p>The <code>Compiler</code> class does this automatically, but I looked for a way to automate the instructions in the <code>AppDelegate</code>. It wants you to run with localhost when in the simulator and run <code>react-native bundle --minify</code> when putting it on the phone.</p>
+
+<p>So let's automatically make those decisions based on the target runtime:</p>
+
+<p>```objectivec</p>
+
+<h1>if TARGET_IPHONE_SIMULATOR</h1>
+
+<p>  jsCodeLocation = [NSURL URLWithString:@"http://localhost:8081/index.ios.bundle?platform=ios"];</p>
+
+<h1>else</h1>
+
+<p>  jsCodeLocation = [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];</p>
+
+<h1>endif</h1>
+
+<p>```</p>
+
+<p>This automatically causes it to use the bundle when running on the phone, but we still need to remember to compile it. So I added a "Run Script" build phase to do the bundle command:</p>
+
+<p>```bash
+if [ "${PLATFORM_NAME}" != "iphonesimulator" ]; then</p>
+
+<pre><code>source ~/.nvm/nvm.sh
+cd ${PROJECT_DIR}/.. &amp;&amp; react-native bundle --minify
+</code></pre>
+
+<p>fi
+```</p>
+
+<p>This assumes that you are using <a href="https://github.com/creationix/nvm">nvm</a>.</p>
+
+<p>Now it's impossible to forget and everything is always based on the target. Nice.</p>
+
+<h2>Summary</h2>
+
+<p>I've updated the code of the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">Example App</a> to have a few ways to build a React Native app with environment nuances. We're mainly using the Configurations approach but the others have come in handy a few times. I hope that is helpful.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[React Native Example App: Navigation]]></title>
+    <link href="http://bleonard.github.com/blog/2015/09/21/react-native-example-app/"/>
+    <updated>2015-09-21T00:00:00-07:00</updated>
+    <id>http://bleonard.github.com/blog/2015/09/21/react-native-example-app</id>
+    <content type="html"><![CDATA[<p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, we have been looking into building an iOS application in <a href="https://facebook.github.io/react-native/">React Native</a>. This is probably the first pure technology that I've been this excited about since moving from C to Ruby.</p>
+
+<p>However, it's definitely still in its early days. There are not many examples of how people are doing things out there. To help remedy this and share what we are learning, I made a <a href="https://github.com/taskrabbit/ReactNativeSampleApp">sample React Native application</a>.</p>
+
+<div class="jumbotron">
+  <image src="http://bleonard.github.com/images/posts/react-native-navigation/screenshots.png" class="bigPicture" />
+</div>
+
+
+<p>The app itself is vaguely like twitter and/or tumblr. There are users that make posts. They follow other users. You can look at users they follow follows and those users' posts. And on and on! The features (or styling) isn't the main point. At this time, we're mostly demonstrating architectural concepts.</p>
+
+<p>The app we're working on is a bit ahead of this one, but I think it will be neat to have this one publicly walk through the same steps that we have done privately. Everything is pretty new and the patterns are not established. We'll post here about some pattern or refactor and update the app and hopefully start a great conversation.</p>
+
+<h2>Navigation</h2>
+
+<p>The first pattern that I wanted to talk about is navigation. The web has a pretty solid navigation story (with the URLs and such) and some <a href="https://github.com/rackt/react-router">tools</a> to map that to React applications. I think it's less clear on the phone.</p>
+
+<p>I'm not sure why it's different, actually, because there is still usually a "Back" button and one screen at a time. Yet, iOS development seems to have evolved in another direction. Most apps are all about this <code>NavigationController</code> and we <code>push</code> and <code>pop</code> and stuff like that. Then things get totally weird when we try to put the URLs back in for something like <a href="http://blog.originate.com/blog/2014/04/22/deeplinking-in-ios/">deep linking</a>.</p>
+
+<!-- more -->
+
+
+<p>React Native supports the same concept with the <a href="https://facebook.github.io/react-native/docs/navigatorios.html">NavigatorIOS</a> or the <a href="https://facebook.github.io/react-native/docs/navigator.html#content">Navigator</a>. We went with Navigator because it was more customizable and would like work better cross-platform. But it still had this <code>push</code> and <code>pop</code> incremental mindset that, otherwise, React totally removes because we're always rendering the whole thing based on <code>state</code> and <code>props</code>.</p>
+
+<p>We also knew that we needed to much better at deep linking. So I decided to make URLs into a first-class citizen. The only way to show anything on the app would be to set a URL. This means that whatever is showing on the screen and where the back button goes is all dictated by the URL.</p>
+
+<h2>Router</h2>
+
+<p>How does this work? For example, <code>sample://dashboard/posts</code> is the first screen when you log in. You can toggle that to <code>sample://dashboard/follows</code> to see who you are following. If you tap on "john" there, you are now at <code>sample://dashboard/follows/john/posts</code> and you see his posts. If you tap the "back" button, you're back on <code>sample://dashboard/follows</code>.</p>
+
+<p>To make this work, we have to parse these URLs and determine the <a href="https://facebook.github.io/react-native/docs/navigator.html#initialroutestack">routeStack</a> of the application to give to the <a href="https://facebook.github.io/react-native/docs/navigator.html">Navigator</a>. So for example <code>sample://dashboard/follows</code> would map to a single item in the stack:</p>
+
+<p>```javascript
+[{
+  component: require('../Screens/FollowList'),
+  passProps: {</p>
+
+<pre><code>username: username // null for current user
+</code></pre>
+
+<p>  }
+}]
+```</p>
+
+<p>and <code>sample://dashboard/follows/john/posts</code> would map to the new screen along with the original.</p>
+
+<p>```javascript
+[{
+  component: require('../Screens/FollowList'),
+  passProps: {</p>
+
+<pre><code>username: username
+</code></pre>
+
+<p>  }
+}, {
+  component: require('../Screens/PostList'),
+  passProps: {</p>
+
+<pre><code>username: username
+</code></pre>
+
+<p>  }
+}]
+```</p>
+
+<p>Creating this stack is the job of the <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/eb139dd0fcd6e57677a2f12ee257568993caeb0c/App/Navigation/Router.js#L40">Router</a> and the <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/eb139dd0fcd6e57677a2f12ee257568993caeb0c/App/Navigation/Routes.js#L139">Routes</a>. The root of the app gets it's state set with the <code>routeStack</code>. That's given to a <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/eb139dd0fcd6e57677a2f12ee257568993caeb0c/App/Navigation/NavigationBar.js#L131">Navigator</a> with it set as the <code>initialRouteStack</code>. As the state continues to change, it is set on that Navigator, who takes care of showing the current view and knowing what "back" is.</p>
+
+<p>To do this, the Router basically just divides the url up into pieces (separated by slash) and iterates through calling <code>parse</code> on the previous result. It's not beautiful, but it works.</p>
+
+<p>I'd love to figure out how to extract the Router into it's own library or use another one, but I haven't had the time to check it out. One requirement that might be a problem is that it needs to be infinitely recursive. If it's going to be responsible for the entire navigator state, then it has to support infinitely long urls like when I look at someone's profile and then the users they follow and then pick one and then users they follow and then that user's posts. It's not clear to me if any web-based solution solves that.</p>
+
+<p>Here what I mean by recursive. This is sample://dashboard/follows/jrichardlai/follows/taskrabbit/follows/bleonard/follows/taskrabbit/follows/bleonard/follows/jrichardlai/post (and back):</p>
+
+<p><image src="http://bleonard.github.com/images/posts/react-native-navigation/nested.gif" style="max-width: 300px"/></p>
+
+<h2>Actions</h2>
+
+<p>How did that state get set in the first place? There is an <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/eb139dd0fcd6e57677a2f12ee257568993caeb0c/App/Actions/AppActions.js#L18">AppActions</a> class with a few ways to manipulate the current state.</p>
+
+<p>```javascript
+var AppActions = {
+  // launch given known url
+  launchRoutePath: function(routePath) {</p>
+
+<pre><code>Dispatcher.dispatch({
+  actionType: AppConstants.LAUNCH_ROUTE_PATH,
+  routePath: routePath
+});
+</code></pre>
+
+<p>  },</p>
+
+<p>  // launch given current and relative url
+  launchRelativeItem: function(currentRoute, item) {</p>
+
+<pre><code>var navItem = assign({}, item); // clone so we can mess with it
+
+if(!navItem.routePath &amp;&amp; navItem.replacePath) {
+  var pieces = currentRoute.routePath.split("/");
+  pieces[pieces.length-1] = navItem.replacePath;
+  navItem.routePath = pieces.join('/');
+}
+if(!navItem.routePath &amp;&amp; navItem.subPath) {
+  navItem.routePath = currentRoute.routePath + "/" + navItem.subPath;
+}
+navItem.currentRoute = currentRoute;
+this.launchItem(navItem);
+</code></pre>
+
+<p>  },</p>
+
+<p>  // go back
+  goBack: function(navigator) {</p>
+
+<pre><code>var current  = navigator.getCurrentRoutes();
+var previous = current[0];
+if (current.length &gt; 2) {
+  previous = current[current.length-2];
+}
+AppActions.launchRoutePath(previous.routePath);
+</code></pre>
+
+<p>  }
+```</p>
+
+<p>These actions can be called when the user taps an item in the list, the back button, or whatever. It dispatches the event, it's picked up, and the root state is changed.</p>
+
+<h2>Navigator</h2>
+
+<p>One great thing about iOS and it's traditional <code>NavigationController</code> pattern is the animations. When you tap on that item in the list, it slides in from the right. When you hit the "back" button, it slides out. Launching URLs old-school web-style doesn't do that at all. It just pops in. Lame.</p>
+
+<p>Fortunately, we can get the best of both worlds. The routeStack is given to the component as a prop, so it triggers the <code>componentDidUpdate</code> lifecyle method. In this method, if we just did <code>this.refs.navigator.immediatelyResetRouteStack(this.props.routeStack.path)</code> then it would be abrupt like the web.</p>
+
+<p>However, we can also look at the new stack and the previous one and be smart about it. It's <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/eb139dd0fcd6e57677a2f12ee257568993caeb0c/App/Navigation/NavigationBar.js#L72-L115">a bit crazy looking</a>, but it basically only ends up doing that if it's completely different. We can handle the most common cases intelligently:</p>
+
+<ul>
+<li><code>this.refs.navigator.push(nextRoute)</code> if the new route is one item added to the previous route</li>
+<li><code>this.refs.navigator.pop()</code> if the new route is one item removed from the previous route</li>
+<li><code>this.refs.navigator.replace(nextRoute)</code> if the new route is a peer of the previous route</li>
+<li>otherwise reset the whole stack</li>
+</ul>
+
+
+<p>So in this one spot, we say it's ok to be not quite as stateful. It gives people the experience they expect and everywhere else gets to treat the world as fully URL-driven.</p>
+
+<h2>Navigation Benefits</h2>
+
+<p>All of this really helps with deep linking or putting the app in the correct state based on a push notification. We had tons of issues before to be able to reconfigure the app (and it's navigation stack) when the notification is slid over. Now it's just calling <code>AppActions.launchRoutePath()</code> and the URL can be sent within the push itself.</p>
+
+<p>We also know/require that every single screen (display of a route) has to be able to exist all on it's own with only the data from the URL. When tapping into some item to show it bigger, for existence, we don't want to depend on that having been fetched from the list. Each screen can stand on it's own though obviously we can use the data if it's already in the store. Being URL-driven helps us there.</p>
+
+<p>We found it useful to even use the <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/eb139dd0fcd6e57677a2f12ee257568993caeb0c/App/Root/LoggedOut.js#L6">NavigationBar</a> even when we didn't "need" it. That is, the sample app's signup/login experience doesn't show a navigation bar. We still depend on all the URL routing and rendering, though. So it just get's hidden and we still get all that from offscreen.</p>
+
+<h2>Other App Stuff</h2>
+
+<p>Here are some of the other things in the sample app that we're not planning on talking much more about. Let us know if something could benefit from a more in-depth look.</p>
+
+<h4>Flux</h4>
+
+<p>The Components use Actions. Actions tend to use the API Services and dispatch an event. The Stores are listening to the events. The Components add and remove listeners to the Stores.</p>
+
+<h4>Environment</h4>
+
+<p>There is a model called Environment that gets bootstrapped from Objective-C. It knows things that are different per environment like what API server to talk to.</p>
+
+<h4>Data storage</h4>
+
+<p>Info is currently stored as json to the local file system.</p>
+
+<h4>Shared CSS</h4>
+
+<p>It uses the <code>cssVar</code> pattern from the sample Facebook apps.</p>
+
+<h4>API</h4>
+
+<p>It uses superagent to do HTTP requests and sets headers and other things like that.</p>
+
+<h4>Components</h4>
+
+<p>Some shared components that might be helpful</p>
+
+<ul>
+<li>SegmentedControl: Non-iOS specific version of that control</li>
+<li>SimpleList: make a list out of the props set</li>
+<li>Button: Helper to make them all similiar</li>
+</ul>
+
+
+<h4>Mixins</h4>
+
+<p>We are currently sharing code through mixins. Some of them might be generally useful.</p>
+
+<ul>
+<li>KeyboardListener: helps know the amount of space the keyboard is taking up</li>
+<li>DispatcherListener: subscribes and ubsubscribes from the Dispatcher for a component</li>
+<li>NavigationListener: react to navigation changes in a component</li>
+</ul>
+
+
+<h4>Server</h4>
+
+<p>There is a server you can run locally using <code>cd server &amp;&amp; npm start</code> that supports the app. It seeds some data and will save (in memory) anything the app sends it.</p>
+]]></content>
+  </entry>
+  
+</feed>

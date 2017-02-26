@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: testing | BLog]]></title>
+  <link href="http://bleonard.github.com/blog/categories/testing/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.com/"/>
+  <updated>2017-02-25T21:54:36-08:00</updated>
+  <id>http://bleonard.github.com/</id>
+  <author>
+    <name><![CDATA[Brian Leonard]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[React Native Integration Tests]]></title>
+    <link href="http://bleonard.github.com/blog/2015/11/08/react-native-integration-tests/"/>
+    <updated>2015-11-08T00:00:00-08:00</updated>
+    <id>http://bleonard.github.com/blog/2015/11/08/react-native-integration-tests</id>
+    <content type="html"><![CDATA[<p>Coming from a Rails <a href="http://guides.rubyonrails.org/testing.html">background</a>, we are very familiar with testing our code. While writing our new <a href="/blog/2015/09/21/react-native-example-app/">React Native app</a>, we found ourself missing a way to test it and ship with confidence. I've updated the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">sample app</a> with the approach we are using for integration tests.</p>
+
+<h2>Test Levels</h2>
+
+<p>When thinking about what and how to test a React Native app, a few levels come to mind:</p>
+
+<ul>
+<li>Unit: Testing some pure Javascript object and it's methods. Just run in Javascript.</li>
+<li>Component: Testing a React component in isolation. You'd want to check its reaction to various state and props. Maybe run just in Javascript with heavy stubbing or in the simulator.</li>
+<li>Integration: Testing a single screen or workflow in the "real" app. Run in the simulator or on the device.</li>
+</ul>
+
+
+<p>The approach shown here is the last one: integration testing. We did this one first because if you are only going to do one of the above, it is probably your best bet. By actually testing out what the user does, you get the highest level of "don't screw it up" coverage.</p>
+
+<p>There are some tradeoffs in this choice. They mostly stem from the fact that it's the slowest (runtime) approach. Because of that, to test many edges cases takes f-o-r-e-v-e-r to actually run the tests. Something lower-level without the simulator would be much faster.</p>
+
+<h2>Running Tests</h2>
+
+<p>In the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">sample app</a>, you follow these steps:</p>
+
+<ul>
+<li>Make sure you have the 9.0 simulators installed in XCode</li>
+<li>Compile app for the test environment: <code>npm run compile:test</code></li>
+<li>Launch simulator and tests: <code>npm test</code></li>
+</ul>
+
+
+<p>Running <code>npm test</code> will launch the simulator and the robots take over.</p>
+
+<div class="jumbotron">
+  <image src="http://bleonard.github.com/images/posts/react-native-integration-tests/follows.gif" class="bigPicture" />
+</div>
+
+
+
+
+<!-- more -->
+
+
+<h2>Plumbing</h2>
+
+<p>The tests are written in Javascript using the <a href="https://mochajs.org/">mocha</a> testing framework. This allows you to declare your cases much like <a href="http://rspec.info/">rspec</a> does in Ruby. It gives you hooks to run things before and after as well.</p>
+
+<p>The simulator is run and controlled using <a href="http://appium.io/">Appium</a>. This is some serious magic that implements the <a href="http://www.seleniumhq.org/">Selenium</a> web testing framework but for iOS and Android.</p>
+
+<p>The compile step is important because it compiles the iOS code with a slightly different environment.</p>
+
+<p>The environment lets the iOS code knows to talk to a different port to get it's code. The React Native <a href="https://github.com/facebook/react-native/tree/master/packager">packager</a> needs to be running on that port so the test suite launches it automatically. This means you don't have to recompile the <code>jsbundle</code> each time you make a JS change - jsut like on the simulator with Command+R. In the same way, this is a tremendous improvement to the development process.</p>
+
+<p>The environment also lets the the JS code do a few things differently. For example, it talks to a different localhost API port than the development app. The test suite launches a small <a href="http://koajs.com/#introduction">koa</a> server on that port. This allows any given test to specify exactly what the server should return for any given API call so we can test the app in a known state.</p>
+
+<p>When in test mode, the <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/9863a1037b2eb2259518c62d37cd50840790e099/App/Root.js#L87">Root</a> component also adds in a <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/9863a1037b2eb2259518c62d37cd50840790e099/App/Root/TestRunner.js#L19">TestRunner</a> component at the top. But giving Appium buttons, it allows the suite to reset the test each time and bootstrap the app. It gets it's bootstrap commands from the koa server. It also hooks logging so that all the <code>console.log</code> calls are sent to the koa server so everything can be logged in the test terminal. In both these, it's the koa server that is the "bridge" between the tests and the simulator.</p>
+
+<p>Putting it all together:</p>
+
+<ul>
+<li><code>npm test</code> runs mocha</li>
+<li>mocha <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/9863a1037b2eb2259518c62d37cd50840790e099/test/helpers/driver.js">spawns</a> an Appium driver process (which launches the simulator)</li>
+<li>mocha <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/9863a1037b2eb2259518c62d37cd50840790e099/test/helpers/packager.js">spawns</a> a React Native Packager process</li>
+<li>mocha <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/9863a1037b2eb2259518c62d37cd50840790e099/test/helpers/server.js">spawns</a> a koa server process</li>
+<li>the test starts</li>
+<li>the test clicks "ResetTest" to be sure to start over (which sends a message to the iOS code to delete some documents)</li>
+<li>the test clicks "Bootstrap" to get setup instructions.</li>
+<li>the test uses the Appium API (<code>driver.findElementById('Log in').click()</code>) to do stuff and see how it goes</li>
+</ul>
+
+
+<h2>Bootstrap</h2>
+
+<p>The concept of "Bootstrap" might warrant a little more explanation.</p>
+
+<p>The sample app has been set up to use the <a href="https://facebook.github.io/react/docs/flux-overview.html">flux pattern</a> and <a href="/blog/2015/09/21/react-native-example-app/">url-based routing</a>. These two things allow a test to put the world in the state it needs to check the behavior.</p>
+
+<p>When writing Appium tests on our Objective-C app, to test an acount management feature, it would log in, tap the sidebar, tap the gear, then tap "Change Password" or whatever. Then the test really starts. This time really adds up.</p>
+
+<p>It gets easier with flux and routes. For example, because everything in our React Native app is based on events from the dispatcher, we don't have to <em>actually</em> log in. We can just dispatch the <code>LOGIN_USER</code> action with the right properties.</p>
+
+<p>Then, because it's based on URLs, we don't have to navigate to the spot we want. We can just dispatch the <code>LAUNCH_ROUTE_PATH</code> with the appropriate URL and go right to the screen under test.</p>
+
+<p>All of this saves a tremendous amount of time and headache when things change.</p>
+
+<p>So how does this work? The test says what it wants to do to set up the world. That might look like this: <code>yield bootstrap().login().nav("dashboard/follows/friend").launch(driver);</code>. This registers actions (login, navigate) with the koa server.</p>
+
+<p>Then when the test clicks "Bootstrap" on the app, it fetches a particular url form the koa server to get its intructions. In this case, it will dispatch the <code>LOGIN_USER</code> action, followed by the <code>LAUNCH_ROUTE_PATH</code> action. Any arbitrary action could be set, but these are the most common.</p>
+
+<h2>Example</h2>
+
+<p>This is what it looks like:</p>
+
+<p>```javascript
+  // name the test something relevant
+  it("should create a new post", function* (driver, done) {</p>
+
+<pre><code>// stub the fetch request to get the initial lists of posts with commonly used json
+server.get("/api/posts/tester", fixtures.home());
+// stub creation and set expectations of endpoint to create new post
+server.post("/api/posts",
+  {id: 100, content: 'new post here', username: 'tester'}, // return this content
+  {content: 'new post here'}                               // expect this content
+);
+// automatically log the test user in
+yield bootstrap().login().launch(driver);
+
+// tap the upper right to create a new post
+yield driver.elementById('+').click();
+// make sure the screen when there
+yield driver.elementById('New Post');
+// type in some stuff
+yield driver.execute("target.frontMostApp().keyboard().typeString('new post here')");
+// tap the submit button
+yield driver.elementById('Submit').click();
+
+// check that we are back on the dashboard
+yield driver.elementById('Dashboard');
+// make sure the new post is there
+yield driver.elementById('new post here');
+
+// all done!
+done();
+</code></pre>
+
+<p>  });</p>
+
+<p>```</p>
+
+<p>Here it is running:</p>
+
+<div class="jumbotron">
+  <image src="http://bleonard.github.com/images/posts/react-native-integration-tests/new_post.gif" class="bigPicture" />
+</div>
+
+
+<p>I find all the <code>yield</code> stuff kind of annoying but it also prevents the <a href="http://www.joshwright.com/tips/javascript-christmas-trees-promises-and-event-emitters">christmas tree of doom</a> situation.</p>
+
+<h2>Test On!</h2>
+
+<p>Now that we've written the integration tests, we can run them on a CI service like <a href="https://travis-ci.org/">Travis</a>.</p>
+
+<p>I set up a <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/9863a1037b2eb2259518c62d37cd50840790e099/.travis.yml">.travis.yml</a> file in the sample app and it's <a href="https://travis-ci.org/taskrabbit/ReactNativeSampleApp">green</a>!</p>
+
+<p>Well, that's it. This is a very new space and we didn't see a great way out there to do this kind of testing in a painless-as-possible kind of way. Hopefully, what we've done here can be useful for you in your own journey towards React Native apps that work as expected.</p>
+]]></content>
+  </entry>
+  
+</feed>

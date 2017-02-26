@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: database | BLog]]></title>
+  <link href="http://bleonard.github.com/blog/categories/database/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.com/"/>
+  <updated>2017-02-25T21:54:36-08:00</updated>
+  <id>http://bleonard.github.com/</id>
+  <author>
+    <name><![CDATA[Brian Leonard]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Rails Dead Columns]]></title>
+    <link href="http://bleonard.github.com/blog/2014/11/13/rails-dead-columns/"/>
+    <updated>2014-11-13T00:00:00-08:00</updated>
+    <id>http://bleonard.github.com/blog/2014/11/13/rails-dead-columns</id>
+    <content type="html"><![CDATA[<p>It happens. This column has to go. But in a <a href="http://rubyonrails.org/">Rails</a> app, there are a few problems. You can't just drop it.</p>
+
+<p>My first expectation is that we would create a <a href="http://guides.rubyonrails.org/migrations.html">migration</a> and do something like this.</p>
+
+<p>```
+class RemoveMiddleNameFromUsers &lt; ::ActiveRecord::Migration
+  def change</p>
+
+<pre><code>remove_column :users, :middle_name
+remove_column :users, :gender
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>This will generally be fine but there are a few practical issues.</p>
+
+<ul>
+<li>Is any of my code still using this column?</li>
+<li>What happens to the production code in the time between the migration and new code using it?</li>
+</ul>
+
+
+<h2>Still in use?</h2>
+
+<p>The obvious thing to do is search the code for use of this column name, but sometimes that can be tricky. The name would be fairly common leading to difficult searching. You could also be accessing it in a fairly inconsistent way like via <code>send</code> and string interpolation or something.</p>
+
+<p>The best way that we've found out that we are still using something is to freak out in test/development/staging if it is accessed. If we didn't have the test coverage, we'd probably log it's usage in production and check the logs for use.</p>
+
+<!-- more -->
+
+
+<h2>Deploy</h2>
+
+<p>Even if you aren't using the column, there's still an issue during the deploy window after the migration and before the server reboots. Rails has cached all the columns from right after it booted up so that it can know what to write to the table when you save a new record (among other things).</p>
+
+<p>This means that it still assumes that column is there and when it reads/writes it will look for or set that column. Obviously this will not work. So what we need is two deploys wherein we first tell ActiveRecord that column no longer exists. Then sometime in the future, we can actually remove it.</p>
+
+<p>Incidentally, I've noticed a read-only (<code>def readonly?</code> returns <code>true</code>) ActiveRecord model always does a <code>SELECT *</code> instead of looking for specific columns and doesn't have this issue.</p>
+
+<h2>Code</h2>
+
+<p>Here is the code use for these purposes.</p>
+
+<p>```ruby</p>
+
+<p>module Mixins
+  module DeadColumns</p>
+
+<pre><code>extend ActiveSupport::Concern
+
+class DeadColumnError &lt; StandardError; end
+
+# to run in config/initializers to remove things globally
+class All
+  class &lt;&lt; self
+    def init
+      return if @active_record_init
+      @active_record_init = true
+      ActiveRecord::Base.send(:include, Mixins::DeadColumns)
+    end
+
+    def death_watch(name, *columns)
+      init
+      @registered_tables ||= {}
+      @registered_tables[name.to_s] = columns.collect(&amp;:to_s)
+    end
+
+    def table_columns_registered(name)
+      @registered_tables[name.to_s] || []
+    end
+  end
+end
+
+included do
+  class &lt;&lt; self
+    alias_method_chain :columns, :death
+  end
+end
+
+module ClassMethods
+
+  def dead_column_list
+    return @dead_columns if @dead_columns
+    @dead_columns = Mixins::DeadColumns::All.table_columns_registered(self.table_name).dup
+  end
+
+  def columns_with_death
+    @columns_with_death ||= columns_without_death.reject{|c| dead_column_list.include?(c.name.to_s) }
+  end
+
+  def dead_columns(*args)
+    to_kill = args.collect(&amp;:to_s)
+    dead_column_list.concat(to_kill)
+
+    to_kill.each do |col|
+
+      define_method("#{col}") do
+        raise DeadColumnError, "#{self.class.name}##{col}"
+      end
+
+      define_method("#{col}?") do
+        raise DeadColumnError, "#{self.class.name}##{col}?"
+      end
+
+      define_method("#{col}_changed?") do
+        raise DeadColumnError, "#{self.class.name}##{col}?"
+      end
+    end
+
+    # reset all these ActiveRecord caches
+    @dynamic_methods_hash = @columns_hash = @column_names = @content_columns = @column_defaults = @columns = @columns_with_death = nil
+  end
+end
+
+def attribute_names
+  super - self.class.dead_column_list
+end
+
+def as_json(options = nil)
+  options ||= {}
+  options[:only] = self.class.column_names if options[:only].nil?
+  super(options)
+end
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>Then in an initializer, we do this:</p>
+
+<p>```ruby</p>
+
+<h1>config/dead_columns.rb</h1>
+
+<p>Mixins::DeadColumns::All.death_watch(:users, :middle_name, :gender)
+Mixins::DeadColumns::All.death_watch(:tasks, :old_price_info)
+```</p>
+
+<p>We used to mix this in to each model, so it was more like this:</p>
+
+<p>```ruby
+class User &lt; ActiveRecord::Base
+  include Mixins::DeadColumns</p>
+
+<p>  dead_columns :middle_name, ::gender
+end
+```</p>
+
+<p>This worked with a slightly modified version of the above code. We stopped using that version, though, when we switched to heavily using <a href="/blog/2014/02/11/rails-4-engines/">engines</a>, and now have many <code>User</code> (and other) models. The initializer works better to make sure it hits all of them.</p>
+
+<h2>Conclusion</h2>
+
+<p>Hopefully, this is helpful as an example of some code to deploy so you can safely remove your columns. It feels good to drop those columns and now you can do it without the pain.</p>
+]]></content>
+  </entry>
+  
+</feed>

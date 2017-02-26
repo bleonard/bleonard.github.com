@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: css | BLog]]></title>
+  <link href="http://bleonard.github.com/blog/categories/css/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.com/"/>
+  <updated>2017-02-25T21:54:36-08:00</updated>
+  <id>http://bleonard.github.com/</id>
+  <author>
+    <name><![CDATA[Brian Leonard]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Teaching CSS]]></title>
+    <link href="http://bleonard.github.com/blog/2015/08/01/teaching-css/"/>
+    <updated>2015-08-01T00:00:00-07:00</updated>
+    <id>http://bleonard.github.com/blog/2015/08/01/teaching-css</id>
+    <content type="html"><![CDATA[<p>To my surprise, my daughter asked me if I would teach her how to build a web site today. She more or less wants a blog to keep track of what is going on at a recess club she made at school: regular notes, calendar, things like that.</p>
+
+<p>I had her draw out on paper what she wanted to build. It was interesting to see her reinvent the concept of a blog. For example, her first iteration only showed the post from "Today." I asked her how you would see yesterday's post. So she add a "Today" and a "Yesterday" button. So I asked her how to see the post from last week. Her answer was approximately, "Well, they just need to keep up!" However, she eventually conceded to a "Previous" and "Next" button.</p>
+
+<p>Even on one's first encounter, it seems that it's impossible to teach this stuff without also teaching about concessions:</p>
+
+<p><strong>Daughter</strong>: OK, here's a picture of what I want to make (shows few buttons on top, content underneath)</p>
+
+<p><strong>Dad</strong>: (Talks about closing and opening tags, gets a word on the page)</p>
+
+<p><strong>Daughter</strong>: Make it bigger.</p>
+
+<p><strong>Dad</strong>: (adds <code>h1</code> tag)</p>
+
+<p><strong>Daughter</strong>: Add the other buttons.</p>
+
+<p><strong>Dad</strong>: (adds two more <code>h1</code> tags)</p>
+
+<p><strong>Daughter</strong>: Why are they not next to each other?</p>
+
+<p><strong>Dad</strong>: (mumbles about <code>ul</code> and <code>li</code> - makes them a list)</p>
+
+<p><strong>Daughter</strong>: Now they are too small again and have those dots.</p>
+
+<p><strong>Dad</strong>: We need to "style" them. Let's remove the dots. (inlines styles: <code>list-style-type:none;</code>)</p>
+
+<p><strong>Daughter</strong>: OK. Now make it bigger again.</p>
+
+<p><strong>Dad</strong>: (adds <code>font-size:50px;</code> to the first one) There.</p>
+
+<p><strong>Daughter</strong>: What about the other ones?</p>
+
+<p><strong>Dad</strong>: How do you think we make them bigger too?</p>
+
+<p><strong>Daughter</strong>: (eventually adds inline style to other ones). Perfect! Now put them next to each other.</p>
+
+<p><strong>Dad</strong>: (adds <code>display:inline;</code>)</p>
+
+<p><strong>Daughter</strong>: You're amazing! Ok, now make the background gold.</p>
+
+<p><strong>Dad</strong>: (<code>background-color:Gold</code>)</p>
+
+<p><strong>Daughter</strong>: That's yellow.</p>
+
+<p><strong>Dad</strong>: Here, look at <a href="http://www.w3schools.com/cssref/css_colornames.asp">this</a>.</p>
+
+<p><strong>Daughter</strong>: Wow, so many choices! (picks GoldenRod)</p>
+
+<p><strong>Dad</strong>: (shows how to change to that)</p>
+
+<p><strong>Daughter</strong>: Perfect! Now make the buttons this one (points to DarkTorquise)</p>
+
+<p><strong>Dad</strong>: (adds links makes them <code>background-color:DarkTurquoise;padding: 10px;</code>)</p>
+
+<p><strong>Daughter</strong>: OK, let's add the main words. In a white box.</p>
+
+<p><strong>Dad</strong>: (adds <code>div</code> with <code>background-color:White;</code> and a few words)</p>
+
+<p><strong>Daughter</strong>: Why is it so small?</p>
+
+<p><strong>Dad</strong>: We need more words. (pastes Lorem Ipsum)</p>
+
+<p><strong>Daughter</strong>: (not impressed) It needs to be bigger and in the middle.</p>
+
+<p><strong>Dad</strong>: (adds <code>padding:20px;margin-left:auto;margin-right:auto;</code> to horizontally center content) How about that?</p>
+
+<p><strong>Daughter</strong>: Also in the middle between the top and bottom.</p>
+
+<p><strong>Dad</strong>: (sighs heavily. googles "vertical center div css" for the 100th time. reads for 7 minutes.)</p>
+
+<p><strong>Daughter</strong>: What's wrong?</p>
+
+<p><strong>Dad</strong>: Are you sure you don't want it near the top?</p>
+]]></content>
+  </entry>
+  
+</feed>

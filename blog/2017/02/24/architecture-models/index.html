@@ -1,0 +1,257 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Architecture: Models - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="This is the first post in what I hope will be a series of articles about how we build things at TaskRabbit. Over time, we/I have internalized all &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2017/02/24/architecture-models/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">Architecture: Models</h1>
+	<div class="entry-content"><p>This is the first post in what I hope will be a series of articles about how we build things at <a href="https://www.taskrabbit.com">TaskRabbit</a>. Over time, we/I have internalized all kinds of lessons and patterns, but have never written them down explicitly and publicly. So let&#8217;s give that a try.</p>
+
+<p>I thought we&#8217;d start with models. That&#8217;s what <a href="http://api.rubyonrails.org/classes/ActiveRecord/Base.html">Rails</a> calls database tables where each row is an instance of that model class.</p>
+
+<p>Overall, we default to the following rules when designing the models in a system:</p>
+
+<ul>
+<li>Keep the scope small and based on decisions in the workflow</li>
+<li>Use state machines to declare and lock in the valid transitions</li>
+<li>Denormalize as needed to optimize use cases in the experience</li>
+</ul>
+
+
+<h3>Scope</h3>
+
+<p>When designing a feature (or the whole app in its early days), you have to decide what the models represent. I&#8217;m calling that the &#8220;scope&#8221; of the model.</p>
+
+<p>For example, most applications have a <code>User</code> model. What columns will it have? Stuff about the user, obviously. But what stuff? One of the tradeoffs to consider is <code>User</code> vs. <code>Account</code> vs. <code>Profile</code>. If you put everything about the user in the same table as the one that&#8217;s pointed to in many foreign keys through the system, there will be a performance impact.</p>
+
+<p>So we put the most commonly needed items on every screen load in the <code>User</code> model and &#8220;extra&#8221; stuff in the <code>Profile</code>.</p>
+
+<ul>
+<li><code>User</code>: authentication, name, avatar, state</li>
+<li><code>Profile</code>: address, average rating, bio information</li>
+</ul>
+
+
+<p>There are plenty of ways to cut this up into other models and move things around, but that&#8217;s what I mean about &#8220;scope&#8221; of a model.</p>
+
+<h3>States</h3>
+
+<p>State machines are built into the foundation of the system. Almost every model has a <code>state</code> column and an initial state. There are then valid transitions to other states.</p>
+
+<p>For example, there is a <code>PaymentTransaction</code> model. It has an initial &#8220;pending&#8221; state that represents the time between when an invoice is submitted and when we charge the credit card. During this time, it can move to a &#8220;canceled&#8221; state if tit should not happen. Or, if things go as planned, it can transition to a &#8220;settled&#8221; state. After that, if there is an issue of some sort, it would go to a &#8220;refunded&#8221; state. Notably, going from &#8220;pending&#8221; to &#8220;refunded&#8221; is <em>not</em> a valid transition.</p>
+
+<div class="jumbotron">
+<img src="/images/posts/architecture-models/states.png" class="bigPicture" />
+</div>
+
+
+<p>Creating these state and transitions preserves some sanity in the system. It&#8217;s a safety check. By asserting what is possible, we can (try to) prevent things that should not be possible.</p>
+
+<h3>Nouns and Verbs</h3>
+
+<p>The TaskRabbit marketplace creates a job that is sent to a Tasker. The Tasker can chat with the Client and can say they will do the job. Or they can decline. If they agree, they are officially assigned to the job and make an appointment. When they complete the job, they invoice the Client for the time worked. In most cases, it&#8217;s done at that point. In other cases, it is &#8220;ongoing&#8221; where they come back next week (to clean again, for example). At more or less any time, they whole thing can be canceled.</p>
+
+<p>If given that description, you could come up with many possible model structures. They would all have a set of pros and cons, but many would work out just fine.</p>
+
+<p>For example, you could have a <code>Job</code> model with these kinds of states: <code>invited</code>, <code>invitation_declined</code>, <code>assigned</code>, <code>appointment_made</code>, <code>invoiced</code>, <code>invoice_paid</code>, <code>canceled</code>, etc. Each would only allow the valid transitions as described above. You would also need the columns to represent the data: <code>client_id</code>, <code>tasker_id</code>, <code>appointment_at</code>, etc.</p>
+
+<p>The main benefit of this approach is centrality. You can <code>SELECT * FROM jobs WHERE client_id = 42</code> and get all of that user&#8217;s situation. Over time, however, we came to value a more decentralized approach.</p>
+
+<p>Now, the models of our system reflect its objects and decisions that the actors make about them. Each fork in the experience has a corresponding model with a simple state machine.</p>
+
+<p>For example, the <code>Invitation</code> model is created first to note the decision the Tasker must make. It then either transitions to <code>accepted</code> or <code>declined</code>.  If accepted, it spawns an <code>Assignment</code>. It, in turn, can move to states like <code>completed</code> or <code>ongoing</code>.</p>
+
+<div class="jumbotron">
+<img src="/images/posts/architecture-models/invitations.png" class="bigPicture" />
+</div>
+
+
+<p>There is still the the <code>Job</code> model but it contains the &#8220;description&#8221; of the work to do and its <code>id</code> ties together the decision-based models.</p>
+
+<h3>Trade-offs</h3>
+
+<p>Everything is pros and cons. The decentralized approach has more global complexity (more objects and interactions) but less local complexity (simpler decisions, states).</p>
+
+<p>It seemed to be the single, monolithic state machine that doomed the single <code>Job</code> model. Everything is fine as long as that&#8217;s the only path through the system. However, as soon as there is a new way for a Task to be assigned, we have a tangled web of states.</p>
+
+<p>Not every task has the invitation pattern noted above. Some are &#8220;broadcast&#8221; to many Taskers at once and shown in a browse-able &#8220;Available Tasks&#8221; section in the their app. That&#8217;s a new fork in the experience. Ongoing tasks also create a state loop of sorts.</p>
+
+<p>These cause the single state machine to get a bit tangled up, but is more easily handled in the decentralized approach. We can make a <code>Broadcast</code> model instead of an <code>Invitation</code> one. That can have its own set of states. Success in that local state machine can also spawn an <code>Assignment</code> and everything goes on as before.</p>
+
+<h3>Denormalization</h3>
+
+<p>To try and get the both worlds, we have also aggressively embraced a variety of forms of denormalization.</p>
+
+<p>We actively try not to do SQL <code>JOIN</code>s for simplicity and performance reasons, but that is at odds with all these little models all over the place. So we have said it&#8217;s OK to have duplicate data. For example, each of these &#8220;decision&#8221; models have the <code>client_id</code>, <code>tasker_id</code>, and pricing information. It just gets passed along. This makes everything a local decision and queries very straightforward.</p>
+
+<p>The big hole in the decentralized approach is to &#8220;get all my stuff&#8221; easily. For that we have different tactics, both of which are denormalization with use cases in mind.</p>
+
+<p>On write to an object, we can update a central model with the current situation for that <code>Job</code>. For example, when an <code>Assignment</code> gets created, we recalculate and store data in two different tables. One for both the Tasker and the Client on what they should be seeing on their respective dashboards. Thus, the API call to &#8220;get all my stuff&#8221; uses one of those tables. That is done in the same transaction as the original write.</p>
+
+<p>The other option is basically the same thing but for either less time-sensitive data or more complicated queries. We use a <a href="/blog/2015/04/02/queue-bus/">message bus</a> to observe changes. We then denormalize applicable data for a specific use case into a table or <a href="http://www.elastic.co">Elasticsearch</a>. For example, when an <code>Appointment</code> is created, we would update the Taskers availability schedule in the database. Updating this schedule would also trigger an update to our recommendation algorithm which uses Elasticsearch.</p>
+
+<p>One important note: all of these denormalizations should be <a href="http://www.restapitutorial.com/lessons/idempotency.html">idempotent</a>. This allows us to recreate the whole thing from the source of truth or recover if any given event is dropped.</p>
+
+<h3>Summary</h3>
+
+<p>At TaskRabbit, we default to the following rules when designing the models in a system:</p>
+
+<ul>
+<li>Keep the scope small and based on decisions in the workflow</li>
+<li>Use state machines to declare and lock in the valid transitions</li>
+<li>Denormalize as needed to optimize use cases in the experience</li>
+</ul>
+
+
+<p>As always, these are just the default guidelines. In any given case, there may be a reason to deviate, but it would have to be clear why that case was special.</p>
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

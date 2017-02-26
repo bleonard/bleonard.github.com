@@ -1,0 +1,229 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Queue Bus - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="At TaskRabbit, we have been using resque-bus for about two years. It has continued to provide value by linking components via a loosely coupled &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2015/04/02/queue-bus/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">Queue Bus</h1>
+	<div class="entry-content"><p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, we have been using <a href="/blog/2013/09/28/resque-bus/">resque-bus</a> for about two years. It has continued to provide value by  linking components via a loosely coupled publish/subscription model. We have seen 10x the number of events going through it, but have not yet hit any scaling issues. The benefit of using the tools we already have continues to be a huge win.</p>
+
+<p>But other teams are using other tools like <a href="http://sidekiq.org/">Sidekiq</a>. We&#8217;re also interested in trying it out, but resque-bus (unsurprisingly) was tied closely to <a href="https://github.com/resque/resque">Resque</a>. We&#8217;ve changed that by creating <a href="https://github.com/queue-bus/queue-bus">queue-bus</a> and using an adapter pattern. There are now adapters in <a href="https://github.com/queue-bus/resque-bus">resque-bus</a> and <a href="https://github.com/queue-bus/sidekiq-bus">sidekiq-bus</a>, as well as a compatible version in <a href="https://github.com/queue-bus/node-queue-bus">node-queue-bus</a>.</p>
+
+<p>The code interactions are basically the same but can work across systems. You can even have one app using Resque and one using Sidekiq.</p>
+
+<h4>Pick your adapter</h4>
+
+<p>By requiring one of the adapters, it automatically gets set up to be the one for the app.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">require</span> <span class="s1">&#39;sidekiq-bus&#39;</span> <span class="c1"># (or &#39;resque-bus&#39;)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>Application A publishes an event</h4>
+
+<p>Something happens in your application and you want to let the world know. In this case, you publish an event.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># business logic</span>
+</span><span class='line'><span class="no">QueueBus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="s2">&quot;user_created&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="p">:</span> <span class="mi">42</span><span class="p">,</span> <span class="n">first_name</span><span class="p">:</span> <span class="s2">&quot;John&quot;</span><span class="p">,</span> <span class="n">last_name</span><span class="p">:</span> <span class="s2">&quot;Smith&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># or do it later</span>
+</span><span class='line'><span class="no">QueueBus</span><span class="o">.</span><span class="n">publish_at</span><span class="p">(</span><span class="mi">1</span><span class="o">.</span><span class="n">hour</span><span class="o">.</span><span class="n">from_now</span><span class="p">,</span> <span class="s2">&quot;user_created&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="p">:</span> <span class="mi">42</span><span class="p">,</span> <span class="n">first_name</span><span class="p">:</span> <span class="s2">&quot;John&quot;</span><span class="p">,</span> <span class="n">last_name</span><span class="p">:</span> <span class="s2">&quot;Smith&quot;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>Application B subscribes to events</h4>
+
+<p>If the same or different application is interested when an event happens, it subscribes to it by name.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># initializer</span>
+</span><span class='line'><span class="no">QueueBus</span><span class="o">.</span><span class="n">dispatch</span><span class="p">(</span><span class="s2">&quot;app_b&quot;</span><span class="p">)</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">subscribe</span> <span class="s2">&quot;user_created&quot;</span> <span class="k">do</span> <span class="o">|</span><span class="n">attributes</span><span class="o">|</span>
+</span><span class='line'>    <span class="c1"># business logic</span>
+</span><span class='line'>    <span class="no">NameCount</span><span class="o">.</span><span class="n">find_or_create_by_name</span><span class="p">(</span><span class="n">attributes</span><span class="o">[</span><span class="s2">&quot;last_name&quot;</span><span class="o">]</span><span class="p">)</span><span class="o">.</span><span class="n">increment!</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Upgrading</h3>
+
+<p>The formats changed a little bit with the move. The last version that used the old format (0.3.7) also can adapt to the new format. This is important because you&#8217;ll have things in the queue during the transition.</p>
+
+<p>Steps:</p>
+
+<ul>
+<li>Upgrade everyone to 0.3.7</li>
+<li>Deploy all the things</li>
+<li>Upgrade everyone to the newest version</li>
+</ul>
+
+
+<h3>More to come</h3>
+
+<p>If people continue to like this approach and gem, we have lots of approaches and tools built on top of it that we&#8217;d be excited to make available. Let us know on <a href="https://github.com/queue-bus/queue-bus">Github</a> that you like it by watching, starring, or creating issues with questions, etc.</p>
+
+<p>Now that we have the adapter pattern, also let us know if you are interested in making one for your background system of choice. A special thanks goes out to <a href="https://github.com/jonsgreen">Jonathan Greenberg</a> and the team at <a href="http://www.purpose.com/">purpose.com</a> who did just that to get this whole thing going.</p>
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

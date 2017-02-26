@@ -1,0 +1,445 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="In Ruby, we often like very simple APIs, but this often comes at the price of thread safety and code flexibility. I&#8217;ve found that if you use a &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/page/4/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner">
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-01-18T08:50:00-08:00" pubdate data-updated="true">Jan 18<span>th</span>, 2013</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/architecture/'>architecture</a>, <a class='category' href='/blog/categories/code/'>code</a>, <a class='category' href='/blog/categories/refactor/'>refactor</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2013/01/18/singletons/">Singletons, Threads, and Flexibility</a></h1>
+	<div class="entry-content">
+		<p>In Ruby, we often like very simple APIs, but this often comes at the price of thread safety and code flexibility. I&#8217;ve found that if you use a few tricks from the start, you can get the best of it all.</p>
+
+<p>I recently did a <a href="/blog/2013/01/11/hubtime">project</a> where I tried to use the <a href="https://github.com/vcr/vcr">VCR</a> gem, but it went awry when working in multiple threads. This is a great gem that, like many of my own, falls into the trap of module/class level singleton configuration/execution.</p>
+
+<p>This is approach is characterized by things like <code>extend self</code> in the top-level <a href="https://github.com/vcr/vcr/blob/8bbe6aacba4bd5a76a946c99ff08f034ff0eb2ce/lib/vcr.rb#L23">module</a> and then having <a href="https://github.com/vcr/vcr/blob/8bbe6aacba4bd5a76a946c99ff08f034ff0eb2ce/lib/vcr.rb#L329">instance variables</a> at that level. This is not to call out VCR specifically. it&#8217;s just my most recent example of hundreds of gems that take this overall approach.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">module</span> <span class="nn">VCR</span>
+</span><span class='line'>  <span class="kp">extend</span> <span class="nb">self</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">current_cassette</span>
+</span><span class='line'>    <span class="n">cassetes</span><span class="o">.</span><span class="n">last</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">configure</span>
+</span><span class='line'>    <span class="k">yield</span> <span class="n">configuration</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">configuration</span>
+</span><span class='line'>    <span class="vi">@configuration</span> <span class="o">||=</span> <span class="no">Configuration</span><span class="o">.</span><span class="n">new</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kp">private</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">cassettes</span>
+</span><span class='line'>    <span class="vi">@cassettes</span> <span class="o">||=</span> <span class="o">[]</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>When operating on multiple threads, things get wacky because of this because they are sharing this <code>current_cassette</code> and writing to the associated file. You end up with recordings on top of each other.</p>
+
+<p>I am inclined (and some say <em>over-inclined</em>) to use singletons to do something like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">VCR</span><span class="o">::</span><span class="no">Client</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">current_cassette</span>
+</span><span class='line'>    <span class="n">cassetes</span><span class="o">.</span><span class="n">last</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">configure</span>
+</span><span class='line'>    <span class="k">yield</span> <span class="n">configuration</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">configuration</span>
+</span><span class='line'>    <span class="vi">@configuration</span> <span class="o">||=</span> <span class="no">Configuration</span><span class="o">.</span><span class="n">new</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kp">private</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">cassettes</span>
+</span><span class='line'>    <span class="vi">@cassettes</span> <span class="o">||=</span> <span class="o">[]</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">module</span> <span class="nn">VCR</span>
+</span><span class='line'>  <span class="kp">extend</span> <span class="nb">self</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">delegate</span> <span class="ss">:current_cassette</span><span class="p">,</span> <span class="ss">:configure</span><span class="p">,</span> <span class="ss">:configuration</span><span class="p">,</span> <span class="ss">:to</span> <span class="o">=&gt;</span> <span class="ss">:default_client</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">default_client</span>
+</span><span class='line'>    <span class="vi">@default_client</span> <span class="o">||=</span> <span class="no">Client</span><span class="o">.</span><span class="n">new</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+
+		
+		<a href="/blog/2013/01/18/singletons/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-01-11T18:03:00-08:00" pubdate data-updated="true">Jan 11<span>th</span>, 2013</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/code/'>code</a>, <a class='category' href='/blog/categories/git/'>git</a>, <a class='category' href='/blog/categories/opensource/'>opensource</a>, <a class='category' href='/blog/categories/projects/'>projects</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2013/01/11/hubtime/">Hubtime</a></h1>
+	<div class="entry-content">
+		<p>I got pretty sidetracked during my <a href="/blog/2012/12/31/review-2012/">2012 Review</a> and ended up making a new tool called <a href="https://github.com/bleonard/hubtime">Hubtime</a>. It lets you graph your activity in a variety aways across Github repositories.</p>
+
+<p>The inspiration came from Github&#8217;s own <a href="https://github.com/bleonard/daily/graphs">reports</a>, but I made Hubtime because those reports are only at a repository level. I was looking to see patterns across the many repositories that I worked on over the year. It seems that Github agrees to some degree because they have since <a href="https://github.com/blog/1360-introducing-contributions">launched</a> metric overviews on user profile pages.</p>
+
+<p><img src="/images/posts/hubtime-github-contributions.png"></p>
+
+<p>A 42 day streak! Hubtime has the data to make Hubtime do the same graph, but right now focuses more on reproducing the Github experience that is only now per repository.</p>
+
+<pre><code>$ ./hubtime.rb graph commits --months 3
+</code></pre>
+
+<p><img src="/images/posts/hubtime-commits.png"></p>
+
+<p>Graphing commits, additions, deletions, or impact can also be done showing the magnitude by repository.</p>
+
+<pre><code>$ ./hubtime.rb graph commits --months 3 --stacked
+</code></pre>
+
+<p><img src="/images/posts/hubtime-stacked.png"></p>
+
+<p>This was the first purely command line Ruby project that I have done. In addition to that, I learned several new things and tried some new approaches during development.</p>
+
+
+		
+		<a href="/blog/2013/01/11/hubtime/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-01-02T19:59:00-08:00" pubdate data-updated="true">Jan 2<span>nd</span>, 2013</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/balance/'>balance</a>, <a class='category' href='/blog/categories/home/'>home</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2013/01/02/playing-work/">Playing Work</a></h1>
+	<div class="entry-content">
+		<p>We didn&#8217;t go anywhere over the holidays and had a nice Christmas at home. It&#8217;s possible that I&#8217;m incapable of taking a vacation at all, but this is particularly true when on a stay-cation. Other than Christmas day itself, I was coding on a normal schedule for most of the week.</p>
+
+<p>My daughter (4.5) was around most of the week too, often with the normal babysitter that comes for my younger son. So all week, our house had me coding, my wife editing, and her hanging out with the babysitter. She even brought us lunch like it was restaurant including a fork wrapped up in a napkin.</p>
+
+<p>On January 1st, I also took the day completely off and asked her what she wanted to play. &#8220;Not now, I&#8217;m working,&#8221; she said. She was &#8220;playing work,&#8221; which involved writing out a dense set of letters on white sheets of paper.</p>
+
+<blockquote><p>&#8220;There is a lot to do and I have to work, even on family days.&#8221;</p></blockquote>
+
+<p>And she went back to scribbling like crazy. This all says something about me as a person and a parent. I&#8217;m not sure exactly what, but it&#8217;s probably not good.</p>
+
+<p>It hurts because I actually think I&#8217;m doing a pretty good job. I leave early (by engineer-at-startup standards) to have dinner and hang out with her and only work again after she is asleep. I&#8217;m not sure I could have more &#8220;balance&#8221; anyway. To me, the term suggests a healthy ratio between what you are forced to do because of work and the things of &#8220;normal life.&#8221; I might be intrinsically unbalanced, but I feel lucky that my normal life has a lot of things that I love doing which centers mostly around building things for people. For better or worse, I&#8217;m thinking about this stuff all the time, anyway.</p>
+
+<p>It likely comes with my being so visibly inaccessible all week. Regardless, I didn&#8217;t have any profound realizations at that moment or anything. Instead, I decided to plant a behavioral seed for later.</p>
+
+<blockquote><p>&#8220;I understand. I&#8217;ll let you get to it. Let me know when you can play.&#8221;</p></blockquote>
+
+		
+		
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-12-31T10:39:00-08:00" pubdate data-updated="true">Dec 31<span>st</span>, 2012</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/architecture/'>architecture</a>, <a class='category' href='/blog/categories/git/'>git</a>, <a class='category' href='/blog/categories/home/'>home</a>, <a class='category' href='/blog/categories/manager/'>manager</a>, <a class='category' href='/blog/categories/review/'>review</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2012/12/31/review-2012/">Review: 2012</a></h1>
+	<div class="entry-content">
+		<p>I honestly can&#8217;t remember anything from January or even October very specifically. It sure felt like I was busy as we doubled the TaskRabbit engineering team and scaled the site to get a lot more stuff done for real people in the real world.</p>
+
+<p>I can&#8217;t even decide what the best way is to see what I did in January. I could look at my email or calendar, but I strive not to make those the center of my world. Maybe in Evernote. My git commits are probably a bit too granular, but maybe there is something in the aggregate.</p>
+
+<p><img src="/images/posts/2012-review-impact.png"></p>
+
+<p>Most striking is the almost non-existence of code between July and October. We were growing the team during this time and I made the conscious choice to try on more of an &#8220;engineering manager&#8221; role as opposed to a &#8220;tech lead&#8221; kind of role. Judging by the large spike in October, it&#8217;s clear the experiment got cut short. Around this time, I made the biggest change of the year: transitioning from VP of Engineering to Chief Architect.</p>
+
+
+		
+		<a href="/blog/2012/12/31/review-2012/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+<nav id="pagenavi">
+    
+        <a href="/blog/page/3/" class="prev">Prev</a>
+    
+    
+    <div class="center"><a href="/blog/archives">Blog Archives</a></div>
+</nav></div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

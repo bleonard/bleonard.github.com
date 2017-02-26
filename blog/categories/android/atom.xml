@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: android | BLog]]></title>
+  <link href="http://bleonard.github.com/blog/categories/android/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.com/"/>
+  <updated>2017-02-25T21:54:36-08:00</updated>
+  <id>http://bleonard.github.com/</id>
+  <author>
+    <name><![CDATA[Brian Leonard]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[React Native Android Launch]]></title>
+    <link href="http://bleonard.github.com/blog/2016/03/24/react-native-android-launch/"/>
+    <updated>2016-03-24T00:00:00-07:00</updated>
+    <id>http://bleonard.github.com/blog/2016/03/24/react-native-android-launch</id>
+    <content type="html"><![CDATA[<p>Yesterday, we launched our updated Tasker app to our Android community. As noted <a href="/blog/2015/12/17/react-native-launch/">before</a> on the iOS launch, this is the app that Taskers use to get their work done. This completes our migration to <a href="https://facebook.github.io/react-native/">React Native</a>.</p>
+
+<p>All of the credit goes to the team that made this happen, especially <a href="https://twitter.com/jrichardlai">JR</a> and <a href="http://jeremyeaton.co/">Jeremy</a>. It was a lot harder than expected to get everything working on both platforms and they showed great dedication and persistence.</p>
+
+<h2>Approach</h2>
+
+<p>The goal of the last release was for the iOS users to not even notice. Mission (more or less) accomplished! However, for this one, it didn't make sense to fork the code by platform without a good reason. So admittedly, the app looks more like an iOS app and than an Android one. However, we did go screen by screen looking for places where Android-specific attention would help the user.</p>
+
+<h2>Differences</h2>
+
+<p>I'll let JR do a followup to his <a href="/blog/2016/01/11/react-native-android/">previous post</a> of all the differences, but the biggest ones in my mind were the handling of the hardware back button and different pickers (date, for example) in the forms. The <code>Platform</code> directory strategy we had put in place during the first cycle worked out pretty well.</p>
+
+<p>We also really struggled with getting push notifications right. This is key for our business and there were many more nuances on the Android platform to work out. We hope to publish what we came up with.</p>
+
+<p>Of course, there was also the more extensive testing to do. Our Android pile:</p>
+
+<div class="jumbotron">
+  <img src="http://bleonard.github.com/images/posts/react-native-android-launch/pile.jpg" class="bigPicture"/>
+</div>
+
+
+<h2>Stats</h2>
+
+<ul>
+<li>App Javascript: 302 files with 21515 lines of code</li>
+<li>Test Javascript: 47 files with 5708 lines of code</li>
+<li>iOS Javascript: 19 files with 449 lines of code</li>
+<li>Android Javascript: 19 files with 770 lines of code</li>
+<li>Objective C: 17 files with 885 lines of code</li>
+<li>Java: 15 files with 912 lines of code</li>
+<li>iOS Config files: 18 files with 2538 lines of stuff</li>
+<li>Android Config files: 16 files with 1106 lines of stuff</li>
+<li>React Components: 124</li>
+<li>Screens (addressable url patterns): 25</li>
+<li>Avg. components per screen: 5</li>
+<li>Dispatcher Events: 55</li>
+<li>Shared JS (vs. Platform JS) percentage: 94%</li>
+<li>JS (vs. Native ObjC/Java) percentage: 92%</li>
+<li>Total shared code percentage: 87%</li>
+<li>Total shared (including config) percentage: 75%</li>
+</ul>
+
+
+<h2>Next steps</h2>
+
+<p>Now, we certainly didn't do this engineering project because the tech was cool (even though it is). We did it to create a foundation that allows us to deliver value more effectively to our community. So that's the next order of business. Time to get rolling! I estimate that we can ship features to both platforms at least twice as quickly with half the engineers than we had before.</p>
+
+<p>Too long, but did read anyway: For you execs out there that somehow read this far (even past lines of code counts!), I'd say that we've found React Native to be at least 5x more productive than traditional mobile development.</p>
+]]></content>
+  </entry>
+  
+</feed>

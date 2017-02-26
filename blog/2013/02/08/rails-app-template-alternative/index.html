@@ -1,0 +1,264 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Rails App Template Alternative - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="We are making lots of new apps at TaskRabbit and have many shared components. All of this stuff (gems, best practices, test setup, etc) needs to get &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2013/02/08/rails-app-template-alternative/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">Rails App Template Alternative</h1>
+	<div class="entry-content"><p>We are making lots of new apps at <a href="https://www.taskrabbit.com">TaskRabbit</a> and have many shared components. All of this stuff (gems, best practices, test setup, etc) needs to get into the new project quickly so the team can focus on the business of providing the intended functionality. My first attempt to solve this problem was to create a <a href="http://edgeguides.rubyonrails.org/rails_application_templates.html">Rails app template</a> with all that stuff, but switched to a new way that involves a true template application.</p>
+
+<p>Conventional app templates seem to work for a lot of people and <a href="https://github.com/RailsApps/rails-composer/">Rails Composer</a> looks to be a good option in this space. This method works by running Ruby code that puts down files. This level of indirection is likely a positive thing when projects vary (<a href="https://github.com/rspec/rspec">rspec</a> one time, <a href="https://github.com/test-unit/test-unit">test-unit</a> the next). However, we&#8217;re trying as hard as we can to be consistent across apps, so when I found that this indirection made working with the templates more difficult, I decided that it was not worth it.</p>
+
+<p>The alternative method is pretty simple. I made a Rails app called <a href="http://en.wikipedia.org/wiki/Warren_(domestic">Warren</a>) that was exactly what I wanted to see new projects use. It contained all our our gems for authentication, shared styles, inter-app communication, and developer tools. You could basically log in, log out, and go to a page where you saw who was logged in. It had its own test suite to test these things along with all the normal stuff: yml files, initializers, .rvmrc, .gitigore, ApplicationController, favicon, etc. It was simply a working Rails app.</p>
+
+<p>The only addition is the <code>app.rake</code> file that I put in the /lib/tasks directory. That provides this functionality:</p>
+
+<pre><code>% rake app:create[new_name]
+</code></pre>
+
+<p>This will create a new app called NewName in a peer folder to Warren. The full process looks something like this:</p>
+
+<pre><code>localhost:warren brian$ rake app:create[new_name]
+
+localhost:warren brian$ cd ../new_name
+=== RVM Message ===
+Do you wish to trust this .rvmrc file? (/Users/brian/taskrabbit/new_name/.rvmrc)
+y[es], n[o], v[iew], c[ancel]&gt; yes
+Using /Users/brian/.rvm/gems/ruby-1.9.3-p194 with gemset new_name
+
+localhost:new_name brian$ bundle install
+Fetching gem metadata from http://rubygems.org/......
+Installing all-the-things (3.9.2) 
+Your bundle is complete!
+
+localhost:new_name brian$ rake db:create db:migrate db:test:prepare
+
+localhost:new_name brian$ rails s
+&gt;&gt; Listening on 0.0.0.0:3000, CTRL+C to stop
+</code></pre>
+
+<p>And http://localhost:3000 works.</p>
+
+<!-- more -->
+
+
+<p>Everything is set up. As a small example, the application.rb and routes.rb have the right stuff in them.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">module</span> <span class="nn">NewName</span>
+</span><span class='line'>  <span class="k">class</span> <span class="nc">Application</span> <span class="o">&lt;</span> <span class="no">Rails</span><span class="o">::</span><span class="no">Application</span>
+</span><span class='line'>    <span class="c1"># normal stuff</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="no">NewName</span><span class="o">::</span><span class="no">Application</span><span class="o">.</span><span class="n">routes</span><span class="o">.</span><span class="n">draw</span> <span class="k">do</span>
+</span><span class='line'>  <span class="c1"># routes</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<p>As well as the database.yml</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">development</span><span class="p-Indicator">:</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">adapter</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">mysql2</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">database</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">new_name_development</span>
+</span><span class='line'>  <span class="l-Scalar-Plain">host</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">...</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And in application.html.erb</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;head&gt;</span>
+</span><span class='line'>  <span class="nt">&lt;title&gt;</span>NewName<span class="nt">&lt;/title&gt;</span>
+</span><span class='line'><span class="nt">&lt;/head&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>There are obviously tons of places that are customized with NewName or new_name and the main point is that it&#8217;s the same places that were customized with Warren or warren. So there is no magic here. I just copy, find, and replace.</p>
+
+<p>NewName works because Warren works. I know Warren works because I can actually use it (and test it with rspec). With app templates, I was regenerating every time that I made a change to a generator file to see if it worked.</p>
+
+<p>I&#8217;m not sure where to check this in. I was going to make a gem/generator to add this one file to your template project, but that goes against the spirit of what I&#8217;m talking about. So I just put it here:</p>
+
+<div class='px500'><script src='https://gist.github.com/4740777.js'></script>
+<noscript><pre><code></code></pre></noscript></div>
+
+
+<p>You&#8217;ll note that my instructions had me <code>cd</code>ing into the directory. I tried to do that in the script, too, but I couldn&#8217;t get the RVM stuff to work. If anyone wants to take a look at the <code>rvm_stuff_that_does_not_work</code> method, I&#8217;d love some help.</p>
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+
+<section id="comment">
+    <h1 class="title">Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://bleonard.github.com/blog/2013/02/08/rails-app-template-alternative/';
+        var disqus_url = 'http://bleonard.github.com/blog/2013/02/08/rails-app-template-alternative/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

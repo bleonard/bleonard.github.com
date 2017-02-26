@@ -1,0 +1,228 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>React Native Launch - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="This week, we launched our updated Tasker app to the community. This is not the app on the app store, but rather the one the Taskers use to get their &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2015/12/17/react-native-launch/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">React Native Launch</h1>
+	<div class="entry-content"><p>This week, we launched our updated Tasker app to the community. This is not the app on the app store, but rather the one the Taskers use to get their work done. Functionally, not much has changed since the last release. But underneath, the app has been completely rewritten in <a href="https://facebook.github.io/react-native/">React Native</a>.</p>
+
+<p>First and foremost, a huge congratulations needs to go out to the team, especially <a href="https://twitter.com/jrichardlai">JR</a>. I&#8217;ve never been on an engineering project that went as smoothly or was as fun as this one. So good!</p>
+
+<h2>Prototype</h2>
+
+<p>I started looking into React Native in the beginning of August. It&#8217;s a really great story. First of all, it&#8217;s <a href="https://facebook.github.io/react/">React</a>. I&#8217;ve now decided that&#8217;s just about the best thing out there. Secondly, I was 10x more productive than when developing a regular iOS app. Finally, there was a decent chance much of the code could be reused on Android. If every feature did not have to be developed twice, we could choose to develop twice as many features or have half the engineers work on something else.</p>
+
+<p>I created a prototype to see if I thought it could work. The main concerns I had we around navigation, push notifications, other native features, data storage, and just getting the right project structure. More or less, I ended up with the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">React Native Sample App</a> that we published. All of those things showed great promise or at least that they were possible.</p>
+
+<!-- more -->
+
+
+<p>The community was also evolving rapidly. It&#8217;s super exciting to be working at the beginning of a technology that shows great promise. Each week, there would be a new thing on github that solved one of our needs. Our strategy was to put off a feature to see if the core team or community would make something available. If they did not, we went ahead and <a href="https://github.com/taskrabbit/react-native-parsed-text">wrote</a> it. I&#8217;m sure everyone was doing something similar. Let&#8217;s call it bootstrap chicken.</p>
+
+<p>The prototype was enough to convince me and enough to get people excited about it. Towards the end of September, JR started working full-time on it. My time in greenfield projects had to come to a close. Back to real life, but I stayed involved as the Product Manager.</p>
+
+<h2>Product Management</h2>
+
+<p>I can&#8217;t imagine anyone saying that I&#8217;m a very good PM. In particular, my story acceptance followup is horrendous. Fortunately, <a href="https://twitter.com/pdevine">Paul</a> helped me out. I did do a pretty good job of writing the stories and putting them in the right order.</p>
+
+<p>One decision made this project work, though. It was to acknowledge that this is an engineering project, not a product one. It&#8217;s so very tempting to update the functionality of the app &#8220;while you&#8217;re at it.&#8221; But opening that door would have doubled the length of the project. Those discussions with design and others would eat up the development time. It would have made the rollout harder. We could do a soft release because it&#8217;s basically the same app. I&#8217;ve written about <a href="/blog/2015/10/26/rewrite/">rewrites</a> before, but that was to drastically change the product. If you can get away with it, do it in place and keep it the same. At least we followed one of those.</p>
+
+<p>So I dragged stories around while JR worked his butt off. This is not a small app and we hit critical functional parity (with many UI tweaks needed) at the beginning of October. We put this in the hands of some Taskers and got their feedback. From there it was getting the less critical features done, getting feedback, shipping new builds, making it prettier, and fixing bugs.</p>
+
+<h2>Shipping</h2>
+
+<p>By last week, we felt really good about it but needed to buckle down to get the release out. We&#8217;d been working so quickly that it was hard to slow down and be more methodical in the final run up. We felt good because <a href="http://jeremyeaton.co/">Jeremy</a> joined the team, we had great <a href="/blog/2015/11/08/react-native-integration-tests/">test coverage</a>, and real Taskers in multiple countries were actually using the thing.</p>
+
+<p>We put out another release to a wider audience and incorporated a few final items. Then&#8230; ship it. The reception has been neutral. Nothing good or bad. This is amazing! That means success in a technology project with no new features except all of the old ones.</p>
+
+<h2>Notes</h2>
+
+<p>I just wanted to note a few interesting things that we did or encountered.</p>
+
+<ul>
+<li><p>We have been beta testing React Native integration from <a href="https://realm.io">Realm</a>. All of our lists (non-singletons) stores are backed by a Realm database. For example, we use this for storing tasks. The various lists and drill-down screens all use the same data. That means its very likely to be always up to date. If you&#8217;re interested in trying it out, sign up <a href="http://goo.gl/forms/UvS8ZM9LOA">here</a>.</p></li>
+<li><p>Be careful about the JS runtime (iOS version). We&#8217;ve been testing in iOS 9. Right before release, we realized a library we use was using <code>new Symbol()</code>. It works in 9.0+ but not in 8.x versions of the OS.</p></li>
+<li><p>Our navigation scheme really is awesome. It makes everything easier. Check out more information <a href="/blog/2015/09/21/react-native-example-app/">here</a>.</p></li>
+<li><p>Internationalization was really interesting. I&#8217;ll write up more on this topic but, briefly: each component declares its own words and we have code to go through all the components and collect them up. Then we can send that off for translation.</p></li>
+<li><p><a href="https://facebook.github.io/react/docs/flux-overview.html">Flux</a> and event dispatching in general really worked out well. Just having minor piece of indirection reduces coupling and leads to great results</p></li>
+<li><p>JR is trying to convert me to ES2015 and also away from <a href="https://facebook.github.io/react/docs/reusable-components.html#mixins">mixins</a>. He did this <a href="https://github.com/taskrabbit/react-component-extension">extension</a> thing. He&#8217;s probably right.</p></li>
+<li><p>I think there&#8217;s a missing pattern for how to run things in the &#8220;background&#8221; in these apps. For example, maybe we&#8217;re supposed to sync something with the server every hour or so. We made something up but I haven&#8217;t seen anything else about it.</p></li>
+<li><p>Everything that is iOS specific is in one directory right now and it&#8217;s not much. I&#8217;m really looking forward to the Android build.</p></li>
+</ul>
+
+
+<h2>Stats</h2>
+
+<ul>
+<li>Javascript: 351 files with 37168 lines of code</li>
+<li>Objective C: 12 files with 1029 lines of code</li>
+<li>React Components: 112</li>
+<li>Screens (addressable url patterns): 25</li>
+<li>Dispatcher Events: 52</li>
+<li>Platform (iOS specific): 18 files with 605 lines of code</li>
+<li>JS / C percentage: 97%</li>
+<li>Shareable code percentage: 93% (so far - we&#8217;ll see with Android)</li>
+<li>Avg. components per screen: 4.5</li>
+</ul>
+
+
+<h2>Next steps</h2>
+
+<p>Now we are going to fix up a few minor things and on to Android. How exciting!</p>
+
+<p>Ok, this video is a bit of a lie because it&#8217;s the old app. But the main point was that the React app looks just like this one. So to get an idea of the functionality we&#8217;ve implemented in React Native&#8230;</p>
+
+<iframe src="https://player.vimeo.com/video/148648842" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

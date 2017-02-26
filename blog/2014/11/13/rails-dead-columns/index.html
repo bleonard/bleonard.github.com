@@ -1,0 +1,399 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Rails Dead Columns - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="It happens. This column has to go. But in a Rails app, there are a few problems. You can&#8217;t just drop it. My first expectation is that we would &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2014/11/13/rails-dead-columns/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">Rails Dead Columns</h1>
+	<div class="entry-content"><p>It happens. This column has to go. But in a <a href="http://rubyonrails.org/">Rails</a> app, there are a few problems. You can&#8217;t just drop it.</p>
+
+<p>My first expectation is that we would create a <a href="http://guides.rubyonrails.org/migrations.html">migration</a> and do something like this.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>class RemoveMiddleNameFromUsers &lt; ::ActiveRecord::Migration
+</span><span class='line'>  def change
+</span><span class='line'>    remove_column :users, :middle_name
+</span><span class='line'>    remove_column :users, :gender
+</span><span class='line'>  end
+</span><span class='line'>end</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This will generally be fine but there are a few practical issues.</p>
+
+<ul>
+<li>Is any of my code still using this column?</li>
+<li>What happens to the production code in the time between the migration and new code using it?</li>
+</ul>
+
+
+<h2>Still in use?</h2>
+
+<p>The obvious thing to do is search the code for use of this column name, but sometimes that can be tricky. The name would be fairly common leading to difficult searching. You could also be accessing it in a fairly inconsistent way like via <code>send</code> and string interpolation or something.</p>
+
+<p>The best way that we&#8217;ve found out that we are still using something is to freak out in test/development/staging if it is accessed. If we didn&#8217;t have the test coverage, we&#8217;d probably log it&#8217;s usage in production and check the logs for use.</p>
+
+<!-- more -->
+
+
+<h2>Deploy</h2>
+
+<p>Even if you aren&#8217;t using the column, there&#8217;s still an issue during the deploy window after the migration and before the server reboots. Rails has cached all the columns from right after it booted up so that it can know what to write to the table when you save a new record (among other things).</p>
+
+<p>This means that it still assumes that column is there and when it reads/writes it will look for or set that column. Obviously this will not work. So what we need is two deploys wherein we first tell ActiveRecord that column no longer exists. Then sometime in the future, we can actually remove it.</p>
+
+<p>Incidentally, I&#8217;ve noticed a read-only (<code>def readonly?</code> returns <code>true</code>) ActiveRecord model always does a <code>SELECT *</code> instead of looking for specific columns and doesn&#8217;t have this issue.</p>
+
+<h2>Code</h2>
+
+<p>Here is the code use for these purposes.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">module</span> <span class="nn">Mixins</span>
+</span><span class='line'>  <span class="k">module</span> <span class="nn">DeadColumns</span>
+</span><span class='line'>    <span class="kp">extend</span> <span class="no">ActiveSupport</span><span class="o">::</span><span class="no">Concern</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">class</span> <span class="nc">DeadColumnError</span> <span class="o">&lt;</span> <span class="no">StandardError</span><span class="p">;</span> <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1"># to run in config/initializers to remove things globally</span>
+</span><span class='line'>    <span class="k">class</span> <span class="nc">All</span>
+</span><span class='line'>      <span class="k">class</span> <span class="o">&lt;&lt;</span> <span class="nb">self</span>
+</span><span class='line'>        <span class="k">def</span> <span class="nf">init</span>
+</span><span class='line'>          <span class="k">return</span> <span class="k">if</span> <span class="vi">@active_record_init</span>
+</span><span class='line'>          <span class="vi">@active_record_init</span> <span class="o">=</span> <span class="kp">true</span>
+</span><span class='line'>          <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="ss">:include</span><span class="p">,</span> <span class="no">Mixins</span><span class="o">::</span><span class="no">DeadColumns</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">def</span> <span class="nf">death_watch</span><span class="p">(</span><span class="nb">name</span><span class="p">,</span> <span class="o">*</span><span class="n">columns</span><span class="p">)</span>
+</span><span class='line'>          <span class="n">init</span>
+</span><span class='line'>          <span class="vi">@registered_tables</span> <span class="o">||=</span> <span class="p">{}</span>
+</span><span class='line'>          <span class="vi">@registered_tables</span><span class="o">[</span><span class="nb">name</span><span class="o">.</span><span class="n">to_s</span><span class="o">]</span> <span class="o">=</span> <span class="n">columns</span><span class="o">.</span><span class="n">collect</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:to_s</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">def</span> <span class="nf">table_columns_registered</span><span class="p">(</span><span class="nb">name</span><span class="p">)</span>
+</span><span class='line'>          <span class="vi">@registered_tables</span><span class="o">[</span><span class="nb">name</span><span class="o">.</span><span class="n">to_s</span><span class="o">]</span> <span class="o">||</span> <span class="o">[]</span>
+</span><span class='line'>        <span class="k">end</span>
+</span><span class='line'>      <span class="k">end</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">included</span> <span class="k">do</span>
+</span><span class='line'>      <span class="k">class</span> <span class="o">&lt;&lt;</span> <span class="nb">self</span>
+</span><span class='line'>        <span class="n">alias_method_chain</span> <span class="ss">:columns</span><span class="p">,</span> <span class="ss">:death</span>
+</span><span class='line'>      <span class="k">end</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">module</span> <span class="nn">ClassMethods</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">def</span> <span class="nf">dead_column_list</span>
+</span><span class='line'>        <span class="k">return</span> <span class="vi">@dead_columns</span> <span class="k">if</span> <span class="vi">@dead_columns</span>
+</span><span class='line'>        <span class="vi">@dead_columns</span> <span class="o">=</span> <span class="no">Mixins</span><span class="o">::</span><span class="no">DeadColumns</span><span class="o">::</span><span class="no">All</span><span class="o">.</span><span class="n">table_columns_registered</span><span class="p">(</span><span class="nb">self</span><span class="o">.</span><span class="n">table_name</span><span class="p">)</span><span class="o">.</span><span class="n">dup</span>
+</span><span class='line'>      <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">def</span> <span class="nf">columns_with_death</span>
+</span><span class='line'>        <span class="vi">@columns_with_death</span> <span class="o">||=</span> <span class="n">columns_without_death</span><span class="o">.</span><span class="n">reject</span><span class="p">{</span><span class="o">|</span><span class="n">c</span><span class="o">|</span> <span class="n">dead_column_list</span><span class="o">.</span><span class="n">include?</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">to_s</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'>      <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="k">def</span> <span class="nf">dead_columns</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">to_kill</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">collect</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:to_s</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">dead_column_list</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">to_kill</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">to_kill</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">col</span><span class="o">|</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="n">define_method</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">col</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">do</span>
+</span><span class='line'>            <span class="k">raise</span> <span class="no">DeadColumnError</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="nb">self</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">#</span><span class="si">#{</span><span class="n">col</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span class='line'>          <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="n">define_method</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">col</span><span class="si">}</span><span class="s2">?&quot;</span><span class="p">)</span> <span class="k">do</span>
+</span><span class='line'>            <span class="k">raise</span> <span class="no">DeadColumnError</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="nb">self</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">#</span><span class="si">#{</span><span class="n">col</span><span class="si">}</span><span class="s2">?&quot;</span>
+</span><span class='line'>          <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>          <span class="n">define_method</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">col</span><span class="si">}</span><span class="s2">_changed?&quot;</span><span class="p">)</span> <span class="k">do</span>
+</span><span class='line'>            <span class="k">raise</span> <span class="no">DeadColumnError</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="nb">self</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">#</span><span class="si">#{</span><span class="n">col</span><span class="si">}</span><span class="s2">?&quot;</span>
+</span><span class='line'>          <span class="k">end</span>
+</span><span class='line'>        <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1"># reset all these ActiveRecord caches</span>
+</span><span class='line'>        <span class="vi">@dynamic_methods_hash</span> <span class="o">=</span> <span class="vi">@columns_hash</span> <span class="o">=</span> <span class="vi">@column_names</span> <span class="o">=</span> <span class="vi">@content_columns</span> <span class="o">=</span> <span class="vi">@column_defaults</span> <span class="o">=</span> <span class="vi">@columns</span> <span class="o">=</span> <span class="vi">@columns_with_death</span> <span class="o">=</span> <span class="kp">nil</span>
+</span><span class='line'>      <span class="k">end</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">attribute_names</span>
+</span><span class='line'>      <span class="k">super</span> <span class="o">-</span> <span class="nb">self</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">dead_column_list</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">as_json</span><span class="p">(</span><span class="n">options</span> <span class="o">=</span> <span class="kp">nil</span><span class="p">)</span>
+</span><span class='line'>      <span class="n">options</span> <span class="o">||=</span> <span class="p">{}</span>
+</span><span class='line'>      <span class="n">options</span><span class="o">[</span><span class="ss">:only</span><span class="o">]</span> <span class="o">=</span> <span class="nb">self</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">column_names</span> <span class="k">if</span> <span class="n">options</span><span class="o">[</span><span class="ss">:only</span><span class="o">].</span><span class="n">nil?</span>
+</span><span class='line'>      <span class="k">super</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then in an initializer, we do this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># config/dead_columns.rb</span>
+</span><span class='line'>
+</span><span class='line'><span class="no">Mixins</span><span class="o">::</span><span class="no">DeadColumns</span><span class="o">::</span><span class="no">All</span><span class="o">.</span><span class="n">death_watch</span><span class="p">(</span><span class="ss">:users</span><span class="p">,</span> <span class="ss">:middle_name</span><span class="p">,</span> <span class="ss">:gender</span><span class="p">)</span>
+</span><span class='line'><span class="no">Mixins</span><span class="o">::</span><span class="no">DeadColumns</span><span class="o">::</span><span class="no">All</span><span class="o">.</span><span class="n">death_watch</span><span class="p">(</span><span class="ss">:tasks</span><span class="p">,</span> <span class="ss">:old_price_info</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>We used to mix this in to each model, so it was more like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">User</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Mixins</span><span class="o">::</span><span class="no">DeadColumns</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">dead_columns</span> <span class="ss">:middle_name</span><span class="p">,</span> <span class="o">::</span><span class="n">gender</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This worked with a slightly modified version of the above code. We stopped using that version, though, when we switched to heavily using <a href="/blog/2014/02/11/rails-4-engines/">engines</a>, and now have many <code>User</code> (and other) models. The initializer works better to make sure it hits all of them.</p>
+
+<h2>Conclusion</h2>
+
+<p>Hopefully, this is helpful as an example of some code to deploy so you can safely remove your columns. It feels good to drop those columns and now you can do it without the pain.</p>
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

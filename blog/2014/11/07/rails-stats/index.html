@@ -1,0 +1,653 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Rails Stats - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="Summary: I extracted and improved on the Rails stats tool. The code is here. Process The other day, I was curious about how our codebase had evolved &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2014/11/07/rails-stats/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">Rails Stats</h1>
+	<div class="entry-content"><p>Summary: I extracted and improved on the Rails stats tool. The code is <a href="https://github.com/bleonard/rails_stats/">here</a>.</p>
+
+<h3>Process</h3>
+
+<p>The other day, I was curious about how our codebase had evolved over the years and knew about the <code>rake stats</code> command in Rails. So I checked out a git sha from 2010 and ran the command. Of course the gems weren&#8217;t installed. So I ran <code>bundle install</code>. It said it couldn&#8217;t find <a href="gemcutter.org">gemcutter.org</a>. That&#8217;s when I knew it wasn&#8217;t going to work out. Even if I switched it to use current standards, at least one of those gems was going to be completely gone or a million of other issues.</p>
+
+<p>I figured that an external tool to do the same thing should be easy and I was right. I copied the 3 files related to that rake job to a new project. The code just took directories in so the only dependence on being actually <em>in</em> the Rails project was a <code>Rails.root</code> call at the beginning. I switched it to be passed in from the command line and I was done!</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Controllers          |  1848 |  1483 |      32 |     174 |   5 |     6 |
+</span><span class='line'>| Helpers              |  2257 |  1892 |      45 |     245 |   5 |     5 |
+</span><span class='line'>| Models               |  4584 |  3509 |      61 |     526 |   8 |     4 |
+</span><span class='line'>| Libraries            |  2987 |  2272 |      30 |     287 |   9 |     5 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Total                | 11676 |  9156 |     168 |    1232 |   7 |     5 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>  Code LOC: 9156     Test LOC: 0     Code to Test Ratio: 1:0.0
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>&#8230; except things were missing. The tool that comes with Rails has a certain set of directories and it only looks for code there. It included the normal Rails stuff like models and controllers but was missing anything that strayed from the prescribed structure. These pieces were missing in the default tool:</p>
+
+<ul>
+<li>Anything added to the app directory (jobs, observers)</li>
+<li>Rspec tests (it only supports Test::Unit)</li>
+<li>Cucumber features</li>
+<li>Any code in <a href="/blog/2014/02/11/rails-4-engines/">Engines</a></li>
+</ul>
+
+
+<p>It turned into a bit of time sink, but was a fun project. By modifying it to use more introspection of the directory structure, I was able to cover all the pieces of the app.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake stats<span class="o">[</span>/path/to/app/<span class="o">]</span>
+</span><span class='line'>
+</span><span class='line'>Directory: /path/to/app/
+</span><span class='line'>
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Controllers          |  1848 |  1483 |      32 |     174 |   5 |     6 |
+</span><span class='line'>| Helpers              |  2257 |  1892 |      45 |     245 |   5 |     5 |
+</span><span class='line'>| Jobs                 |   399 |   295 |      11 |      33 |   3 |     6 |
+</span><span class='line'>| Models               |  4584 |  3509 |      61 |     526 |   8 |     4 |
+</span><span class='line'>| Observers            |    42 |    22 |       2 |       5 |   2 |     2 |
+</span><span class='line'>| Libraries            |  2987 |  2272 |      30 |     287 |   9 |     5 |
+</span><span class='line'>| Configuration        |  1233 |   669 |       4 |      17 |   4 |    37 |
+</span><span class='line'>| Spec Support         |  1416 |  1152 |       4 |      30 |   7 |    36 |
+</span><span class='line'>| Integration Tests    |    91 |    73 |       0 |       1 |   0 |    71 |
+</span><span class='line'>| Lib Tests            |   101 |    83 |       0 |       1 |   0 |    81 |
+</span><span class='line'>| Model Tests          |  3397 |  2522 |       0 |      18 |   0 |   138 |
+</span><span class='line'>| Cucumber Support     |   739 |   521 |       0 |       1 |   0 |   519 |
+</span><span class='line'>| Cucumber Features    |  2711 |  2487 |      29 |     145 |   5 |    15 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Total                | 21805 | 16980 |     218 |    1483 |   6 |     9 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>  Code LOC: 10142     Test LOC: 6838     Code to Test Ratio: 1:0.7
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<!-- more -->
+
+
+<h3>Things it knows about</h3>
+
+<ul>
+<li>Any concepts you&#8217;ve added within an <code>app</code> directory</li>
+<li>Configuration files</li>
+<li>Library files</li>
+<li>Gems that you&#8217;ve embedded in the project</li>
+<li>Engines and their code</li>
+<li>RSpec/Unit/Cucumber Tests</li>
+</ul>
+
+
+<h3>Example output</h3>
+
+<p>Here are some open source Rails projects an their output.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+<span class='line-number'>157</span>
+<span class='line-number'>158</span>
+<span class='line-number'>159</span>
+<span class='line-number'>160</span>
+<span class='line-number'>161</span>
+<span class='line-number'>162</span>
+<span class='line-number'>163</span>
+<span class='line-number'>164</span>
+<span class='line-number'>165</span>
+<span class='line-number'>166</span>
+<span class='line-number'>167</span>
+<span class='line-number'>168</span>
+<span class='line-number'>169</span>
+<span class='line-number'>170</span>
+<span class='line-number'>171</span>
+<span class='line-number'>172</span>
+<span class='line-number'>173</span>
+<span class='line-number'>174</span>
+<span class='line-number'>175</span>
+<span class='line-number'>176</span>
+<span class='line-number'>177</span>
+<span class='line-number'>178</span>
+<span class='line-number'>179</span>
+<span class='line-number'>180</span>
+<span class='line-number'>181</span>
+<span class='line-number'>182</span>
+<span class='line-number'>183</span>
+<span class='line-number'>184</span>
+<span class='line-number'>185</span>
+<span class='line-number'>186</span>
+<span class='line-number'>187</span>
+<span class='line-number'>188</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake stats<span class="o">[</span>/users/brian/examples/diaspora/<span class="o">]</span>
+</span><span class='line'>
+</span><span class='line'>Directory: /users/brian/examples/diaspora
+</span><span class='line'>
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Collections          |   259 |   198 |       0 |      56 |   0 |     1 |
+</span><span class='line'>| Helpers              |  1863 |  1478 |       0 |     218 |   0 |     4 |
+</span><span class='line'>| Models               |  4694 |  3517 |      55 |     580 |  10 |     4 |
+</span><span class='line'>| Pages                |   201 |   158 |       0 |      21 |   0 |     5 |
+</span><span class='line'>| Controllers          |  2797 |  2168 |      40 |     208 |   5 |     8 |
+</span><span class='line'>| Mailers              |   313 |   263 |      13 |      32 |   2 |     6 |
+</span><span class='line'>| Presenters           |   516 |   425 |      18 |      71 |   3 |     3 |
+</span><span class='line'>| Uploaders            |    84 |    63 |       2 |       9 |   4 |     5 |
+</span><span class='line'>| Workers              |   600 |   399 |      32 |      33 |   1 |    10 |
+</span><span class='line'>| Javascripts          |  7550 |  4941 |       0 |     741 |   0 |     4 |
+</span><span class='line'>| Libraries            |  7031 |  4890 |      69 |     701 |  10 |     4 |
+</span><span class='line'>| Configuration        |  2556 |   833 |       5 |      10 |   2 |    81 |
+</span><span class='line'>| Controller Tests     |  4628 |  3775 |       0 |       2 |   0 |  1885 |
+</span><span class='line'>| Spec Support         |  1141 |   900 |       6 |      56 |   9 |    14 |
+</span><span class='line'>| Helper Tests         |   771 |   615 |       0 |       6 |   0 |   100 |
+</span><span class='line'>| Integration Tests    |   891 |   647 |       0 |      14 |   0 |    44 |
+</span><span class='line'>| Lib Tests            |  4076 |  3259 |       2 |       4 |   2 |   812 |
+</span><span class='line'>| Other Tests          |   120 |   101 |       0 |       0 |   0 |     0 |
+</span><span class='line'>| Mailer Tests         |   412 |   328 |       0 |       0 |   0 |     0 |
+</span><span class='line'>| Model Tests          |  6120 |  4964 |       0 |       1 |   0 |  4962 |
+</span><span class='line'>| Presenter Tests      |   353 |   303 |       0 |       0 |   0 |     0 |
+</span><span class='line'>| Worker Tests         |   821 |   648 |       0 |       0 |   0 |     0 |
+</span><span class='line'>| Cucumber Features    |  2157 |  1863 |      47 |     155 |   3 |    10 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Total                | 49954 | 36736 |     289 |    2918 |  10 |    10 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>  Code LOC: 19333     Test LOC: 17403     Code to Test Ratio: 1:0.9
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake stats<span class="o">[</span>/users/brian/examples/discourse<span class="o">]</span>
+</span><span class='line'>
+</span><span class='line'>Directory: /users/brian/examples/discourse
+</span><span class='line'>
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Controllers          |  5005 |  3812 |      56 |     416 |   7 |     7 |
+</span><span class='line'>| Helpers              |   286 |   218 |       0 |      32 |   0 |     4 |
+</span><span class='line'>| Jobs                 |  1830 |  1343 |      53 |     114 |   2 |     9 |
+</span><span class='line'>| Mailers              |   438 |   340 |       7 |      24 |   3 |    12 |
+</span><span class='line'>| Models               | 12378 |  8393 |     123 |     983 |   7 |     6 |
+</span><span class='line'>| Serializers          |  2809 |  2223 |      73 |     374 |   5 |     3 |
+</span><span class='line'>| Services             |  1353 |  1060 |      20 |     106 |   5 |     8 |
+</span><span class='line'>| Javascripts          | 21722 | 13649 |       0 |    1844 |   0 |     5 |
+</span><span class='line'>| Libraries            | 35298 | 27521 |     189 |    2565 |  13 |     8 |
+</span><span class='line'>| Configuration        |  1758 |  1179 |       6 |      12 |   2 |    96 |
+</span><span class='line'>| Other Tests          | 12998 |  9830 |      20 |      41 |   2 |   237 |
+</span><span class='line'>| Controller Tests     |  7673 |  5911 |       0 |       4 |   0 |  1475 |
+</span><span class='line'>| Spec Support         |   707 |   560 |       1 |      16 |  16 |    33 |
+</span><span class='line'>| Helper Tests         |    88 |    71 |       0 |       0 |   0 |     0 |
+</span><span class='line'>| Integration Tests    |   307 |   235 |       0 |       1 |   0 |   233 |
+</span><span class='line'>| Job Tests            |  1343 |  1017 |       3 |       9 |   3 |   111 |
+</span><span class='line'>| Mailer Tests         |   421 |   302 |       0 |       1 |   0 |   300 |
+</span><span class='line'>| Model Tests          | 11236 |  8599 |       2 |      49 |  24 |   173 |
+</span><span class='line'>| Serializer Tests     |   297 |   236 |       0 |       2 |   0 |   116 |
+</span><span class='line'>| Service Tests        |  1767 |  1406 |       0 |       2 |   0 |   701 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Total                | 119714| 87905 |     553 |    6595 |  11 |    11 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>  Code LOC: 59738     Test LOC: 28167     Code to Test Ratio: 1:0.5
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake stats<span class="o">[</span>/users/brian/examples/gitlabhq<span class="o">]</span>
+</span><span class='line'>
+</span><span class='line'>Directory: /users/brian/examples/gitlabhq
+</span><span class='line'>
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Controllers          |  3690 |  2890 |      66 |     384 |   5 |     5 |
+</span><span class='line'>| Finders              |   428 |   267 |       8 |      27 |   3 |     7 |
+</span><span class='line'>| Helpers              |  2280 |  1761 |       0 |     222 |   0 |     5 |
+</span><span class='line'>| Mailers              |   382 |   275 |       1 |      29 |  29 |     7 |
+</span><span class='line'>| Models               |  6922 |  4680 |      58 |     714 |  12 |     4 |
+</span><span class='line'>| Services             |  2021 |  1502 |      51 |     149 |   2 |     8 |
+</span><span class='line'>| Uploaders            |    81 |    62 |       2 |      14 |   7 |     2 |
+</span><span class='line'>| Workers              |   128 |    99 |       6 |       8 |   1 |    10 |
+</span><span class='line'>| Javascripts          |  3843 |  2936 |       1 |     534 | 534 |     3 |
+</span><span class='line'>| Libraries            |  7246 |  4785 |     120 |     438 |   3 |     8 |
+</span><span class='line'>| Configuration        |  1421 |   782 |       4 |      11 |   2 |    69 |
+</span><span class='line'>| Controller Tests     |   428 |   334 |       0 |       0 |   0 |     0 |
+</span><span class='line'>| Spec Support         |  1119 |   715 |       2 |      27 |  13 |    24 |
+</span><span class='line'>| Other Tests          |    67 |    55 |       0 |       0 |   0 |     0 |
+</span><span class='line'>| Feature Tests        |  2209 |  1765 |       0 |       8 |   0 |   218 |
+</span><span class='line'>| Finder Tests         |   281 |   230 |       0 |       0 |   0 |     0 |
+</span><span class='line'>| Helper Tests         |  1608 |  1255 |       0 |       5 |   0 |   249 |
+</span><span class='line'>| Lib Tests            |  1459 |  1180 |       1 |      11 |  11 |   105 |
+</span><span class='line'>| Mailer Tests         |   630 |   478 |       0 |       0 |   0 |     0 |
+</span><span class='line'>| Model Tests          |  3856 |  2669 |       0 |      10 |   0 |   264 |
+</span><span class='line'>| Request Tests        |  4229 |  3600 |       0 |      10 |   0 |   358 |
+</span><span class='line'>| Routing Tests        |   849 |   520 |       0 |       0 |   0 |     0 |
+</span><span class='line'>| Service Tests        |  1611 |  1307 |       0 |      34 |   0 |    36 |
+</span><span class='line'>| Worker Tests         |    45 |    35 |       0 |       2 |   0 |    15 |
+</span><span class='line'>| Cucumber Features    |  6749 |  5734 |     141 |     947 |   6 |     4 |
+</span><span class='line'>| Cucumber Support     |  6235 |  4980 |      65 |      71 |   1 |    68 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Total                | 59817 | 44896 |     526 |    3655 |   6 |    10 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>  Code LOC: 20039     Test LOC: 24857     Code to Test Ratio: 1:1.2
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake stats<span class="o">[</span>/users/brian/examples/redmine/<span class="o">]</span>
+</span><span class='line'>
+</span><span class='line'>Directory: /users/brian/examples/redmine
+</span><span class='line'>
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Controllers          |  6738 |  5005 |      51 |     416 |   8 |    10 |
+</span><span class='line'>| Helpers              |  4445 |  3014 |       2 |     281 | 140 |     8 |
+</span><span class='line'>| Models               | 13221 |  9369 |      86 |    1026 |  11 |     7 |
+</span><span class='line'>| Libraries            | 19041 | 13499 |     137 |    1147 |   8 |     9 |
+</span><span class='line'>| Configuration        |   779 |   550 |      14 |      18 |   1 |    28 |
+</span><span class='line'>| Integration Tests    |  8286 |  6032 |      92 |     202 |   2 |    27 |
+</span><span class='line'>| Other Tests          |   669 |   521 |       3 |      53 |  17 |     7 |
+</span><span class='line'>| Test Support         |  1102 |   791 |       8 |      70 |   8 |     9 |
+</span><span class='line'>| Functional Tests     | 18448 | 14784 |      61 |    1372 |  22 |     8 |
+</span><span class='line'>| Unit Tests           | 23680 | 18217 |     117 |    1783 |  15 |     8 |
+</span><span class='line'>| Helper Tests         |  3321 |  2567 |      16 |     171 |  10 |    13 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Total                | 99730 | 74349 |     587 |    6539 |  11 |     9 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>  Code LOC: 31437     Test LOC: 42912     Code to Test Ratio: 1:1.4
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake stats<span class="o">[</span>/users/brian/examples/refinerycms<span class="o">]</span>
+</span><span class='line'>
+</span><span class='line'>Directory: /users/brian/examples/refinerycms
+</span><span class='line'>
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Controllers          |   950 |   748 |      17 |      83 |   4 |     7 |
+</span><span class='line'>| Helpers              |   399 |   308 |       0 |      28 |   0 |     9 |
+</span><span class='line'>| Mailers              |    22 |    18 |       1 |       2 |   2 |     7 |
+</span><span class='line'>| Models               |   846 |   570 |      14 |      86 |   6 |     4 |
+</span><span class='line'>| Presenters           |   365 |   271 |       8 |      44 |   5 |     4 |
+</span><span class='line'>| Javascripts          |   717 |   531 |       0 |      52 |   0 |     8 |
+</span><span class='line'>| Libraries            |     4 |     4 |       0 |       0 |   0 |     0 |
+</span><span class='line'>| Gems                 |  4166 |  2997 |      44 |     372 |   8 |     6 |
+</span><span class='line'>| Controller Tests     |   207 |   170 |       1 |       1 |   1 |   168 |
+</span><span class='line'>| Spec Support         |   309 |   243 |       2 |       6 |   3 |    38 |
+</span><span class='line'>| Feature Tests        |  1907 |  1484 |       0 |       4 |   0 |   369 |
+</span><span class='line'>| Lib Tests            |  1952 |  1687 |       6 |       4 |   0 |   419 |
+</span><span class='line'>| Model Tests          |  1323 |  1072 |       0 |       5 |   0 |   212 |
+</span><span class='line'>| Helper Tests         |   324 |   264 |       0 |       1 |   0 |   262 |
+</span><span class='line'>| Presenter Tests      |   355 |   299 |       0 |       0 |   0 |     0 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Total                | 13846 | 10666 |      93 |     688 |   7 |    13 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>  Code LOC: 5447     Test LOC: 5219     Code to Test Ratio: 1:1.0
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake stats<span class="o">[</span>/users/brian/examples/spree<span class="o">]</span>
+</span><span class='line'>
+</span><span class='line'>Directory: /users/brian/examples/spree
+</span><span class='line'>
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Controllers          |  4653 |  3800 |      86 |     492 |   5 |     5 |
+</span><span class='line'>| Helpers              |  1142 |   949 |       0 |      90 |   0 |     8 |
+</span><span class='line'>| Models               |  9893 |  7308 |     167 |     973 |   5 |     5 |
+</span><span class='line'>| Javascripts          |  2770 |  2100 |       9 |     416 |  46 |     3 |
+</span><span class='line'>| Mailers              |    63 |    58 |       5 |       8 |   1 |     5 |
+</span><span class='line'>| Libraries            |    15 |    14 |       0 |       0 |   0 |     0 |
+</span><span class='line'>| Gems                 |  4690 |  3641 |      35 |     254 |   7 |    12 |
+</span><span class='line'>| Controller Tests     |  7344 |  6000 |       6 |      19 |   3 |   313 |
+</span><span class='line'>| Model Tests          | 16747 | 13452 |      20 |      27 |   1 |   496 |
+</span><span class='line'>| Request Tests        |    32 |    24 |       0 |       0 |   0 |     0 |
+</span><span class='line'>| Spec Support         |   577 |   427 |       3 |       9 |   3 |    45 |
+</span><span class='line'>| Feature Tests        |  6079 |  4809 |       0 |      17 |   0 |   280 |
+</span><span class='line'>| Helper Tests         |   602 |   470 |       2 |       1 |   0 |   468 |
+</span><span class='line'>| Lib Tests            |  1455 |  1216 |       8 |      11 |   1 |   108 |
+</span><span class='line'>| Mailer Tests         |   252 |   208 |       0 |       0 |   0 |     0 |
+</span><span class='line'>| Other Tests          |    33 |    27 |       0 |       0 |   0 |     0 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Total                | 56347 | 44503 |     341 |    2317 |   6 |    17 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>  Code LOC: 17870     Test LOC: 26633     Code to Test Ratio: 1:1.5
+</span><span class='line'>
+</span></code></pre></td></tr></table></div></figure>
+
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

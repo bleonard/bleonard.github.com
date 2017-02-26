@@ -1,0 +1,235 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Rollback ActiveRecord model in after_save - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="It&#8217;s not exactly a best practice, but sometimes it comes up and I couldn&#8217;t find any material on the Internet about how to make it work. &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2013/05/23/rollback-after-save/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">Rollback ActiveRecord Model in After_save</h1>
+	<div class="entry-content"><p>It&#8217;s not exactly a best practice, but sometimes it comes up and I couldn&#8217;t find any material on the Internet about how to make it work. The situation is that you&#8217;re saving your record and it&#8217;s <code>after_save</code> and now you&#8217;ve decided that you don&#8217;t want to save it at all. What to do? The short answer is to <code>raise ActiveRecord::RecordInvalid.new(self)</code> and run away.</p>
+
+<h3>How did you get here?</h3>
+
+<p>This seems most relevant to syncing scenarios. For example, when a Task is created, we need to create a parallel record in an external system. When it is necessary, it has to happen and the Task should not exist (or be saved) without it. I could make that call in a <code>before_save</code> callback and add a validation error if it didn&#8217;t work. However, if the rest of the validations don&#8217;t work, then there is no taking back that call. Everything else in a SQL transaction, but not other systems. I had some success with making absolute sure that it was the <em>last</em> <code>before_save</code> and that worked out for a while. Then we needed to send the <code>id</code> of the Task to the external system. This just does not exist before the save actually occurs the first time. So I wanted to put it in an <code>after_save</code> callback.</p>
+
+<h3>What to do?</h3>
+
+<p>The thing to note in this case, though, is that <code>after_save</code> is still in the SQL transaction. So if we freak out enough, it will roll the whole thing back. The trick is freaking out in the right way.</p>
+
+<p>Returning <code>false</code> no longer seems to stop things. I swear that used to happen in older (&lt; 3) versions of Rails. Raising most errors will stop the transaction but also crash the system.  The first one that I tried was <code>ActiveRecord::Rollback</code> and it worked just fine in that it did not save and did not crash, but this test that I had was failing.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="o">.</span><span class="n">should</span> <span class="o">==</span> <span class="kp">false</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now, I wouldn&#8217;t have even have caught this if I did what I usually do which would be to use the <code>task.save.should be_false</code> rspec helper. This is because raising <code>ActiveRecord::Rollback</code> ended up in the <code>save</code> call returning nil. That would usually be fine, but I wanted to get it just like normal.</p>
+
+<p>If you take a look at the ActiveRecord <a href="https://github.com/rails/rails/blob/7ead1d81431b2c2c0366347b7bfdf9a329b6f934/activerecord/lib/active_record/persistence.rb#L105">code</a> for save, the answer reveals itself.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="o">*</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">create_or_update</span>
+</span><span class='line'><span class="k">rescue</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">RecordInvalid</span>
+</span><span class='line'>  <span class="kp">false</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>By raising <code>ActiveRecord::RecordInvalid</code> we treat it like a validation error and it has the expected behavior. I went ahead and added an actual error to seem even more like the normal case. Final code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Task</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'>  <span class="n">after_save</span> <span class="ss">:sync_with_external</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">sync_with_external</span>
+</span><span class='line'>    <span class="n">response</span> <span class="o">=</span> <span class="no">External</span><span class="o">.</span><span class="n">sync!</span><span class="p">(</span><span class="nb">id</span><span class="p">:</span> <span class="nb">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">info</span><span class="p">:</span> <span class="nb">self</span><span class="o">.</span><span class="n">info</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">error?</span>
+</span><span class='line'>      <span class="nb">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="ss">:base</span><span class="p">,</span> <span class="s2">&quot;There was a problem, etc ...&quot;</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">raise</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">RecordInvalid</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">self</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>    <span class="kp">true</span> <span class="c1"># I still do this out of superstition</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Caveats</h3>
+
+<p>This main issue that comes up is that you only get to have one of these to be absolutely sure everything is fine. If there were two of these external services, you&#8217;d end up with the same original problem. I guess, you should put and your flakiest ones first or try to get out of it altogether.</p>
+
+<p>Also note that or non-immediately-critical syncing (like search indexing), the right spot for these types of things are in <code>after_commit</code> where I would queue up a background job with retry logic. That would be outside of the SQL transaction and actually be needed to prevent timing issues in that background thread.</p>
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+
+<section id="comment">
+    <h1 class="title">Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://bleonard.github.com/blog/2013/05/23/rollback-after-save/';
+        var disqus_url = 'http://bleonard.github.com/blog/2013/05/23/rollback-after-save/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

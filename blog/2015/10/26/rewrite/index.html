@@ -1,0 +1,324 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>To rewrite or not to rewrite? - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+To rewrite, or not to rewrite- that is the question: &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2015/10/26/rewrite/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">To Rewrite or Not to Rewrite?</h1>
+	<div class="entry-content"><figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>To rewrite, or not to rewrite- that is the question: 
+</span><span class='line'>Whether 'tis better for the product to suffer
+</span><span class='line'>The features and debt of outrageous history
+</span><span class='line'>Or to once again battle a sea of edge cases,
+</span><span class='line'>And by forgetting relive them. To wish- to hope-
+</span><span class='line'>No more; and by hope to say we end
+</span><span class='line'>The heartache, and the thousand unnatural cases
+</span><span class='line'>That code can error to. 'Tis a codebase
+</span><span class='line'>Devoutly to be wish'd. To wish- to hope.
+</span><span class='line'>To hope- perchance to rebuild: ay, there's the rub!
+</span><span class='line'>For in that hope of clarity what simplicity comes
+</span><span class='line'>When we have removed this outdated cruft
+</span><span class='line'>Must give us success. But give the respect
+</span><span class='line'>To the current repo of such long life.
+</span><span class='line'>For who would bear the features of the past,
+</span><span class='line'>High expectations, the race conditions,
+</span><span class='line'>The admin tools, the product delay,
+</span><span class='line'>The exhaustion overcome, and the data
+</span><span class='line'>That shall posthaste be moved to a new store
+</span><span class='line'>As each mistake of the past be brought back
+</span><span class='line'>With sighs of regret? Who would these issues bear,
+</span><span class='line'>To toil and code under a weary life,
+</span><span class='line'>But that the chance of something rebuilt
+</span><span class='line'>That undiscover'd codebase, from whose lines
+</span><span class='line'>No complexity returns- tempts the will,
+</span><span class='line'>And makes us choose between those ills we have
+</span><span class='line'>Than sprint towards others we know not of?
+</span><span class='line'>Thus the unknowns make cowards of us all,
+</span><span class='line'>And thus the heavy weight of such choice
+</span><span class='line'>Is oft tempered by promises of thought,
+</span><span class='line'>And refactorings of great scope and breadth
+</span><span class='line'>With this regard the hope does turn awry
+</span><span class='line'>And lose the name of action.- What say you?
+</span><span class='line'>The lauded pivot! Siren of opportunity
+</span><span class='line'>May all our sins be forgotten.</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The internal struggle of the rewrite decision eats away at developers. It could be so much better. We have learned so much. Let&#8217;s start over. It causes inaction over months accompanied by much grumbling. But if you do it, how can you make sure it doesn&#8217;t turn into a tragedy?</p>
+
+<p>I can&#8217;t say that I am happy or proud that we have rewritten TaskRabbit twice. That doesn&#8217;t feel right. Conceptually, if we would have done it correctly the first time, then it wouldn&#8217;t have been needed. Or maybe we should have done it in place. I would say that&#8217;s absolutely fair, but doesn&#8217;t capture the reality of development of the last 6 years.</p>
+
+<p>When I started writing this post, I just felt like mapping my existential crisis to Hamlet&#8217;s and now I&#8217;m heading towards defending myself against Joel&#8217;s famous <a href="http://www.joelonsoftware.com/articles/fog0000000069.html">post</a> stating the fact that you should never do a rewrite. I just went back and read it (again) and I (still) agree. It&#8217;s hard to argue with. Maybe it&#8217;s best to discuss the times we did rewrite to the times we didn&#8217;t.</p>
+
+<!-- more -->
+
+
+<h3>Refactor</h3>
+
+<p>The <a href="/blog/2015/10/06/v2-retrospective/">V2 timeline</a> notes the rewrites and some of the major refactoring efforts that we&#8217;ve gone though. There were obviously many times that we did <em>not</em> rewrite the whole system. Ha.</p>
+
+<p>A few of those projects:</p>
+
+<ul>
+<li>Switching out Delayed Job for Resque</li>
+<li>Refactoring the ratings system</li>
+<li>Extracting local services out into external ones</li>
+<li>Allowing multiple Taskers on a Task (1 to N change)</li>
+<li>Making it possible to have hourly rates.</li>
+<li>Doing more things asynchronously using Resque Bus</li>
+<li>Allowing users to &#8220;half sign up&#8221; for the site</li>
+</ul>
+
+
+<p>Most of these things were somewhere on the spectrum between features and major refactors, but all of them had some key components that might have been a trigger to consider a rewrite.</p>
+
+<p>Usually, it&#8217;s when some underlying assumption is just no longer the case. For example, a task no longer has a single Tasker, but rather can have many. Or the <code>current_user</code> might only be partially &#8220;logged-in&#8221; to the site. Much of the code has to be touched to undo that assumption.</p>
+
+<p>Or maybe it&#8217;s a data migration/timing issue. When switching background job processors, there is plenty of coordination to do. When changing the table(s) that data is stored in there is a double-write situation like in a completely new system. This is because they <em>are</em> new systems, just in the shell of the current one.</p>
+
+<h3>Service-Oriented</h3>
+
+<p>That architectures move towards being service-oriented seems to be common knowledge. We found that there are various <a href="/blog/2015/10/06/v2-retrospective/">pros and cons</a> with the approach. However, I would say that what we did was a type of rewrite.</p>
+
+<p>It&#8217;s a more gradual and sustainable version, though, because it&#8217;s a continuum. Very gradually, we moved functionality to new apps that leveraged the original app&#8217;s APIs. The stuff inside that shell didn&#8217;t really change. It just got a new face and became the data provider.</p>
+
+<p>It seems likely that something like this is the recommended path of handling a rewrite. First, you draw a line around the system that needs the overhaul. Then you encapsulate that system and expose an API. You write lots of tests on the API and have other things depend on it. Then you swap in the system. Ideally, you are <a href="http://onstartups.com/tabid/3339/bid/97052/How-To-Survive-a-Ground-Up-Rewrite-Without-Losing-Your-Sanity.aspx">double-writing</a> just like in the minor refactor so you can do it gradually and in parallel to see issues.</p>
+
+<h3>Rewrite</h3>
+
+<p>So what is the right time to make a completely new shell (app/repo)? I&#8217;ll agree that the correct answer could be &#8220;never.&#8221; However, the siren song of the full rewrite is strong.</p>
+
+<p>The main thing to understand is that the goal was to test a new business model. We had experimented with many different ways to get tasks done and thought that we now knew the single, best way. The &#8220;single&#8221; is the important part there. As <a href="/blog/2015/10/06/v2-retrospective/">noted</a>, the current codebase had support for many iterations and combinations that were created in search of product-market fit. While it would have been technically possible to shoehorn the new model in as yet another variation, we were already overrun with combinations.</p>
+
+<p>The second note is that this was to be a test in a new market. Specifically, we were going to launch this test in London. While Londoners do speak English, we really wanted to do full translation the right way on the whole site. It would have taken a really long time to do i18n right in the current app. It was just not build with that in mind. And the majority wouldn&#8217;t have been needed. To do it correctly would have also meant spreading the notion of &#8220;locale&#8221; through the entire ecosystem including the payment system, database, background workers, etc. Overall, it was much easier to start with the requirement of i18n than bolt it on.</p>
+
+<p>The main locale changes could have taken place in the core app and most of the translation could have occurred in another SOA app that used the APIs just like our US app. The truth is that we had definitely grown weary of that whole pattern. The coupling would have been even stronger between the two systems. The core app took forever to boot up. The test suite took days on days. It was a new direction for the company that we thought was the future. We could leave the baggage behind and simplify.</p>
+
+<p>We could launch this simplified experience and codebase in a new country and see if it worked. Specifically, it&#8217;s not the case that we were changing the airplane in flight. Because of the market segmentation, it was closer to a new startup. It would start with one person in London posting just like we did years ago in Boston instead of the whole load of our US app. This minimized the risk of technical glitches and being wrong about the business model substantially. I found it hard to argue with <code>rails new</code> in that reduced-risk environment.</p>
+
+<h3>Merge</h3>
+
+<p>When the new product did very well in London, the next step was to bring it to the US. It now went from being a new startup to having a merger with the old one. That&#8217;s the part of the scenario where things get tricky, of course. I&#8217;ll talk about the technical details of the migration some other time, but it actually went really smoothly. Because all the code was already running the London marketplace, there were no real technical issues either.</p>
+
+<p>If there was a reason to do it all in the same ecosystem, it would have been the more human factor. It would have been easier/necessary to evolve towards the new product. This would have been a more gradual change for the people used to the way the site worked. It likely would have been a smoother transition, but also very painful behind the scenes. We would not have the clarity, simplicity, and improved power to innovate that we got from the rewrite.</p>
+
+<p>A year and a half later, it&#8217;s pretty clear we made the right choice. The business is great and the tech stack is still pretty fresh and clean. At least it worked out better than it did for Hamlet and that&#8217;s all we can really hope for.</p>
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

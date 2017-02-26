@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: sidekiq | BLog]]></title>
+  <link href="http://bleonard.github.com/blog/categories/sidekiq/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.com/"/>
+  <updated>2017-02-25T21:54:36-08:00</updated>
+  <id>http://bleonard.github.com/</id>
+  <author>
+    <name><![CDATA[Brian Leonard]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Queue Bus]]></title>
+    <link href="http://bleonard.github.com/blog/2015/04/02/queue-bus/"/>
+    <updated>2015-04-02T00:00:00-07:00</updated>
+    <id>http://bleonard.github.com/blog/2015/04/02/queue-bus</id>
+    <content type="html"><![CDATA[<p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, we have been using <a href="/blog/2013/09/28/resque-bus/">resque-bus</a> for about two years. It has continued to provide value by  linking components via a loosely coupled publish/subscription model. We have seen 10x the number of events going through it, but have not yet hit any scaling issues. The benefit of using the tools we already have continues to be a huge win.</p>
+
+<p>But other teams are using other tools like <a href="http://sidekiq.org/">Sidekiq</a>. We're also interested in trying it out, but resque-bus (unsurprisingly) was tied closely to <a href="https://github.com/resque/resque">Resque</a>. We've changed that by creating <a href="https://github.com/queue-bus/queue-bus">queue-bus</a> and using an adapter pattern. There are now adapters in <a href="https://github.com/queue-bus/resque-bus">resque-bus</a> and <a href="https://github.com/queue-bus/sidekiq-bus">sidekiq-bus</a>, as well as a compatible version in <a href="https://github.com/queue-bus/node-queue-bus">node-queue-bus</a>.</p>
+
+<p>The code interactions are basically the same but can work across systems. You can even have one app using Resque and one using Sidekiq.</p>
+
+<h4>Pick your adapter</h4>
+
+<p>By requiring one of the adapters, it automatically gets set up to be the one for the app.</p>
+
+<p><code>ruby
+require 'sidekiq-bus' # (or 'resque-bus')
+</code></p>
+
+<h4>Application A publishes an event</h4>
+
+<p>Something happens in your application and you want to let the world know. In this case, you publish an event.</p>
+
+<p>```ruby</p>
+
+<h1>business logic</h1>
+
+<p>QueueBus.publish("user_created", id: 42, first_name: "John", last_name: "Smith")</p>
+
+<h1>or do it later</h1>
+
+<p>QueueBus.publish_at(1.hour.from_now, "user_created", id: 42, first_name: "John", last_name: "Smith")
+```</p>
+
+<h4>Application B subscribes to events</h4>
+
+<p>If the same or different application is interested when an event happens, it subscribes to it by name.</p>
+
+<p>```ruby</p>
+
+<h1>initializer</h1>
+
+<p>QueueBus.dispatch("app_b") do
+  subscribe "user_created" do |attributes|</p>
+
+<pre><code># business logic
+NameCount.find_or_create_by_name(attributes["last_name"]).increment!
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<h3>Upgrading</h3>
+
+<p>The formats changed a little bit with the move. The last version that used the old format (0.3.7) also can adapt to the new format. This is important because you'll have things in the queue during the transition.</p>
+
+<p>Steps:</p>
+
+<ul>
+<li>Upgrade everyone to 0.3.7</li>
+<li>Deploy all the things</li>
+<li>Upgrade everyone to the newest version</li>
+</ul>
+
+
+<h3>More to come</h3>
+
+<p>If people continue to like this approach and gem, we have lots of approaches and tools built on top of it that we'd be excited to make available. Let us know on <a href="https://github.com/queue-bus/queue-bus">Github</a> that you like it by watching, starring, or creating issues with questions, etc.</p>
+
+<p>Now that we have the adapter pattern, also let us know if you are interested in making one for your background system of choice. A special thanks goes out to <a href="https://github.com/jonsgreen">Jonathan Greenberg</a> and the team at <a href="http://www.purpose.com/">purpose.com</a> who did just that to get this whole thing going.</p>
+]]></content>
+  </entry>
+  
+</feed>

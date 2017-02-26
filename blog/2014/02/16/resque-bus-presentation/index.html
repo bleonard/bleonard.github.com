@@ -1,0 +1,701 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Resque Bus Presentation - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="View the Presentation Or view the slide sheet below Resque Bus Brian Leonard TaskRabbit 02/17/2014 Hi, my name is Brian Leonard and I&#8217;m the &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/2014/02/16/resque-bus-presentation/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">Resque Bus Presentation</h1>
+	<div class="entry-content"><p><a href="/blog/2014/02/16/resque-bus-presentation/slides"><h2>View the Presentation</h2></a></p>
+
+<h5>Or view the slide sheet below</h5>
+
+
+<hr />
+
+
+<section class='slide'><div class='content'>
+
+<h2>Resque Bus</h2>
+
+<h3>Brian Leonard</h3>
+
+<h5>TaskRabbit</h5>
+
+<h5>02/17/2014</h5>
+
+<!-- more -->
+
+
+</div>
+
+<aside class='notes'>
+
+<p>Hi, my name is Brian Leonard and I&#8217;m the Chief Architect and Technical Cofounder of TaskRabbit. TaskRabbit is a marketplace where neighbors help neighbors get things done.</p>
+
+<p>At TaskRabbit we are using Redis and Resque to do all of our background processing. We&#8217;ve also gone one step further to use these tools to create an asynchronous message bus system that we call Resque Bus.</p>
+
+</aside>
+
+</section>
+
+<section class='slide'><div class='content'>
+
+<h3>Redis</h3>
+
+<ul>
+<li>Key/Value Store</li>
+<li>Atomic Operations</li>
+</ul>
+
+
+<br/>
+
+
+<p><img src="/images/posts/resque-bus-presentation/redis-logo.jpeg" alt="Redis Logo" /></p>
+
+</div>
+
+<aside class='notes'>
+
+<p>I don&#8217;t have to tell you guys about Redis, but for our purposes the main point is that we can store stuff in it and the operations are atomic.</p>
+
+</aside>
+
+</section>
+
+<section class='slide'><div class='content'>
+
+<h3>Resque</h3>
+
+<p><img src="/images/posts/resque-bus-presentation/resque-screenshot.png" alt="Resque UI" /></p>
+
+</div>
+
+<aside class='notes'>
+
+<p><a href="https://github.com/defunkt/resque">Resque</a> is a background queue built on top of Redis. It uses arrays and the atomic properties of Redis to get this done.</p>
+
+<p>The ability to put things in order and then atomically pop an item from the list is all that is really needed for a great background queue and Redis fits perfectly.</p>
+
+<p>There is plenty of code, but it all comes down to inserting json the queue, popping, and executing code with that as an input.</p>
+
+</aside>
+
+</section>
+
+<section class='slide'><div class='content'>
+
+<h3>Resque Pattern</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Rating</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'>  <span class="n">after_commit</span> <span class="ss">:enqueue_worker</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">enqueue_worker</span>
+</span><span class='line'>    <span class="no">Resque</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="no">CalculateAverageWorker</span><span class="p">,</span> <span class="nb">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">CalculateAverageWorker</span>
+</span><span class='line'>  <span class="vi">@queue</span> <span class="o">=</span> <span class="ss">:default</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">perform</span><span class="p">(</span><span class="n">rating_id</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">rating</span> <span class="o">=</span> <span class="no">Rating</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">rating_id</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">total</span>  <span class="o">=</span> <span class="no">Rating</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">rabbit_id</span><span class="p">:</span> <span class="n">rating</span><span class="o">.</span><span class="n">rabbit_id</span><span class="p">)</span><span class="o">.</span><span class="n">count</span>
+</span><span class='line'>    <span class="n">sum</span>    <span class="o">=</span> <span class="no">Rating</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">rabbit_id</span><span class="p">:</span> <span class="n">rating</span><span class="o">.</span><span class="n">rabbit_id</span><span class="err">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="ss">:value</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">profile</span> <span class="o">=</span> <span class="no">RabbitProfile</span><span class="o">.</span><span class="n">find_by</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="n">rating</span><span class="o">.</span><span class="n">rabbit_id</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">profile</span><span class="o">.</span><span class="n">ratings_total</span>  <span class="o">=</span> <span class="n">total</span>
+</span><span class='line'>    <span class="n">profile</span><span class="o">.</span><span class="n">rating_average</span> <span class="o">=</span> <span class="n">sum</span><span class="o">.</span><span class="n">to_f</span> <span class="o">/</span> <span class="p">(</span><span class="mi">5</span><span class="o">*</span><span class="n">total</span><span class="o">.</span><span class="n">to_f</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">profile</span><span class="o">.</span><span class="n">save!</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+</div>
+
+<aside class='notes'>
+
+<p>The pattern goes something like this: something happens on the main (request) thread. It queues up a worker in the background with a class name and arguments. In this case, we enqueue the CalculateAverageWorker with the new rating id. The background worker then does whatever it needs to do. In this case, we update the TaskRabbit&#8217;s average rating on her profile.</p>
+
+</aside>
+
+</section>
+
+<section>
+
+<section class='slide' data-transition='none'><div class='content'>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_resque_1.png" alt="Resque 1" /></p>
+
+</div>
+
+<aside class='notes'>
+
+<p>Looking at the Redis data workflow, it looks like this.</p>
+
+</aside>
+
+</section>
+
+<section class='slide' data-transition='none'><div class='content'>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_resque_2.png" alt="Resque 2" /></p>
+
+</div>
+
+</section>
+
+<section class='slide' data-transition='none'><div class='content'>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_resque_3.png" alt="Resque 3" /></p>
+
+</div>
+
+</section>
+
+<section class='slide' data-transition='none'><div class='content'>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_resque_4.png" alt="Resque 4" /></p>
+
+</div>
+
+</section>
+
+</section>
+
+<section class='slide'><div class='content'>
+
+<h3>New Profile App</h3>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_bus_1.png" alt="Bus 1" /></p>
+
+</div>
+
+<aside class='notes'>
+
+<p>As we moved our code to a more service-oriented architecture, we wanted to move profiles to a new Rails app. Most of this app was concerned with uploading media and content and other ways for our TaskRabbits to market themselves. A very minor point is this app is this number to display on a profile. Something like that did not justify <em>not</em> splitting up the app, but it was still something that needed to happen.</p>
+
+</aside>
+
+</section>
+
+<section class='slide'><div class='content'>
+
+<h3>Resque Bus Pattern</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Rating</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'>  <span class="n">after_commit</span> <span class="ss">:enqueue_worker</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">enqueue_worker</span>
+</span><span class='line'>    <span class="no">ResqueBus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="s2">&quot;rating_created&quot;</span><span class="p">,</span> <span class="nb">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># initializer</span>
+</span><span class='line'><span class="no">ResqueBus</span><span class="o">.</span><span class="n">dispatch</span><span class="p">(</span><span class="s2">&quot;profile&quot;</span><span class="p">)</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">subscribe</span> <span class="s2">&quot;rating_created&quot;</span> <span class="k">do</span> <span class="o">|</span><span class="n">attributes</span><span class="o">|</span>
+</span><span class='line'>    <span class="n">rating</span> <span class="o">=</span> <span class="no">Rating</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">rating_id</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">total</span>  <span class="o">=</span> <span class="no">Rating</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">rabbit_id</span><span class="p">:</span> <span class="n">rating</span><span class="o">.</span><span class="n">rabbit_id</span><span class="p">)</span><span class="o">.</span><span class="n">count</span>
+</span><span class='line'>    <span class="n">sum</span>    <span class="o">=</span> <span class="no">Rating</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">rabbit_id</span><span class="p">:</span> <span class="n">rating</span><span class="o">.</span><span class="n">rabbit_id</span><span class="err">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="ss">:value</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">profile</span> <span class="o">=</span> <span class="no">RabbitProfile</span><span class="o">.</span><span class="n">find_by</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="n">rating</span><span class="o">.</span><span class="n">rabbit_id</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">profile</span><span class="o">.</span><span class="n">ratings_total</span>  <span class="o">=</span> <span class="n">total</span>
+</span><span class='line'>    <span class="n">profile</span><span class="o">.</span><span class="n">rating_average</span> <span class="o">=</span> <span class="n">sum</span><span class="o">.</span><span class="n">to_f</span> <span class="o">/</span> <span class="p">(</span><span class="mi">5</span><span class="o">*</span><span class="n">total</span><span class="o">.</span><span class="n">to_f</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">profile</span><span class="o">.</span><span class="n">save!</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+</div>
+
+<aside class='notes'>
+
+<p>So this is more or less the same thing, but with different syntax. The difference is that the rating calculation code can now live in another app. This is possible because of the layer of abstraction that ResqueBus adds.</p>
+
+</aside>
+
+</section>
+
+</section>
+
+<section>
+
+<section class='slide' data-transition='none'><div class='content'>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_bus_2.png" alt="Bus 2" /></p>
+
+</div>
+
+<aside class='notes'>
+
+<p>As you can see, the difference is this new layer of <code>resquebus_incoming</code> that we&#8217;ve added, so now it looks like this:</p>
+
+<ul>
+<li>Profile App subscribes to events (puts a hash in Redis saying what it is interested in)</li>
+<li>Task App publishes the event (puts published hash as args in a Resque queue called <code>resquebus_incoming</code> with a class of <code>Driver</code>)</li>
+<li>The <code>Driver</code> copies the event hash to 0 to N application queues based on subscriptions (arg hash now in <code>profile_default</code> queue with a class of <code>Rider</code>)</li>
+<li>The <code>Rider</code> in Profile App executes the block given in the subscription</li>
+</ul>
+
+
+</aside>
+
+</section>
+
+<section class='slide' data-transition='none'><div class='content'>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_bus_3.png" alt="Bus 3" /></p>
+
+</div>
+
+</section>
+
+<section class='slide' data-transition='none'><div class='content'>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_bus_4.png" alt="Bus 4" /></p>
+
+</div>
+
+</section>
+
+<section class='slide' data-transition='none'><div class='content'>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_bus_5.png" alt="Bus 5" /></p>
+
+</div>
+
+</section>
+
+<section class='slide' data-transition='none'><div class='content'>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_bus_6.png" alt="Bus 6" /></p>
+
+</div>
+
+</section>
+
+<section class='slide' data-transition='none'><div class='content'>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_bus_7.png" alt="Bus 7" /></p>
+
+</div>
+
+</section>
+
+<section class='slide' data-transition='none'><div class='content'>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_bus_8.png" alt="Bus 8" /></p>
+
+</div>
+
+</section>
+
+<section class='slide' data-transition='none'><div class='content'>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_bus_9.png" alt="Bus 9" /></p>
+
+</div>
+
+</section>
+
+</section>
+
+<section class='slide'><div class='content'>
+
+<h3>It&#8217;s Just Resque</h3>
+
+<p><img src="/images/posts/resque-bus-presentation/resque-screenshot.png" alt="Resque UI" /></p>
+
+</div>
+
+<aside class='notes'>
+
+<p>The thing to note here is that it&#8217;s all still Resque workers; which, in turn, is all just moving things around in Redis. This allows us leverage our current infrastructure but with new-found capabilities. The simplicity also allows us use technologies other than Ruby itself. For example, [Evan] just wrote a <a href="http://github.com/taskrabbit/node-resque">resque</a> and <a href="http://github.com/taskrabbit/node-resquebus">resque-bus</a> client in node.</p>
+
+</aside>
+
+</section>
+
+<section class='slide'><div class='content'>
+
+<h3>Use Cases</h3>
+
+<p>Publishing all all data changes, especially state changes.</p>
+
+<ul>
+<li>Rails app communication</li>
+<li>Bus Apps</li>
+<li>Loggers</li>
+</ul>
+
+
+</div>
+
+<aside class='notes'>
+
+<p>We publish all the time, basically every time the data changes. We&#8217;ve found it&#8217;s particularly important to publish when the state of an object changes. For example a Task goes from the assigned state to the completed state. Some of these events have many subscribers. Many events are completely ignored (at the moment) and that is fine too.</p>
+
+</aside>
+
+</section>
+
+<section class='slide'><div class='content'>
+
+<h3>Rails app communication</h3>
+
+<ul>
+<li>Own codebase and storage mechanisms</li>
+<li>+1: Local Simplicity</li>
+<li>+1: Local Specialization</li>
+<li>-1: Global Complexity</li>
+</ul>
+
+
+</div>
+
+<aside class='notes'>
+
+<p>This is like the profile app case. It has it&#8217;s own codebase and storage to optimize that particular experience. Specifically, it&#8217;s much more of a document store than the other app, which is more relational.</p>
+
+<p>The separation described here between the two systems involved (Tasks and Profiles) has had a few effects.</p>
+
+<p>Local simplicity has increased. Each system does what it does with simpler code than if it was all combined into the same thing.</p>
+
+<p>Local specialization has increased. For example, now that the profile experience is separate in code, I feel better in choosing the right storage solution for that experience. When in one system, it feels like &#8220;yet another thing&#8221; added to something that&#8217;s already complicated.</p>
+
+<p>Global complexity has increased. This separation has a cost and it is in the number of moving pieces. More moving pieces adds maintenance costs through mysterious bugs, time in runtime execution, and overall cognitive load on the developer. It&#8217;s case by case, but we believe it can be worth it.</p>
+
+</aside>
+
+</section>
+
+<section class='slide'><div class='content'>
+
+<h3>Bus Apps</h3>
+
+<ul>
+<li>No UI, only listens to bus</li>
+<li>+1: Local Simplicity</li>
+<li>+1: Local Specialization</li>
+<li>+1: Memory Profile</li>
+</ul>
+
+
+<p>Examples</p>
+
+<ul>
+<li>External Analytics</li>
+<li>Communications</li>
+<li>Fraud</li>
+</ul>
+
+
+</div>
+
+<aside class='notes'>
+
+<p>We have several apps that have no UI and only exist to listen to the bus and take action accordingly. For example, we have a fraud app that might subscribe to the ratings event, along with several others, to help look for fraudulent or &#8220;bad&#8221; behavior. These apps can be very specialized and focused. It&#8217;s easy to let a team member own the problem and run with it without worrying about anything else in the system. The straightforwardness allows them to be just a simple ruby process too, which drastically reduces memory usage.</p>
+
+</aside>
+
+</section>
+
+<section class='slide'><div class='content'>
+
+<h3>Switchboard</h3>
+
+<ul>
+<li>Centralized sending email, text messages, push notifications, etc.</li>
+<li>No shared knowledge or credentials</li>
+<li>Asynchronous API for all apps to use and just focus on the content.</li>
+</ul>
+
+
+</div>
+
+<aside class='notes'>
+
+<p>The best example of a bus app is what we call Switchboard. It receives an event that indicates that a text message needs to be sent, so it does so. Or it can look at the user&#8217;s preference and decide not send it.</p>
+
+<p>Switchboard allows all of the apps in the system to send mails and text messages and push notifications without knowing how to do it. In effect, Resque Bus and Switchboard create an asynchronous API. It&#8217;s just instead of being a normal API call, it&#8217;s knowing what to publish to the bus.</p>
+
+<p>In a decentralized system, this adds a lot of value by encapsulating knowledge about Twilio and other external providers and making is dead simple for the various apps to accomplish these tasks. They can just focus on the content and move on.</p>
+
+</aside>
+
+</section>
+
+<section class='slide'><div class='content'>
+
+<h3>Loggers</h3>
+
+<ul>
+<li>Subscribes to everything that&#8217;s published</li>
+<li>Writes to Elastic Search</li>
+</ul>
+
+
+<p>Enabling&#8230;</p>
+
+<ul>
+<li>Tracing events through system</li>
+<li>Simple centralized logging</li>
+<li>Realtime business dashboards and metrics</li>
+</ul>
+
+
+</div>
+
+<aside class='notes'>
+
+<p>This is a specialized case of the bus app that I think is really interesting. The app subscribes to everything by doing a regex with a <em>dot</em> <em>plus</em>. Any app can now save something to Elastic search by publishing to the bus. We can then also query this index to get all kinds of interesting data like tracing event through the system or adding up revenue for the day on a refreshing screen.</p>
+
+</aside>
+
+</section>
+
+<section class='slide'><div class='content'>
+
+<h3>Best Practices</h3>
+
+<ul>
+<li>Always Be Publishing</li>
+<li>Make many small bus apps</li>
+<li>Start small</li>
+</ul>
+
+
+</div>
+
+<aside class='notes'>
+
+<p>It&#8217;s fine if an event is completely ignored. Even at the base case, we have recorded what happened in the system for admins to examine later. In our most-used cases, we&#8217;ve seen events like the user signing up to trigger many parallel code paths such as notification, search indexing, fraud checking, analytics analysis, etc. All of this happens while the most important code (the signup itself) has remained unchanged and focused.</p>
+
+<p>The value continues to increase with each subscriber. Small, self-contained, reactive bus apps that process things that can be done asynchronously keep things really tight.</p>
+
+<p>Like any architectural principal, it&#8217;s easy to overuse something and have it generally get out of control. To get started, start publishing a bunch of things. Then add a few subscribers without your own app. Those &#8220;bus apps&#8221; can be within your main codebase too. If you&#8217;re on Rails, maybe within an <a href="http://tech.taskrabbit.com/blog/2014/02/11/rails-4-engines/">engine</a> or even just regular code. See how it works and expand if you like it.</p>
+
+</aside>
+
+</section>
+
+<section class='slide'><div class='content'>
+
+<h2>Thanks!</h2>
+
+<p>Questions?</p>
+
+</div>
+
+</section>
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+
+<section id="comment">
+    <h1 class="title">Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://bleonard.github.com/blog/2014/02/16/resque-bus-presentation/';
+        var disqus_url = 'http://bleonard.github.com/blog/2014/02/16/resque-bus-presentation/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

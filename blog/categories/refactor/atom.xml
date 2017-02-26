@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: refactor | BLog]]></title>
+  <link href="http://bleonard.github.com/blog/categories/refactor/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.com/"/>
+  <updated>2017-02-25T21:54:36-08:00</updated>
+  <id>http://bleonard.github.com/</id>
+  <author>
+    <name><![CDATA[Brian Leonard]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Singletons, Threads, and Flexibility]]></title>
+    <link href="http://bleonard.github.com/blog/2013/01/18/singletons/"/>
+    <updated>2013-01-18T08:50:00-08:00</updated>
+    <id>http://bleonard.github.com/blog/2013/01/18/singletons</id>
+    <content type="html"><![CDATA[<p>In Ruby, we often like very simple APIs, but this often comes at the price of thread safety and code flexibility. I've found that if you use a few tricks from the start, you can get the best of it all.</p>
+
+<p>I recently did a <a href="/blog/2013/01/11/hubtime">project</a> where I tried to use the <a href="https://github.com/vcr/vcr">VCR</a> gem, but it went awry when working in multiple threads. This is a great gem that, like many of my own, falls into the trap of module/class level singleton configuration/execution.</p>
+
+<p>This is approach is characterized by things like <code>extend self</code> in the top-level <a href="https://github.com/vcr/vcr/blob/8bbe6aacba4bd5a76a946c99ff08f034ff0eb2ce/lib/vcr.rb#L23">module</a> and then having <a href="https://github.com/vcr/vcr/blob/8bbe6aacba4bd5a76a946c99ff08f034ff0eb2ce/lib/vcr.rb#L329">instance variables</a> at that level. This is not to call out VCR specifically. it's just my most recent example of hundreds of gems that take this overall approach.</p>
+
+<p>``` ruby
+module VCR
+  extend self</p>
+
+<p>  def current_cassette</p>
+
+<pre><code>cassetes.last
+</code></pre>
+
+<p>  end</p>
+
+<p>  def configure</p>
+
+<pre><code>yield configuration
+</code></pre>
+
+<p>  end</p>
+
+<p>  def configuration</p>
+
+<pre><code>@configuration ||= Configuration.new
+</code></pre>
+
+<p>  end</p>
+
+<p>  private</p>
+
+<p>  def cassettes</p>
+
+<pre><code>@cassettes ||= []
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>When operating on multiple threads, things get wacky because of this because they are sharing this <code>current_cassette</code> and writing to the associated file. You end up with recordings on top of each other.</p>
+
+<p>I am inclined (and some say <em>over-inclined</em>) to use singletons to do something like this:</p>
+
+<p>``` ruby
+class VCR::Client
+  def current_cassette</p>
+
+<pre><code>cassetes.last
+</code></pre>
+
+<p>  end</p>
+
+<p>  def configure</p>
+
+<pre><code>yield configuration
+</code></pre>
+
+<p>  end</p>
+
+<p>  def configuration</p>
+
+<pre><code>@configuration ||= Configuration.new
+</code></pre>
+
+<p>  end</p>
+
+<p>  private</p>
+
+<p>  def cassettes</p>
+
+<pre><code>@cassettes ||= []
+</code></pre>
+
+<p>  end
+end</p>
+
+<p>module VCR
+  extend self</p>
+
+<p>  delegate :current_cassette, :configure, :configuration, :to => :default_client</p>
+
+<p>  def default_client</p>
+
+<pre><code>@default_client ||= Client.new
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<!-- more -->
+
+
+<p></p>
+
+<p>The most common use case of the module doesn't change at all because I delegate everything to a default one. You can still do:</p>
+
+<p>``` ruby</p>
+
+<h1>global</h1>
+
+<p>VCR.configure do |c|
+  c.cassette_library_dir = 'fixtures/vcr_cassettes'
+end</p>
+
+<p>class Fetcher
+  def initialize(path)</p>
+
+<pre><code>@path = path
+</code></pre>
+
+<p>  end</p>
+
+<p>  def fetch!</p>
+
+<pre><code>VCR.use_cassette('#{@path}/fetched') do
+  response = Net::HTTP.get_response(URI("api.http://example.com/#{@path}"))
+  process(response)
+end
+</code></pre>
+
+<p>  end
+end</p>
+
+<p>class Main
+  def process_all</p>
+
+<pre><code>self.paths.each do |path|
+  fetcher = Fetcher.new(path)
+  fetcher.fetch!
+end
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>and it will use the default_client.</p>
+
+<p>But this whole scheme now allows my threaded code to do something like this:</p>
+
+<p>``` ruby
+class ThreadedFetcher
+  def initialize(path)</p>
+
+<pre><code>@path = path
+</code></pre>
+
+<p>  end</p>
+
+<p>  def vcr_client</p>
+
+<pre><code>return @vcr_client if @vcr_client
+@vcr_client = VCR::Client.new
+@vcr_client.configure do |c|
+  c.cassette_library_dir = "fixtures/vcr_cassettes/#{@path}"
+end
+@vcr_client
+</code></pre>
+
+<p>  end</p>
+
+<p>  def fetch!</p>
+
+<pre><code># the same original code would probably work but I like it even more separated 
+# that is, move the @path into client init above
+vcr_client.use_cassette('fetched') do
+  response = Net::HTTP.get_response(URI("http://api.example.com/#{@path}"))
+  process(response)
+end
+</code></pre>
+
+<p>  end
+end</p>
+
+<p>class Main
+  def process_all</p>
+
+<pre><code>mutex = Mutex.new
+queue = self.paths.dup
+
+self.thread_count.times.map {
+  Thread.new do
+    while path = mutex.synchronize { queue.pop }
+      fetcher = ThreadedFetcher.new(path)
+      fetcher.fetch!
+    end
+  end
+}.each(&amp;:join)
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>Clearly there is more code, but it is now 8x (or whatever) faster.</p>
+
+<p>One example that I've seen done really well in this way is the <a href="https://github.com/sferik/twitter/blob/7bd6f8f589a91a8c82363d07da77ec012890c6cb/lib/twitter.rb">twitter gem</a> and others that seems to follow that pattern like <a href="https://github.com/pengwynn/octokit/blob/a6cd608d3fa69730a93fef9746fa8c4e1b505fda/lib/octokit.rb">octokit</a> which I used for <a href="https://github.com/bleonard/hubtime">hubtime</a> in such a <a href="https://github.com/bleonard/hubtime/blob/639b5309c24604d54ded17c480b8747ff2208424/repo.rb#L28">threaded way</a>.</p>
+
+<p>Again, I'm not calling out VCR or anything and I'm sure I've trivialized the complexity involved. I would love to put a pull request link to VCR here, but alas, for another time.</p>
+
+<p>If you do this from the beginning, though, it can be a strong win with minimal overhead. It adds multi-threaded capabilities as well as the ability (such as with twitter) to work with two different users in your app without changing anything global.</p>
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,777 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="So I&#8217;m at least two years behind blogging about various projects, but I have the list right here. I feel like being productive tonight but am &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.com/blog/page/3/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner">
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-04-08T20:40:00-07:00" pubdate data-updated="true">Apr 8<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/chat/'>chat</a>, <a class='category' href='/blog/categories/organization/'>organization</a>, <a class='category' href='/blog/categories/sync/'>sync</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2014/04/08/yammer-to-hipchat/">Yammer to Hipchat</a></h1>
+	<div class="entry-content">
+		<p>So I&#8217;m at least two years behind blogging about various projects, but I have the list right here. I feel like being productive tonight but am not quite ready to start the next big feature so I thought I&#8217;d mention one on that list.</p>
+
+<p>For a variety of reasons, I was trying to get everyone to migrate from <a href="https://www.yammer.com">Yammer</a> to <a href="https://www.hipchat.com">Hipchat</a> a few years back. They aren&#8217;t exactly direct competitors, but I liked the more direct Hipchat model and didn&#8217;t want to be running two distracting things all the time. The main holdout was that Yammer tended to be used for communicating to the whole company as it&#8217;s model is better suited to that.</p>
+
+<p>I quickly made <a href="https://github.com/bleonard/yam2hip">yam2hip</a> to sync them over to my new client of choice. It&#8217;s made to deploy to <a href="https://www.heroku.com/">Heroku</a>. Every 90 seconds it will look for new Yammer messages and post them in a Hipchat room. I made a Hipchat room called &#8220;Yammer&#8221; to be the target room.</p>
+
+<p>If people would have continued to use both, I probably would have made it bi-directional; however, we are now quite happily all on Hipchat (boom).</p>
+
+		
+		
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-04-05T16:54:00-07:00" pubdate data-updated="true">Apr 5<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/architecture/'>architecture</a>, <a class='category' href='/blog/categories/iphone/'>iphone</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2014/04/05/ios-auth-blocks/">iOS Authentication Blocks</a></h1>
+	<div class="entry-content">
+		<p>In my recent project, <a href="http://www.bleonard.com/blog/2014/04/03/cakewalk/">Cakewalk</a>, we give the user a fairly complete experience without having to sign up. This seems like the nice thing to do but it&#8217;s also in Apple&#8217;s guidelines for app approval. At some point, though, we need to create an account for them. In our case, it&#8217;s when they want to add an idea to their favorites or save their filter preferences. A &#8220;gate&#8221; such as this is something I&#8217;ve done on the web many times but it&#8217;s the first time I&#8217;ve done it an iPhone app. I&#8217;ll describe how I solved it using <a href="https://developer.apple.com/library/ios/documentation/cocoa/Conceptual/Blocks/Articles/bxGettingStarted.html#//apple_ref/doc/uid/TP40007502-CH7-SW1">blocks</a>.</p>
+
+<h2>Web</h2>
+
+<p>On the web, I would usually send them to a URL. If that URL requires a logged in user, then it would redirect to the login/signup URL with a query param. For example, if the page was <code>http://www.example.com/favorite</code>, it would redirect to something like <code>http://www.example.com/login?after_auth=%2Ffavorite</code>. The login/signup form would add this as a hidden parameter that it POSTs. If the action is successful, it will use this url instead of the default one to send the user to next place. In Rails, it would look something like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">def</span> <span class="nf">login</span>
+</span><span class='line'>  <span class="n">user</span> <span class="o">=</span> <span class="no">User</span><span class="o">.</span><span class="n">find_by_email</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:email</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">authenticate</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:password</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>    <span class="c1"># right!</span>
+</span><span class='line'>    <span class="n">log_in!</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">redirect_to</span> <span class="n">params</span><span class="o">[</span><span class="ss">:after_auth</span><span class="o">]</span> <span class="o">||</span> <span class="n">dashboard_path</span>
+</span><span class='line'>  <span class="k">else</span>
+</span><span class='line'>    <span class="c1"># not right!</span>
+</span><span class='line'>    <span class="n">render</span> <span class="ss">:form</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If the site allows the users to switch back and forth between login and signup pages or allows Facebook, Twitter or some other OAuth, it can be easy to lose this parameter. I&#8217;ve seen sites put the value in a cookie for this reason. It can simplify it, but is more likely to have unintended site effects.</p>
+
+<h2>Blocks</h2>
+
+<p>Most of the complexity of the web version is because of the stateless nature of the medium. The query parameter or cookie is an attempt to add that state globally. This is not particularly an issue in an iPhone app. The global state is fairly well known in the view controllers and there is shared memory. The interesting thing that I realized is that it&#8217;s not just data that we can store, but also <a href="https://developer.apple.com/library/ios/documentation/cocoa/Conceptual/Blocks/Articles/bxGettingStarted.html#//apple_ref/doc/uid/TP40007502-CH7-SW1">blocks</a>.</p>
+
+<p>An Objective C block is an inline declaration of a function. It is similar to features available in Ruby and Javascript. Here we use one to change how a sort is done:</p>
+
+
+		
+		<a href="/blog/2014/04/05/ios-auth-blocks/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-04-03T21:10:00-07:00" pubdate data-updated="true">Apr 3<span>rd</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/caching/'>caching</a>, <a class='category' href='/blog/categories/iphone/'>iphone</a>, <a class='category' href='/blog/categories/kids/'>kids</a>, <a class='category' href='/blog/categories/rails/'>rails</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2014/04/03/cakewalk/">Cakewalk</a></h1>
+	<div class="entry-content">
+		<p>It&#8217;s nice to be useful. I was glad to be able to help out my wife and her partner make a new iPhone app called <a href="http://www.cakewalkapp.com">Cakewalk</a>.</p>
+
+<p>I really like the counter-culture situation of it. Technology has become a way to distract the kids or something you can hand them when you are out of other things to do. <a href="http://www.personify.us">Krista</a> and <a href="http://www.textunvexed.com">Marijane</a> had the idea to use technology to go the other way by giving parents an app that was for them, not the kids. And the goal of the app is to stop using the app and start real playtime with the kids.</p>
+
+<p>Put simply, Cakewalk comes in handy when the kids really want to play with you, but you’re having a hard time coming up with something to do. It is full of quick ideas for simple fun. And every activity is something you can do right now—no research, no prep, and no trips to the store.</p>
+
+<p>So get it now on the App Store <a href="http://www.cakewalkapp.com/get">here</a>. See below for the tech notes on how it was built.</p>
+
+<p><img src="/images/posts/cakewalk/HoolaPhoto.jpg" alt="Cakewalk Idea" /></p>
+
+
+		
+		<a href="/blog/2014/04/03/cakewalk/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-03-16T10:31:00-07:00" pubdate data-updated="true">Mar 16<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/rails/'>rails</a>, <a class='category' href='/blog/categories/tests/'>tests</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2014/03/16/offshore/">Offshore: Rails Remote Factories</a></h1>
+	<div class="entry-content">
+		<p>Last year at <a href="https://www.taskrabbit.com">TaskRabbit</a>, we decided to go headlong into this <a href="http://en.wikipedia.org/wiki/Service-oriented_architecture">Service Oriented Architecture</a> thing. We ended up with several <a href="http://rubyonrails.org/">Rails</a> and <a href="http://www.sinatrarb.com/">other</a> Ruby apps that loosely depended on each other to work. While this was mostly good from a separation of concerns and organizational perspective, we found effective automated testing to be quite difficult.</p>
+
+<p>Specifically, we have one core platform application whose API is the most used. We also allow other apps to have read-only access to its database. Several of the apps are more or less a client to that server. So while the satellite apps have their own test suite, the integration tests can only be correct if they are exercising the core API.</p>
+
+<p>To handle this use case, we created a gem called <a href="https://github.com/taskrabbit/offshore">Offshore</a>. A normal test suite has <a href="https://github.com/thoughtbot/factory_girl">factories</a> and/or <a href="http://guides.rubyonrails.org/testing.html#the-low-down-on-fixtures">fixture data</a> and it uses database <a href="http://api.rubyonrails.org/classes/ActiveRecord/Transactions/ClassMethods.html">transactions</a> to reset the data for every test. Offshore brings this the SOA world by providing the ability to use another application&#8217;s factories from your test suite as well as handling the rollback between tests. Through the actual exercising of the other application as well as a simplified usage pattern, we found that we trusted our integration tests much more that alternative approaches.</p>
+
+<h2>System</h2>
+
+<p>What we have are several apps based on use case, all using a core platform. There are web apps for each of the participants in our marketplace: workers, consumers, and businesses. We also have iPhone and Android apps along those same lines.</p>
+
+<p>The apps communicate in a few ways. All of them use the platform&#8217;s API synchronously. The web apps use <a href="https://github.com/taskrabbit/resque-bus">Resque Bus</a> to subscribe and publish asynchronously. We also allow the web apps to read the platform database, but not write.</p>
+
+<p><img src="/images/posts/offshore/generic_network_map.png" alt="Network Map" /></p>
+
+<h2>Use Case</h2>
+
+<p>The APIs and data involved are basically about tasks and users in the system and their various state transitions. For example, our business app signs up a user and post a tasks using the API. The user will then be on the their dashboard seeing a list of tasks in various states, conversations with the workers, payment details, etc.</p>
+
+
+		
+		<a href="/blog/2014/03/16/offshore/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-03-06T15:57:00-08:00" pubdate data-updated="true">Mar 6<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/blog/'>blog</a>, <a class='category' href='/blog/categories/jekyll/'>jekyll</a>, <a class='category' href='/blog/categories/octopress/'>octopress</a>, <a class='category' href='/blog/categories/plugins/'>plugins</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2014/03/06/jekyll-slides/">Jekyll Slides</a></h1>
+	<div class="entry-content">
+		<p>I really like <a href="http://jekyllrb.com/">Jekyll</a>/<a href="http://octopress.org/">Octopress</a> and have aspirations to make my presentations in HTML instead of Powerpoint. For my last <a href="http://www.meetup.com/San-Francisco-Redis-Meetup/events/164972192/">presentation to the Redis Meetup</a>, I combined the two. I found it really easy to &#8220;blog&#8221; the talk and created a <a href="https://github.com/bleonard/jekyll-slides">plugin</a> to convert <a href="http://www.bleonard.com/blog/2014/02/16/resque-bus-presentation/">that</a> to a <a href="http://lab.hakim.se/reveal-js">reveal.js</a> <a href="http://www.bleonard.com/blog/2014/02/16/resque-bus-presentation/slides">presentation</a> from the same source. It&#8217;s my first Jekyll plugin, but it got the job done. Check it out <a href="https://github.com/bleonard/jekyll-slides">here</a>.</p>
+
+<h2>Usage</h2>
+
+<p>Make a new blog post and add <code>slides: simple</code> to the metadata at the top. The value <code>simple</code> refers to the <a href="http://lab.hakim.se/reveal-js/?theme=solarized#/themes">reveal.js theme</a> to use. The options are: <code>beige</code>, <code>blood</code>, <code>moon</code>, <code>night</code>, <code>serif</code>, <code>simple</code>, <code>sky</code>, and <code>solarized</code>.</p>
+
+<p>Here is the header from the <a href="http://www.bleonard.com/blog/2014/02/16/resque-bus-presentation/slides">last presentation</a>:</p>
+
+<pre><code>---
+layout: post
+published: true
+title: "Resque Bus Presentation"
+date: 2014-02-16 08:48
+comments: true
+author: BL
+slides: simple
+categories: architecture resque redis bus
+---
+</code></pre>
+
+<p>You then write your normal blog post with a few extra elements mixed in.</p>
+
+<p>For example, you start a slide with the <code>{% slide %}</code> notation. You can also say <code>{% notes %}</code> at the &#8220;bottom&#8221; of a slide. This will not appear in the slideshow, but will appear in the blog post.</p>
+
+<p>You say <code>{% endslide %}</code> at the end of the presentation. You could do this each time, but it&#8217;s inferred by the beginning of a new slide using <code>{% slide %}</code>, so the end notation is only needed at the end.</p>
+
+<p>That&#8217;s about it. Here &#8216;s the whole presentation if it was only a few of the slides:</p>
+
+<pre><code>{% slide %}
+
+## Resque Bus
+
+### Brian Leonard
+
+##### TaskRabbit
+##### 02/17/2014
+
+{% notes %}
+
+Hi, my name is Brian Leonard and I'm the Chief Architect and Technical Cofounder of TaskRabbit. TaskRabbit is a marketplace where neighbors help neighbors get things done.
+
+At TaskRabbit we are using Redis and Resque to do all of our background processing. We've also gone one step further to use these tools to create an asynchronous message bus system that we call Resque Bus.
+
+{% slide %}
+
+### Redis
+
+* Key/Value Store
+* Atomic Operations
+
+![Redis Logo](/images/posts/resque-bus-presentation/redis-logo.jpeg)
+
+{% notes %}
+
+I don't have to tell you guys about Redis, but for our purposes the main point is that we can store stuff in it and the operations are atomic.
+
+{% slide %}
+
+## Thanks!
+
+Questions?
+
+{% endslide %}
+</code></pre>
+
+<p>Compilation produces the <a href="http://www.bleonard.com/blog/2014/02/16/resque-bus-presentation/">blog post here</a> as well as the <a href="http://www.bleonard.com/blog/2014/02/16/resque-bus-presentation/slides">presentation here</a>.</p>
+
+
+		
+		<a href="/blog/2014/03/06/jekyll-slides/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-02-16T08:48:00-08:00" pubdate data-updated="true">Feb 16<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/architecture/'>architecture</a>, <a class='category' href='/blog/categories/bus/'>bus</a>, <a class='category' href='/blog/categories/redis/'>redis</a>, <a class='category' href='/blog/categories/resque/'>resque</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2014/02/16/resque-bus-presentation/">Resque Bus Presentation</a></h1>
+	<div class="entry-content">
+		<p><a href="/blog/2014/02/16/resque-bus-presentation/slides"><h2>View the Presentation</h2></a></p>
+
+<h5>Or view the slide sheet below</h5>
+
+
+<hr />
+
+
+<section class='slide'><div class='content'>
+
+<h2>Resque Bus</h2>
+
+<h3>Brian Leonard</h3>
+
+<h5>TaskRabbit</h5>
+
+<h5>02/17/2014</h5>
+
+
+		
+		<a href="/blog/2014/02/16/resque-bus-presentation/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-02-11T16:27:00-08:00" pubdate data-updated="true">Feb 11<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/architecture/'>architecture</a>, <a class='category' href='/blog/categories/engines/'>engines</a>, <a class='category' href='/blog/categories/rails/'>rails</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2014/02/11/rails-4-engines/">Rails 4 Engines</a></h1>
+	<div class="entry-content">
+		<p>At <a href="https://www.taskrabbit.com">TaskRabbit</a>, we have gone through a few iterations on how we make our app(s). In the beginning, there was the monolithic Rails app in the standard way with 100+ models and their many corresponding controllers and views. Then we moved to several apps with their own logic and often using the big one via API. Our newest <a href="https://taskrabbit.co.uk">project</a> is a single &#8220;app&#8221; made up of several Rails engines. We have found that this strikes a great balance between the (initial) straightforwardness of the single Rails app and the modularity of the more service-oriented architecture.</p>
+
+<p>We&#8217;ve talked about this approach with a few people and they often ask very specific questions about the tactics used to make this happen, so let&#8217;s go through it here and via a <a href="https://github.com/taskrabbit/rails_engines_example">sample application</a>.</p>
+
+<h2>Rails Engines</h2>
+
+<p><a href="http://edgeguides.rubyonrails.org/engines.html">Rails Engines</a> is basically a whole Rails app that lives in the container of another one. Put another way, as the docs note: an app itself is basically just an engine at the root level. Over the years, we&#8217;ve seen sen engines as parts of gems such as <a href="https://github.com/plataformatec/devise/blob/7a9ae13baadc3643d0f5b74077d9760d19c56adb/lib/devise/rails.rb">devise</a> or <a href="https://github.com/sferik/rails_admin/blob/master/lib/rails_admin/engine.rb">rails_admin</a>. These example show the power of engines by providing a large set of relatively self-contained functionality &#8220;mounted&#8221; into an app.</p>
+
+<p>At some point, there was a talk that suggested the approach of putting my our functionality into engines and that the Rails team seemed to be devoting more and more time to make them a first class citizen. Our friends at Pivotal Labs were talking about it a lot, too. Sometimes <a href="http://pivotallabs.com/migrating-from-a-single-rails-app-to-a-suite-of-rails-engines/">good</a> and sometimes <a href="http://pivotallabs.com/experience-report-engine-usage-that-didn-t-work/">not so good</a>.</p>
+
+<h2>Versus Many Apps</h2>
+
+<p>We&#8217;d seen an app balloon and get out of control before, leading us to try and find better ways of modularization. It was fun and somewhat liberating to say &#8220;Make a new app!&#8221; when there was a new problem domain to tackle. We also used it as a way to handle our growing organization. We could ask Team A to work on App A and know that they could run faster by understanding the scope was limited to that. As a side-note and in retrospect, we probably let organizational factors affect architecture way more than appropriate.</p>
+
+<p>Lots of things were great about this scenario. The teams had freedom to explore new approaches and we learned a lot. App B could upgrade Rack (or whatever) because it depend on the crazy thing that App A depended on. App C had the terrible native code-dependent gem and we only had to put that on the App C servers. Memory usage was kept lower, allowing us to run more background workers and unicorn threads.</p>
+
+
+		
+		<a href="/blog/2014/02/11/rails-4-engines/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-09-28T16:27:00-07:00" pubdate data-updated="true">Sep 28<span>th</span>, 2013</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/architecture/'>architecture</a>, <a class='category' href='/blog/categories/bus/'>bus</a>, <a class='category' href='/blog/categories/redis/'>redis</a>, <a class='category' href='/blog/categories/resque/'>resque</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2013/09/28/resque-bus/">Resque Bus</a></h1>
+	<div class="entry-content">
+		<p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, we are using <a href="https://github.com/resque/resque">Resque</a> to do our background job processing. We&#8217;ve also gone one step further and used <a href="http://redis.io/">Redis</a> and Resque to create an asynchronous <a href="http://en.wikipedia.org/wiki/Message_queue">message</a> <a href="http://en.wikipedia.org/wiki/Enterprise_service_bus">bus</a> system that we call <a href="https://github.com/taskrabbit/resque-bus">Resque Bus</a>.</p>
+
+<h3>Redis / Resque</h3>
+
+<p><a href="http://redis.io/">Redis</a> is a single-threaded in-memory key/value store similar to <a href="http://memcached.org/">memcached</a>. Redis has other features like pub/sub and more advanced data structures, but the key feature that makes it an ideal storage engine for a queue and a message bus is that is can perform atomic operations.  Atomic operations are the kind of operations you can expect to do on in-process data (like Array.pop or Array.splice) but in way that keeps the data sane for everyone connected to the database.</p>
+
+<p><a href="https://github.com/resque/resque">Resque</a> is a background queue built on top of Redis. There seems to be <a href="http://sidekiq.org/">other</a> <a href="https://github.com/collectiveidea/delayed_job">options</a> <a href="https://github.com/kr/beanstalkd">out</a> there these days, but we are pretty happy with Resque and associated <a href="http://resquework.org">tools/ecosystem</a>. There is plenty of code in the resque codebase, but it all comes down to inserting json the queue, popping, and executing code with that as an input.</p>
+
+<h3>Resque Bus</h3>
+
+<p><a href="https://github.com/taskrabbit/resque-bus">Resque Bus</a> uses Resque to create an asynchronous <a href="http://en.wikipedia.org/wiki/Message_queue">message</a> <a href="http://en.wikipedia.org/wiki/Enterprise_service_bus">bus</a> system. As we have created more applications with interdependencies, we have found it helpful to create something like this to loosely couple the worlds. There are <a href="http://zeromq.org/">several</a> <a href="http://www.rabbitmq.com/">other</a> <a href="http://redis.io/topics/pubsub">possible</a> <a href="http://kafka.apache.org/">solutions</a> to this problem, but I really felt that it was important to use something that our team understood well for this piece of infrastructure that we could easily modify and maintain.</p>
+
+
+		
+		<a href="/blog/2013/09/28/resque-bus/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-05-23T11:40:00-07:00" pubdate data-updated="true">May 23<span>rd</span>, 2013</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/rails/'>rails</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2013/05/23/rollback-after-save/">Rollback ActiveRecord Model in After_save</a></h1>
+	<div class="entry-content">
+		<p>It&#8217;s not exactly a best practice, but sometimes it comes up and I couldn&#8217;t find any material on the Internet about how to make it work. The situation is that you&#8217;re saving your record and it&#8217;s <code>after_save</code> and now you&#8217;ve decided that you don&#8217;t want to save it at all. What to do? The short answer is to <code>raise ActiveRecord::RecordInvalid.new(self)</code> and run away.</p>
+
+<h3>How did you get here?</h3>
+
+<p>This seems most relevant to syncing scenarios. For example, when a Task is created, we need to create a parallel record in an external system. When it is necessary, it has to happen and the Task should not exist (or be saved) without it. I could make that call in a <code>before_save</code> callback and add a validation error if it didn&#8217;t work. However, if the rest of the validations don&#8217;t work, then there is no taking back that call. Everything else in a SQL transaction, but not other systems. I had some success with making absolute sure that it was the <em>last</em> <code>before_save</code> and that worked out for a while. Then we needed to send the <code>id</code> of the Task to the external system. This just does not exist before the save actually occurs the first time. So I wanted to put it in an <code>after_save</code> callback.</p>
+
+<h3>What to do?</h3>
+
+<p>The thing to note in this case, though, is that <code>after_save</code> is still in the SQL transaction. So if we freak out enough, it will roll the whole thing back. The trick is freaking out in the right way.</p>
+
+<p>Returning <code>false</code> no longer seems to stop things. I swear that used to happen in older (&lt; 3) versions of Rails. Raising most errors will stop the transaction but also crash the system.  The first one that I tried was <code>ActiveRecord::Rollback</code> and it worked just fine in that it did not save and did not crash, but this test that I had was failing.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="o">.</span><span class="n">should</span> <span class="o">==</span> <span class="kp">false</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now, I wouldn&#8217;t have even have caught this if I did what I usually do which would be to use the <code>task.save.should be_false</code> rspec helper. This is because raising <code>ActiveRecord::Rollback</code> ended up in the <code>save</code> call returning nil. That would usually be fine, but I wanted to get it just like normal.</p>
+
+<p>If you take a look at the ActiveRecord <a href="https://github.com/rails/rails/blob/7ead1d81431b2c2c0366347b7bfdf9a329b6f934/activerecord/lib/active_record/persistence.rb#L105">code</a> for save, the answer reveals itself.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="o">*</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">create_or_update</span>
+</span><span class='line'><span class="k">rescue</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">RecordInvalid</span>
+</span><span class='line'>  <span class="kp">false</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>By raising <code>ActiveRecord::RecordInvalid</code> we treat it like a validation error and it has the expected behavior. I went ahead and added an actual error to seem even more like the normal case. Final code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Task</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+</span><span class='line'>  <span class="n">after_save</span> <span class="ss">:sync_with_external</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">sync_with_external</span>
+</span><span class='line'>    <span class="n">response</span> <span class="o">=</span> <span class="no">External</span><span class="o">.</span><span class="n">sync!</span><span class="p">(</span><span class="nb">id</span><span class="p">:</span> <span class="nb">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">info</span><span class="p">:</span> <span class="nb">self</span><span class="o">.</span><span class="n">info</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">error?</span>
+</span><span class='line'>      <span class="nb">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="ss">:base</span><span class="p">,</span> <span class="s2">&quot;There was a problem, etc ...&quot;</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">raise</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">RecordInvalid</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">self</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>    <span class="kp">true</span> <span class="c1"># I still do this out of superstition</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Caveats</h3>
+
+<p>This main issue that comes up is that you only get to have one of these to be absolutely sure everything is fine. If there were two of these external services, you&#8217;d end up with the same original problem. I guess, you should put and your flakiest ones first or try to get out of it altogether.</p>
+
+<p>Also note that or non-immediately-critical syncing (like search indexing), the right spot for these types of things are in <code>after_commit</code> where I would queue up a background job with retry logic. That would be outside of the SQL transaction and actually be needed to prevent timing issues in that background thread.</p>
+
+		
+		
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-02-08T08:44:00-08:00" pubdate data-updated="true">Feb 8<span>th</span>, 2013</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/rails/'>rails</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2013/02/08/rails-app-template-alternative/">Rails App Template Alternative</a></h1>
+	<div class="entry-content">
+		<p>We are making lots of new apps at <a href="https://www.taskrabbit.com">TaskRabbit</a> and have many shared components. All of this stuff (gems, best practices, test setup, etc) needs to get into the new project quickly so the team can focus on the business of providing the intended functionality. My first attempt to solve this problem was to create a <a href="http://edgeguides.rubyonrails.org/rails_application_templates.html">Rails app template</a> with all that stuff, but switched to a new way that involves a true template application.</p>
+
+<p>Conventional app templates seem to work for a lot of people and <a href="https://github.com/RailsApps/rails-composer/">Rails Composer</a> looks to be a good option in this space. This method works by running Ruby code that puts down files. This level of indirection is likely a positive thing when projects vary (<a href="https://github.com/rspec/rspec">rspec</a> one time, <a href="https://github.com/test-unit/test-unit">test-unit</a> the next). However, we&#8217;re trying as hard as we can to be consistent across apps, so when I found that this indirection made working with the templates more difficult, I decided that it was not worth it.</p>
+
+<p>The alternative method is pretty simple. I made a Rails app called <a href="http://en.wikipedia.org/wiki/Warren_(domestic">Warren</a>) that was exactly what I wanted to see new projects use. It contained all our our gems for authentication, shared styles, inter-app communication, and developer tools. You could basically log in, log out, and go to a page where you saw who was logged in. It had its own test suite to test these things along with all the normal stuff: yml files, initializers, .rvmrc, .gitigore, ApplicationController, favicon, etc. It was simply a working Rails app.</p>
+
+<p>The only addition is the <code>app.rake</code> file that I put in the /lib/tasks directory. That provides this functionality:</p>
+
+<pre><code>% rake app:create[new_name]
+</code></pre>
+
+<p>This will create a new app called NewName in a peer folder to Warren. The full process looks something like this:</p>
+
+<pre><code>localhost:warren brian$ rake app:create[new_name]
+
+localhost:warren brian$ cd ../new_name
+=== RVM Message ===
+Do you wish to trust this .rvmrc file? (/Users/brian/taskrabbit/new_name/.rvmrc)
+y[es], n[o], v[iew], c[ancel]&gt; yes
+Using /Users/brian/.rvm/gems/ruby-1.9.3-p194 with gemset new_name
+
+localhost:new_name brian$ bundle install
+Fetching gem metadata from http://rubygems.org/......
+Installing all-the-things (3.9.2) 
+Your bundle is complete!
+
+localhost:new_name brian$ rake db:create db:migrate db:test:prepare
+
+localhost:new_name brian$ rails s
+&gt;&gt; Listening on 0.0.0.0:3000, CTRL+C to stop
+</code></pre>
+
+<p>And http://localhost:3000 works.</p>
+
+
+		
+		<a href="/blog/2013/02/08/rails-app-template-alternative/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+<nav id="pagenavi">
+    
+        <a href="/blog/page/2/" class="prev">Prev</a>
+    
+    
+        <a href="/blog/page/4/" class="next">Next</a>
+    
+    <div class="center"><a href="/blog/archives">Blog Archives</a></div>
+</nav></div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

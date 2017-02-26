@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: projects | BLog]]></title>
+  <link href="http://bleonard.github.com/blog/categories/projects/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.com/"/>
+  <updated>2017-02-25T21:54:36-08:00</updated>
+  <id>http://bleonard.github.com/</id>
+  <author>
+    <name><![CDATA[Brian Leonard]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Hubtime]]></title>
+    <link href="http://bleonard.github.com/blog/2013/01/11/hubtime/"/>
+    <updated>2013-01-11T18:03:00-08:00</updated>
+    <id>http://bleonard.github.com/blog/2013/01/11/hubtime</id>
+    <content type="html"><![CDATA[<p>I got pretty sidetracked during my <a href="/blog/2012/12/31/review-2012/">2012 Review</a> and ended up making a new tool called <a href="https://github.com/bleonard/hubtime">Hubtime</a>. It lets you graph your activity in a variety aways across Github repositories.</p>
+
+<p>The inspiration came from Github's own <a href="https://github.com/bleonard/daily/graphs">reports</a>, but I made Hubtime because those reports are only at a repository level. I was looking to see patterns across the many repositories that I worked on over the year. It seems that Github agrees to some degree because they have since <a href="https://github.com/blog/1360-introducing-contributions">launched</a> metric overviews on user profile pages.</p>
+
+<p><img src="/images/posts/hubtime-github-contributions.png"></p>
+
+<p>A 42 day streak! Hubtime has the data to make Hubtime do the same graph, but right now focuses more on reproducing the Github experience that is only now per repository.</p>
+
+<pre><code>$ ./hubtime.rb graph commits --months 3
+</code></pre>
+
+<p><img src="/images/posts/hubtime-commits.png"></p>
+
+<p>Graphing commits, additions, deletions, or impact can also be done showing the magnitude by repository.</p>
+
+<pre><code>$ ./hubtime.rb graph commits --months 3 --stacked
+</code></pre>
+
+<p><img src="/images/posts/hubtime-stacked.png"></p>
+
+<p>This was the first purely command line Ruby project that I have done. In addition to that, I learned several new things and tried some new approaches during development.</p>
+
+<!-- more -->
+
+
+<h3>Commander</h3>
+
+<p>For no particular reason versus the <a href="http://www.awesomecommandlineapps.com/gems.html">alternatives</a>, I decided to use the <a href="https://github.com/visionmedia/commander">Commander</a> gem to bootstrap the project. This gem take code like this:</p>
+
+<p><div class=''><script src='https://gist.github.com/4527775.js'></script>
+<noscript><pre><code></code></pre></noscript></div>
+</p>
+
+<p>And produces help documentation like this:</p>
+
+<pre><code>$ ./hubtime.rb impact -h
+
+NAME:
+  impact
+
+SYNOPSIS:
+  hubtime impact
+
+DESCRIPTION:
+  Graph your additions and deletions
+
+OPTIONS:
+  --months INTEGER 
+      How many months of history
+  --user USERNAME 
+      Which Github user
+</code></pre>
+
+<p>It also parses the arguments and generally allows for getting right to the point.</p>
+
+<p>The point for me was making the impact graph, initially. To get there, I decided to use only Github's <a href="http://developer.github.com/v3/">API</a>. In theory, I could have checked repositories out and done a bunch of git stuff locally. In retrospect, this would have been much more performant and maybe more useful in the long run.</p>
+
+<p>Nevertheless, the first step was authentication. I made a command to enter the username and password. In the original version, I sent this to Github to get an OAuth token and did not store the password, just the token. Right before releasing, I switched to not use a client application as it would cause all users collectively to get 5000 requests total to the API as opposed to per user. This limit proved to be a problem. I unfortunately had to store the password locally somewhere and took a half-hearted attempt at obfuscation.</p>
+
+<p>As I mentioned, the API limit seems very high but very quickly became a problem. The core issue is that the data I needed (additions and deletions of a commit) is not available on the <a href="http://developer.github.com/v3/repos/commits/#list-commits-on-a-repository">commit list</a> API. It is only available on the <a href="http://developer.github.com/v3/git/commits/#get-a-commit">single commit</a> endpoint. Thus, I used the list command to see what I did within all my personal and organization repositories and then queried each commit for the data I needed.</p>
+
+<h3>Caching</h3>
+
+<p>Because I am involved in 50+ repositories and have thousands of commits and there were some <a href="https://gist.github.com/4256275">problems</a> with paging in the API, I very quickly hit my limit. Even for performance reasons, I started looking for a good way to cache the results. It's not like the commit I did last January is going to get more or less lines now, right?</p>
+
+<p>As I was <em>attempting</em> to make this a short project, I didn't want to write a caching layer and, for the first time, it occurred to me to use the <a href="https://github.com/vcr/vcr">VCR</a> gem outside of a testing environment. It worked beautifully.</p>
+
+<p><div class=''><script src='https://gist.github.com/4527774.js'></script>
+<noscript><pre><code></code></pre></noscript></div>
+</p>
+
+<p>So what I would do is have my API usage timeout, wait a bit, and then get back to it. Or only do the most recent month, then do the last two months, and walk backwards in that way. It never repeated itself, particularly on the single commit queries. For cached queries, it was much faster too.</p>
+
+<h3>Performance</h3>
+
+<p>The caching helped, but it was still very slow. That's a lot of waiting for Github to tell you stuff. I'm not sure how I've made it this long without really working on multiple threads in Ruby, but I decided to make it happen here. The first approach I took had a worker pool and each thread would work a single repository.</p>
+
+<p><div class=''><script src='https://gist.github.com/4527766.js'></script>
+<noscript><pre><code></code></pre></noscript></div>
+</p>
+
+<p>This dramatically sped up the fetching, of course. At this point in my development, all the requests were cached already, but it was still 5x faster with 8 threads. I felt pretty good about that, but it could still be better. It wasn't 8x faster because one of the repositories had significantly more activity so, in the end, there was still just a single worker working for a significant amount of time. To remedy this, I dealt with each repository serially and moved the parallelization to the window and commit levels.</p>
+
+<p><div class=''><script src='https://gist.github.com/4527771.js'></script>
+<noscript><pre><code></code></pre></noscript></div>
+</p>
+
+<p>The parallelization was in two spots now, but it also made the output simpler as my <code>puts</code> statements of what repositories it was working weren't all coming in at the same time.</p>
+
+<h3>Threadsafe</h3>
+
+<p>I felt pretty happy about my multithreaded experiment and decided to jam through some of the other members of my team. Things got weird.</p>
+
+<p>All this time, I had been using the multithreaded code on VCR-cached queries. Clearing the cache or looking up the activity of another user caused the recording to go back into effect. After much confusion, I realized that VCR was not <a href="https://github.com/vcr/vcr/issues/200">threadsafe</a> and that the "cassettes" would have have the output from one query and half from another. The first time through it would be fine, but then when trying to use the recording the next time, it would fail to parse and blow up.</p>
+
+<p>I was in this far already and didn't want to ditch the project, even though I already had my graphs for my <a href="/blog/2012/12/31/review-2012/">review</a>. I had also tasted the speed (or at least the lack of absurd slowness) and couldn't go back to running it in one thread, so I wrote my own simple <a href="https://github.com/bleonard/hubtime/blob/master/cacher.rb">cacher</a> that was used in threadsafe way and removed VCR. For good measure, I also cached the final results needed to draw all the graphs. This made subsequent commands instantaneous, which was very satisfying. Looking back, I'd say it was close to a <a href="http://37signals.com/svn/posts/3113-how-key-based-cache-expiration-works">russian doll</a> caching strategy.</p>
+
+<p>In end, the structure looked like this:</p>
+
+<p><img src="/images/posts/hubtime-caching-windows.png"></p>
+
+<p>Where all of those windows of time. The 'activity' ones contain various stats. They are all together, but if I just had one repository, it would look like this (except with all the years, months, and days of each:</p>
+
+<p><div class='px300'><script src='https://gist.github.com/4527842.js'></script>
+<noscript><pre><code></code></pre></noscript></div>
+</p>
+
+<p>And the commit windows contain shas for the user during that window:</p>
+
+<p><div class='px100'><script src='https://gist.github.com/4527744.js'></script>
+<noscript><pre><code></code></pre></noscript></div>
+</p>
+
+<p>It also caches the commits themselves:</p>
+
+<p><img src="/images/posts/hubtime-caching-shas.png"></p>
+
+<p>The contents of each is the serialized version of the <a href="https://github.com/intridea/hashie">Hashie::Mash</a> that <a href="https://github.com/pengwynn/octokit">Octokit</a> returns.</p>
+
+<h3>Charts</h3>
+
+<p>Finally, I used <a href="http://www.highcharts.com/">HighCharts</a> to make the charts themselves. It was kind of funny to be building a command line tool and not really have a way to show charts, so I actually started with a table and a <a href="https://github.com/joemiller/spark-ping">sparkline</a>. I was looking for the those pretty pictures, though, so I fell back to doing things in a web way. In this case, I used ERB to render a page to an HTML file and then used the command line <code>open</code> command to launch that file.</p>
+
+<p>A few more graphs:</p>
+
+<pre><code>$ ./hubtime.rb impact --months 12
+</code></pre>
+
+<p><img src="https://raw.github.com/bleonard/hubtime/master/readme/impact.png" alt="Impact Graph" /></p>
+
+<pre><code>$ ./hubtime.rb graph impact --stacked
+</code></pre>
+
+<p><img src="https://raw.github.com/bleonard/hubtime/master/readme/stacked.png" alt="Stacked Graph" /></p>
+
+<pre><code>$ ./hubtime.rb pie
+</code></pre>
+
+<p><img src="https://raw.github.com/bleonard/hubtime/master/readme/pie.png" alt="Stacked Graph" /></p>
+]]></content>
+  </entry>
+  
+</feed>

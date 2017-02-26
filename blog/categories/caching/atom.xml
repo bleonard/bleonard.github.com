@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: caching | BLog]]></title>
+  <link href="http://bleonard.github.com/blog/categories/caching/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.com/"/>
+  <updated>2017-02-25T21:54:36-08:00</updated>
+  <id>http://bleonard.github.com/</id>
+  <author>
+    <name><![CDATA[Brian Leonard]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Cakewalk]]></title>
+    <link href="http://bleonard.github.com/blog/2014/04/03/cakewalk/"/>
+    <updated>2014-04-03T21:10:00-07:00</updated>
+    <id>http://bleonard.github.com/blog/2014/04/03/cakewalk</id>
+    <content type="html"><![CDATA[<p>It's nice to be useful. I was glad to be able to help out my wife and her partner make a new iPhone app called <a href="http://www.cakewalkapp.com">Cakewalk</a>.</p>
+
+<p>I really like the counter-culture situation of it. Technology has become a way to distract the kids or something you can hand them when you are out of other things to do. <a href="http://www.personify.us">Krista</a> and <a href="http://www.textunvexed.com">Marijane</a> had the idea to use technology to go the other way by giving parents an app that was for them, not the kids. And the goal of the app is to stop using the app and start real playtime with the kids.</p>
+
+<p>Put simply, Cakewalk comes in handy when the kids really want to play with you, but you’re having a hard time coming up with something to do. It is full of quick ideas for simple fun. And every activity is something you can do right now—no research, no prep, and no trips to the store.</p>
+
+<p>So get it now on the App Store <a href="http://www.cakewalkapp.com/get">here</a>. See below for the tech notes on how it was built.</p>
+
+<p><img src="/images/posts/cakewalk/HoolaPhoto.jpg" alt="Cakewalk Idea" /></p>
+
+<!-- more -->
+
+
+<p><img src="/images/posts/cakewalk/HoolaText.jpg" alt="Cakewalk Text" /></p>
+
+<p><img src="/images/posts/cakewalk/CheckBoxes.jpg" alt="Idea Filtering" /></p>
+
+<h1>Tech Notes</h1>
+
+<p>I made a <a href="http://rubyonrails.org/">Rails</a> server as well as the iPhone client.</p>
+
+<p>The real work in the project has been Marijane and Krista writing the content and taking beautiful pictures, so the first order of business was allow that to be stored in a useful way. Rails is awesome at <a href="http://en.wikipedia.org/wiki/Create,_read,_update_and_delete">CRUD</a> applications, so I made an admin panel of sorts where they could enter the content and attach photos. I tried to practice what I <a href="/blog/2014/02/11/rails-4-engines/">preach</a> and made an admin <a href="/blog/2014/02/11/rails-4-engines/">engine</a> using Bootstrap to make it not terrible to look at.</p>
+
+<p>Then, I made an api engine to serve json for the app to use. The main functionality of the app is listing ideas with various filters which was still fairly straightforward from the data they entered.</p>
+
+<p>Then came the hard part (for me at least). I had not developed an iPhone app since right after Apple first released the SDK and much has changed. This was a great opportunity to see what has been going on. It turns out that a lot has been going on.</p>
+
+<ul>
+<li>People make and share libraries now and <a href="http://cocoapods.org/">CocoaPods</a> is a good thing.</li>
+<li><a href="https://github.com/AFNetworking/AFNetworking">AFNetworking</a> and <a href="https://github.com/Inferis/ViewDeck">ViewDeck</a> saved me a ton of time.</li>
+<li><a href="https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/CoreData/cdProgrammingGuide.html">Core Data</a> worked pretty well for my use case.</li>
+<li>You can take up the whole screen, but it can get pretty weird.</li>
+<li>I couldn't resist doing the <a href="http://www.macworld.com/article/2042808/inside-the-technology-behind-ios-7s-parallax-effect.html">parallax</a> stuff.</li>
+<li>I still didn't use <a href="https://developer.apple.com/xcode/interface-builder/">Interface Builder</a> and preferred laying it out with code.</li>
+<li>The <a href="https://developer.apple.com/library/ios/releasenotes/objectivec/rn-transitioningtoarc/introduction/introduction.html">ARC</a> compiler sure simplified the situation a lot.</li>
+<li><a href="https://developer.apple.com/library/ios/documentation/cocoa/Conceptual/Blocks/Articles/bxGettingStarted.html#//apple_ref/doc/uid/TP40007502-CH7-SW1">Blocks</a> syntax really cleans things up.</li>
+<li>The 2x images for retina display are somewhat annoying but the tooling is much better.</li>
+<li><a href="https://developer.apple.com/library/ios/documentation/uikit/reference/UIGestureRecognizer_Class/Reference/Reference.html">Gesture Recognizers</a> may have been there before but I didn't know about them. That's <em>much</em> easier.</li>
+</ul>
+
+
+<p>The whole app is basically a <a href="http://www.appcoda.com/uipageviewcontroller-tutorial-intro/">UIPageViewController</a> to infinitely swipe through idea after idea. On each page is a background image with a parallax effect. The content for the idea is in a <a href="http://idevzilla.com/2010/09/16/uiscrollview-a-really-simple-tutorial/">UIScrollView</a>. I spent way too much time on the interaction between the two components. The background changes and tilts as you scroll up. It's so fun to do the little UI touches.</p>
+
+<p>On the side of the ideas, you can filter what you want to see. This uses <a href="https://github.com/Inferis/ViewDeck">ViewDeck</a> to slide open a controller that has a <a href="https://developer.apple.com/library/ios/documentation/uikit/reference/UITableView_Class/Reference/Reference.html">UITableView</a> of options. Selecting any given option toggles the filters, which affects the list of ideas.</p>
+
+<p>Everything is fairly straightforward. The most interesting parts of this project for me were around performance. For example, my first inclination was to use the APIs to load the list of ideas. Then fetch the idea data when the user swiped to the next one. Where I ended up was completely the opposite. The user rarely interacts directly with the server at all. All of the filtering and loading of the next idea happen locally on the phone immediately using <a href="https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/CoreData/cdProgrammingGuide.html">Core Data</a>. The communication with the server happens in a background thread and any different results are injected into the list. This produces a <em>much</em> more fluid user experience.</p>
+
+<p>The other performance issue was figuring out how to run this project at a <em>very</em> low cost even if a million parents decided this was the next big thing. I stumbled upon <a href="https://www.cloudflare.com/">Cloudflare</a> as one of the main solutions. By structuring the API requests well, I've been able to have Cloudflare fully cache the results for a reasonable amount of time. This prevents most requests from even having to hit my server. I did the same thing with web pages like the homepage. If you go to that page, it will stop at Cloudflare. This is very powerful because they can handle a huge amount of users without a problem.</p>
+
+<p>So try out the <a href="http://www.cakewalkapp.com/get">app</a>. It's free and has made me a better parent. If there's anything you want to hear more about, let me know.</p>
+]]></content>
+  </entry>
+  
+</feed>

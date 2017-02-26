@@ -1,0 +1,659 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: redis | BLog]]></title>
+  <link href="http://bleonard.github.com/blog/categories/redis/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.com/"/>
+  <updated>2017-02-25T21:54:36-08:00</updated>
+  <id>http://bleonard.github.com/</id>
+  <author>
+    <name><![CDATA[Brian Leonard]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Resque Bus Presentation]]></title>
+    <link href="http://bleonard.github.com/blog/2014/02/16/resque-bus-presentation/"/>
+    <updated>2014-02-16T08:48:00-08:00</updated>
+    <id>http://bleonard.github.com/blog/2014/02/16/resque-bus-presentation</id>
+    <content type="html"><![CDATA[<p>{% slide %}</p>
+
+<h2>Resque Bus</h2>
+
+<h3>Brian Leonard</h3>
+
+<h5>TaskRabbit</h5>
+
+<h5>02/17/2014</h5>
+
+<!-- more -->
+
+
+<p>{% notes %}</p>
+
+<p>Hi, my name is Brian Leonard and I'm the Chief Architect and Technical Cofounder of TaskRabbit. TaskRabbit is a marketplace where neighbors help neighbors get things done.</p>
+
+<p>At TaskRabbit we are using Redis and Resque to do all of our background processing. We've also gone one step further to use these tools to create an asynchronous message bus system that we call Resque Bus.</p>
+
+<p>{% slide %}</p>
+
+<h3>Redis</h3>
+
+<ul>
+<li>Key/Value Store</li>
+<li>Atomic Operations</li>
+</ul>
+
+
+<br/>
+
+
+<p><img src="/images/posts/resque-bus-presentation/redis-logo.jpeg" alt="Redis Logo" /></p>
+
+<p>{% notes %}</p>
+
+<p>I don't have to tell you guys about Redis, but for our purposes the main point is that we can store stuff in it and the operations are atomic.</p>
+
+<p>{% slide %}</p>
+
+<h3>Resque</h3>
+
+<p><img src="/images/posts/resque-bus-presentation/resque-screenshot.png" alt="Resque UI" /></p>
+
+<p>{% notes %}</p>
+
+<p><a href="https://github.com/defunkt/resque">Resque</a> is a background queue built on top of Redis. It uses arrays and the atomic properties of Redis to get this done.</p>
+
+<p>The ability to put things in order and then atomically pop an item from the list is all that is really needed for a great background queue and Redis fits perfectly.</p>
+
+<p>There is plenty of code, but it all comes down to inserting json the queue, popping, and executing code with that as an input.</p>
+
+<p>{% slide %}</p>
+
+<h3>Resque Pattern</h3>
+
+<p>```ruby
+class Rating &lt; ActiveRecord::Base
+  after_commit :enqueue_worker</p>
+
+<p>  def enqueue_worker</p>
+
+<pre><code>Resque.enqueue(CalculateAverageWorker, self.id)
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>```ruby
+class CalculateAverageWorker
+  @queue = :default</p>
+
+<p>  def self.perform(rating_id)</p>
+
+<pre><code>rating = Rating.find(rating_id)
+total  = Rating.where(rabbit_id: rating.rabbit_id).count
+sum    = Rating.where(rabbit_id: rating.rabbit_id').sum(:value)
+
+profile = RabbitProfile.find_by(user_id: rating.rabbit_id)
+profile.ratings_total  = total
+profile.rating_average = sum.to_f / (5*total.to_f)
+profile.save!
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>{% notes %}</p>
+
+<p>The pattern goes something like this: something happens on the main (request) thread. It queues up a worker in the background with a class name and arguments. In this case, we enqueue the CalculateAverageWorker with the new rating id. The background worker then does whatever it needs to do. In this case, we update the TaskRabbit's average rating on her profile.</p>
+
+<p>{% slide_top transition: none %}</p>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_resque_1.png" alt="Resque 1" /></p>
+
+<p>{% notes %}</p>
+
+<p>Looking at the Redis data workflow, it looks like this.</p>
+
+<p>{% slide transition: none %}</p>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_resque_2.png" alt="Resque 2" /></p>
+
+<p>{% slide transition: none %}</p>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_resque_3.png" alt="Resque 3" /></p>
+
+<p>{% slide_bottom transition: none %}</p>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_resque_4.png" alt="Resque 4" /></p>
+
+<p>{% slide %}</p>
+
+<h3>New Profile App</h3>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_bus_1.png" alt="Bus 1" /></p>
+
+<p>{% notes %}</p>
+
+<p>As we moved our code to a more service-oriented architecture, we wanted to move profiles to a new Rails app. Most of this app was concerned with uploading media and content and other ways for our TaskRabbits to market themselves. A very minor point is this app is this number to display on a profile. Something like that did not justify <em>not</em> splitting up the app, but it was still something that needed to happen.</p>
+
+<p>{% slide %}</p>
+
+<h3>Resque Bus Pattern</h3>
+
+<p>```ruby
+class Rating &lt; ActiveRecord::Base
+  after_commit :enqueue_worker</p>
+
+<p>  def enqueue_worker</p>
+
+<pre><code>ResqueBus.publish("rating_created", self.attributes)
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>```ruby</p>
+
+<h1>initializer</h1>
+
+<p>ResqueBus.dispatch("profile") do
+  subscribe "rating_created" do |attributes|</p>
+
+<pre><code>rating = Rating.find(rating_id)
+total  = Rating.where(rabbit_id: rating.rabbit_id).count
+sum    = Rating.where(rabbit_id: rating.rabbit_id').sum(:value)
+
+profile = RabbitProfile.find_by(user_id: rating.rabbit_id)
+profile.ratings_total  = total
+profile.rating_average = sum.to_f / (5*total.to_f)
+profile.save!
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>{% notes %}</p>
+
+<p>So this is more or less the same thing, but with different syntax. The difference is that the rating calculation code can now live in another app. This is possible because of the layer of abstraction that ResqueBus adds.</p>
+
+<p>{% slide_top transition: none %}</p>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_bus_2.png" alt="Bus 2" /></p>
+
+<p>{% notes %}</p>
+
+<p>As you can see, the difference is this new layer of <code>resquebus_incoming</code> that we've added, so now it looks like this:</p>
+
+<ul>
+<li>Profile App subscribes to events (puts a hash in Redis saying what it is interested in)</li>
+<li>Task App publishes the event (puts published hash as args in a Resque queue called <code>resquebus_incoming</code> with a class of <code>Driver</code>)</li>
+<li>The <code>Driver</code> copies the event hash to 0 to N application queues based on subscriptions (arg hash now in <code>profile_default</code> queue with a class of <code>Rider</code>)</li>
+<li>The <code>Rider</code> in Profile App executes the block given in the subscription</li>
+</ul>
+
+
+<p>{% slide transition: none %}</p>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_bus_3.png" alt="Bus 3" /></p>
+
+<p>{% slide transition: none %}</p>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_bus_4.png" alt="Bus 4" /></p>
+
+<p>{% slide transition: none %}</p>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_bus_5.png" alt="Bus 5" /></p>
+
+<p>{% slide transition: none %}</p>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_bus_6.png" alt="Bus 6" /></p>
+
+<p>{% slide transition: none %}</p>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_bus_7.png" alt="Bus 7" /></p>
+
+<p>{% slide transition: none %}</p>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_bus_8.png" alt="Bus 8" /></p>
+
+<p>{% slide_bottom transition: none %}</p>
+
+<p><img src="/images/posts/resque-bus-presentation/rating_bus_9.png" alt="Bus 9" /></p>
+
+<p>{% slide %}</p>
+
+<h3>It's Just Resque</h3>
+
+<p><img src="/images/posts/resque-bus-presentation/resque-screenshot.png" alt="Resque UI" /></p>
+
+<p>{% notes %}</p>
+
+<p>The thing to note here is that it's all still Resque workers; which, in turn, is all just moving things around in Redis. This allows us leverage our current infrastructure but with new-found capabilities. The simplicity also allows us use technologies other than Ruby itself. For example, [Evan] just wrote a <a href="http://github.com/taskrabbit/node-resque">resque</a> and <a href="http://github.com/taskrabbit/node-resquebus">resque-bus</a> client in node.</p>
+
+<p>{% slide %}</p>
+
+<h3>Use Cases</h3>
+
+<p>Publishing all all data changes, especially state changes.</p>
+
+<ul>
+<li>Rails app communication</li>
+<li>Bus Apps</li>
+<li>Loggers</li>
+</ul>
+
+
+<p>{% notes %}</p>
+
+<p>We publish all the time, basically every time the data changes. We've found it's particularly important to publish when the state of an object changes. For example a Task goes from the assigned state to the completed state. Some of these events have many subscribers. Many events are completely ignored (at the moment) and that is fine too.</p>
+
+<p>{% slide %}</p>
+
+<h3>Rails app communication</h3>
+
+<ul>
+<li>Own codebase and storage mechanisms</li>
+<li>+1: Local Simplicity</li>
+<li>+1: Local Specialization</li>
+<li>-1: Global Complexity</li>
+</ul>
+
+
+<p>{% notes %}</p>
+
+<p>This is like the profile app case. It has it's own codebase and storage to optimize that particular experience. Specifically, it's much more of a document store than the other app, which is more relational.</p>
+
+<p>The separation described here between the two systems involved (Tasks and Profiles) has had a few effects.</p>
+
+<p>Local simplicity has increased. Each system does what it does with simpler code than if it was all combined into the same thing.</p>
+
+<p>Local specialization has increased. For example, now that the profile experience is separate in code, I feel better in choosing the right storage solution for that experience. When in one system, it feels like "yet another thing" added to something that's already complicated.</p>
+
+<p>Global complexity has increased. This separation has a cost and it is in the number of moving pieces. More moving pieces adds maintenance costs through mysterious bugs, time in runtime execution, and overall cognitive load on the developer. It's case by case, but we believe it can be worth it.</p>
+
+<p>{% slide %}</p>
+
+<h3>Bus Apps</h3>
+
+<ul>
+<li>No UI, only listens to bus</li>
+<li>+1: Local Simplicity</li>
+<li>+1: Local Specialization</li>
+<li>+1: Memory Profile</li>
+</ul>
+
+
+<p>Examples</p>
+
+<ul>
+<li>External Analytics</li>
+<li>Communications</li>
+<li>Fraud</li>
+</ul>
+
+
+<p>{% notes %}</p>
+
+<p>We have several apps that have no UI and only exist to listen to the bus and take action accordingly. For example, we have a fraud app that might subscribe to the ratings event, along with several others, to help look for fraudulent or "bad" behavior. These apps can be very specialized and focused. It's easy to let a team member own the problem and run with it without worrying about anything else in the system. The straightforwardness allows them to be just a simple ruby process too, which drastically reduces memory usage.</p>
+
+<p>{% slide %}</p>
+
+<h3>Switchboard</h3>
+
+<ul>
+<li>Centralized sending email, text messages, push notifications, etc.</li>
+<li>No shared knowledge or credentials</li>
+<li>Asynchronous API for all apps to use and just focus on the content.</li>
+</ul>
+
+
+<p>{% notes %}</p>
+
+<p>The best example of a bus app is what we call Switchboard. It receives an event that indicates that a text message needs to be sent, so it does so. Or it can look at the user's preference and decide not send it.</p>
+
+<p>Switchboard allows all of the apps in the system to send mails and text messages and push notifications without knowing how to do it. In effect, Resque Bus and Switchboard create an asynchronous API. It's just instead of being a normal API call, it's knowing what to publish to the bus.</p>
+
+<p>In a decentralized system, this adds a lot of value by encapsulating knowledge about Twilio and other external providers and making is dead simple for the various apps to accomplish these tasks. They can just focus on the content and move on.</p>
+
+<p>{% slide %}</p>
+
+<h3>Loggers</h3>
+
+<ul>
+<li>Subscribes to everything that's published</li>
+<li>Writes to Elastic Search</li>
+</ul>
+
+
+<p>Enabling...</p>
+
+<ul>
+<li>Tracing events through system</li>
+<li>Simple centralized logging</li>
+<li>Realtime business dashboards and metrics</li>
+</ul>
+
+
+<p>{% notes %}</p>
+
+<p>This is a specialized case of the bus app that I think is really interesting. The app subscribes to everything by doing a regex with a <em>dot</em> <em>plus</em>. Any app can now save something to Elastic search by publishing to the bus. We can then also query this index to get all kinds of interesting data like tracing event through the system or adding up revenue for the day on a refreshing screen.</p>
+
+<p>{% slide %}</p>
+
+<h3>Best Practices</h3>
+
+<ul>
+<li>Always Be Publishing</li>
+<li>Make many small bus apps</li>
+<li>Start small</li>
+</ul>
+
+
+<p>{% notes %}</p>
+
+<p>It's fine if an event is completely ignored. Even at the base case, we have recorded what happened in the system for admins to examine later. In our most-used cases, we've seen events like the user signing up to trigger many parallel code paths such as notification, search indexing, fraud checking, analytics analysis, etc. All of this happens while the most important code (the signup itself) has remained unchanged and focused.</p>
+
+<p>The value continues to increase with each subscriber. Small, self-contained, reactive bus apps that process things that can be done asynchronously keep things really tight.</p>
+
+<p>Like any architectural principal, it's easy to overuse something and have it generally get out of control. To get started, start publishing a bunch of things. Then add a few subscribers without your own app. Those "bus apps" can be within your main codebase too. If you're on Rails, maybe within an <a href="http://tech.taskrabbit.com/blog/2014/02/11/rails-4-engines/">engine</a> or even just regular code. See how it works and expand if you like it.</p>
+
+<p>{% slide %}</p>
+
+<h2>Thanks!</h2>
+
+<p>Questions?</p>
+
+<p>{% endslide %}</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Resque Bus]]></title>
+    <link href="http://bleonard.github.com/blog/2013/09/28/resque-bus/"/>
+    <updated>2013-09-28T16:27:00-07:00</updated>
+    <id>http://bleonard.github.com/blog/2013/09/28/resque-bus</id>
+    <content type="html"><![CDATA[<p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, we are using <a href="https://github.com/resque/resque">Resque</a> to do our background job processing. We've also gone one step further and used <a href="http://redis.io/">Redis</a> and Resque to create an asynchronous <a href="http://en.wikipedia.org/wiki/Message_queue">message</a> <a href="http://en.wikipedia.org/wiki/Enterprise_service_bus">bus</a> system that we call <a href="https://github.com/taskrabbit/resque-bus">Resque Bus</a>.</p>
+
+<h3>Redis / Resque</h3>
+
+<p><a href="http://redis.io/">Redis</a> is a single-threaded in-memory key/value store similar to <a href="http://memcached.org/">memcached</a>. Redis has other features like pub/sub and more advanced data structures, but the key feature that makes it an ideal storage engine for a queue and a message bus is that is can perform atomic operations.  Atomic operations are the kind of operations you can expect to do on in-process data (like Array.pop or Array.splice) but in way that keeps the data sane for everyone connected to the database.</p>
+
+<p><a href="https://github.com/resque/resque">Resque</a> is a background queue built on top of Redis. There seems to be <a href="http://sidekiq.org/">other</a> <a href="https://github.com/collectiveidea/delayed_job">options</a> <a href="https://github.com/kr/beanstalkd">out</a> there these days, but we are pretty happy with Resque and associated <a href="http://resquework.org">tools/ecosystem</a>. There is plenty of code in the resque codebase, but it all comes down to inserting json the queue, popping, and executing code with that as an input.</p>
+
+<h3>Resque Bus</h3>
+
+<p><a href="https://github.com/taskrabbit/resque-bus">Resque Bus</a> uses Resque to create an asynchronous <a href="http://en.wikipedia.org/wiki/Message_queue">message</a> <a href="http://en.wikipedia.org/wiki/Enterprise_service_bus">bus</a> system. As we have created more applications with interdependencies, we have found it helpful to create something like this to loosely couple the worlds. There are <a href="http://zeromq.org/">several</a> <a href="http://www.rabbitmq.com/">other</a> <a href="http://redis.io/topics/pubsub">possible</a> <a href="http://kafka.apache.org/">solutions</a> to this problem, but I really felt that it was important to use something that our team understood well for this piece of infrastructure that we could easily modify and maintain.</p>
+
+<!-- more -->
+
+
+<h4>Application A publishes an event</h4>
+
+<p>Something happens in your application and you want to let the world know. In this case, you publish an event.</p>
+
+<p>```ruby</p>
+
+<h1>business logic</h1>
+
+<p>ResqueBus.publish("user_created", "id" => 42, "first_name" => "John", "last_name" => "Smith")</p>
+
+<h1>or do it later</h1>
+
+<p>ResqueBus.publish_at(1.hour.from_now, "user_created", "id" => 42, "first_name" => "John", "last_name" => "Smith")
+```</p>
+
+<h4>Application B subscribes to events</h4>
+
+<p>If the same or different application is interested when an event happens, it subscribes to it by name.</p>
+
+<p>```ruby</p>
+
+<h1>initializer</h1>
+
+<p>ResqueBus.dispatch("app_b") do
+  subscribe "user_created" do |attributes|</p>
+
+<pre><code># business logic
+NameCount.find_or_create_by_name(attributes["last_name"]).increment!
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<h3>How it works</h3>
+
+<p>The following is how this workflow is accomplished:</p>
+
+<ul>
+<li>Application B subscribes to events (puts a hash in Redis saying what it is interested in)</li>
+<li>Application A publishes the event (puts published hash as args in a Resque queue called <code>resquebus_incoming</code> with a class of <code>Driver</code>)</li>
+<li>The <code>Driver</code> copies the event hash to 0 to N application queues based on subscriptions (arg hash now in <code>app_b_default</code> queue with a class of <code>Rider</code>)</li>
+<li>The <code>Rider</code> in Application B executes the block given in the subscription</li>
+</ul>
+
+
+<p><img src="/images/posts/resque-bus/data_flow.jpg" alt="Redis Bus Data Flow" /></p>
+
+<h4>Dedicated Setup</h4>
+
+<p>Each app needs to tell it's subscriptions to Redis</p>
+
+<pre><code>$ rake resquebus:subscribe
+</code></pre>
+
+<p>The incoming queue needs to be processed on a dedicated or all the app servers.</p>
+
+<p>  $ rake resquebus:driver resque:work</p>
+
+<p>The subscription block is run inside a Resque worker which needs to be started for each app.</p>
+
+<pre><code>$ rake resquebus:setup resque:work
+</code></pre>
+
+<p>If you want retry to work for subscribing app or you are using hte delayed <code>publish_at</code> syntax, you should run resque-scheduler</p>
+
+<pre><code>$ rake resque:scheduler
+</code></pre>
+
+<h4>Combined Setup</h4>
+
+<p>This is the most dedicated way to run it, but all that <code>resquebus:driver</code> and <code>resquebus:setup</code> do is set the <code>QUEUES</code> environment variable. So you could run:</p>
+
+<pre><code>$ rake resque:work QUEUES=*
+</code></pre>
+
+<p>That would work only if you have a single app. While I believe this paradigm still adds value for a single app, it's likely you have more than one app and the most important rule is to not allow Application C to process Application B's queue, so that command would likely look more like this:</p>
+
+<pre><code>$ rake resque:work QUEUES=app_b_default,resquebus_incoming
+</code></pre>
+
+<p>It's best practice to set your queue names, anyway. If you use resque-bus in the same Redis db as your "normal" Resque queues, then your full command set would probably look something like this:</p>
+
+<pre><code>$ rake resquebus:subscribe
+$ rake resque:work QUEUES=high,app_b_default,medium,resquebus_incoming,low
+$ rake resque:scheduler
+</code></pre>
+
+<h4>It's Just Resque</h4>
+
+<p>The above illustrates the primary reason that I like this system. <strong>It's just Resque</strong>.  While this may not be the most performant way to create a message bus, there are a number of good reasons to do so:</p>
+
+<ul>
+<li>Nothing new to monitor or deploy</li>
+<li>If used in a combined setup, you have nothing new to run</li>
+<li>If it stops processing a queue (downtime, during deploy process), it catches back up easily</li>
+<li>I understand what is going on (and resque has a simple data model in general)</li>
+<li>It's portable.  Resque has been re-implemented in a number of languages beyond ruby (we use a node.js rider for example)</li>
+<li>Many plugins already exist to add in extra capabilities (stats recording for example)</li>
+</ul>
+
+
+<p>I feel that the "I understand point..." sounds a little like <a href="http://en.wikipedia.org/wiki/Not_invented_here">NIH</a>, but it's just really important to me to fully know where this critical data lives.</p>
+
+<p>Of course, because it's just Resque, there are known issues to work through:</p>
+
+<ul>
+<li>It's relatively slow when compared with other systems. We've experimented with Node and Sidekiq to do the <code>Driver</code> role if this becomes an issue.</li>
+<li>Redis does not have a good failover system so this adds a single point of failure to the system. We've been working on various techniques to mitigate this risk including replication and (failover tools)[https://github.com/twitter/twemproxy].</li>
+</ul>
+
+
+<h3>Use Cases</h3>
+
+<p>The effect on our apps from other apps publishing and subscribing ends up being one of focus. A request comes in to the web server and that code is in charge of accomplishing the primary mission, for example signing up a user. When this is finished, it publishes an event called <code>user_created</code> just in case other apps care.</p>
+
+<p>Sometimes one or several apps do care. In the signup case, our marketing app subscribes and starts a campaign to onboard that user as effectively as it knows how starting with a welcome email. Our analytics app subscribes and lets various external systems like Mixpanel know. Our admin search tool subscribes to get that user in the index. And so on.</p>
+
+<p>Most of our data goes through certain states. For example, a Task goes from assigned to completed. Overall, we have found that publishing when the states changes is just about always the right thing to do. Some of those events have many subscribers. Many events are completely ignored (at the moment) and that is fine too.</p>
+
+<p>A few types of apps have evolved within this paradigm:</p>
+
+<ul>
+<li>Rails apps that subscribe and publish in order to achieve their goals</li>
+<li>Bus apps that are small and data driven that have no UI</li>
+<li>Logging and analytics apps that subscribe to record many events</li>
+</ul>
+
+
+<h4>Rails app communication</h4>
+
+<p>When a Task is posted on the site, the app publishes a <code>task_opened</code> event. This is a very important event and there are lots of subscribers. One of them is our Task-browsing app that helps TaskRabbits find the right job for them. It has its own codebase and storage designed to optimize this particular experience. When it receives the event about the new Task, it does all the calculations about who is right for the job and stores them in the way it wants to optimize the browsing. It is also subscribed to events that would indicate that the Task is now longer to be browsed by TaskRabbits. In these cases, it removes objects related to that Task from storage.</p>
+
+<p>The separation described here between the two systems involved (Task posting and browsing) has had a few effects.</p>
+
+<ul>
+<li>Local simplicity has increased. Each system does what it does with simpler code than if it was all combined into the same thing.</li>
+<li>Local specialization has increased. For example, now that the browsing experience is separate in code, I feel better in choosing the right storage solution for that experience. When in one system, it feels like "yet another thing" added to something that's already complicated.</li>
+<li>Global complexity has increased. This separation has a cost and it is in the number of moving pieces. More moving pieces adds maintenance costs through mysterious bugs, time in runtime execution, and overall cognitive load on the developer. It's case by case, but we believe it can be worth it.</li>
+</ul>
+
+
+<p>Finally, note that this Rails app also publishes events about the new TaskRabbits that are relevant to the Task.</p>
+
+<h4>Bus Apps</h4>
+
+<p>Specifically, the browsing application publishes N events, each about a notification that should occur because of the new Task. We have a class of application which has no UI and just listens on the bus. We call the app listening for notification events Switchboard. Switchboard is an example of what I called a "bus app." A bus app exists to subscribe to various events and take action based on the data. In this case, Switchboard receives an event that indicates that a text message needs to be sent, so it does so. Or it can look at the user's preference and decide not send it.</p>
+
+<p>With this approach, Switchboard is able to accomplish a few things effectively:</p>
+
+<ul>
+<li>It is the only app that knows our <a href="https://www.twilio.com">Twilio</a> credentials or how to format the HTTP call</li>
+<li>It is the only one that knows that we even use Twilio or what phone number(s) to send from</li>
+<li>It is the only app that decides what phone number to send to and/or how to look up a user's preferences</li>
+<li>It can have a drastically reduced memory profile than a normal Rails app in order to be able to process more effectively.</li>
+<li>It provides a centralized choke point for all outgoing communications, making something like a staging whitelist easy to implement</li>
+</ul>
+
+
+<p>In effect, ResqueBus and Switchboard create an asynchronous API. Simply knowing the terms of the API (what to publish) provides several benefits to the consuming apps:</p>
+
+<ul>
+<li>They don't have to know how to send text messages</li>
+<li>They don't have to know how to look up a user's preferences or even phone number</li>
+<li>They don't have to change anything if we decide to send text messages differently</li>
+<li>They can focus on the content of the message only</li>
+<li>They will not be help up or crash if Twilio is having a problem of some sort</li>
+</ul>
+
+
+<h4>Loggers</h4>
+
+<p>As noted, all of these benefits of decentralization come at the cost of global complexity. It's important to choose such architectural areas carefully and clearly this approach is one that we've fully embraced. The addition of these "additional" moving pieces requires creation of new tools to mitigate the operational and cognitive overhead that they add. A good example that I read about recently was the ability Twitter has to <a href="http://highscalability.com/blog/2013/7/8/the-architecture-twitter-uses-to-deal-with-150m-active-users.html">trace a tweet</a> through the whole lifecycle.</p>
+
+<p>At TaskRabbit, the equivalent is an app called Metrics that subscribes to every single event. Case by case, the Metrics subscription adds some data to assist in querying later and stores each event.  We store events in log files, and optionally, <a href="http://www.elasticsearch.org/">elastic search</a>. When combined with <a href="https://github.com/taskrabbit/resque-bus/blob/9171f0879e1c356e64086230d71698a52304f8d7/lib/resque-bus.rb#L153">unique ids</a> for each event that subscriptions can chain along if they republish, this provides the capability to trace any logical event through the system.</p>
+
+<p>That was the original goal of the system, but it somewhat accidentally had several effects.</p>
+
+<ul>
+<li>Again, the ability to trace a logical event throughout decoupled systems</li>
+<li>Centralized logging capability a la <a href="http://www.sumologic.com/">SumoLogic</a> for free (any app can publish random stuff to bus)</li>
+<li>With minor denormalization and well-crafted queries, realtime business dashboards and metrics a la <a href="https://mixpanel.com/">Mixpanel</a> or <a href="https://www.google.com/analytics">Google Analytics</a></li>
+</ul>
+
+
+<h3>Subscriptions</h3>
+
+<p>There are a few other ways to subscribe to receive events.</p>
+
+<h4>Any Attributes</h4>
+
+<p>The first version of Resque Bus only allowed subscribing via the event type as show above. While I found this covered the majority of use cases and was the easiest to understand, we found ourselves subscribing to events and then throwing it away if other attributes didn't line up quite right. For example:</p>
+
+<p>```ruby
+subscribe "task_changed" do |attributes|
+  if attributes["state"] == 'opened'</p>
+
+<pre><code>TaskIndex.write(attributes["id"])
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>While this is fine, something didn't sit quite right. It adds unnecessary load to the system that could have been avoided at the <code>Driver</code> level. The biggest realization is that <code>bus_event_type</code> is no different than any other attribute in the hash and doesn't deserver to be treated as such.</p>
+
+<p>In the current version of Resque Bus, this code is now:</p>
+
+<p>subscribe "any_id_i_want", "bus_event_type" => "task_changed", "state" => "opened" do |attributes|
+  TaskIndex.write(attributes["id"])
+end</p>
+
+<p>This ensures it never even makes it to this queue unless all of the attributes match. I felt it was important to keep the simple case simple (so it's still possible), but in the implementation the first subscription is equivalent to this:</p>
+
+<p>```ruby
+subscribe "task_changed", "bus_event_type" => "task_changed" do |attributes|
+  if attributes["state"] == 'opened'</p>
+
+<pre><code>TaskIndex.write(attributes["id"])
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<h4>Subscriber Mixin</h4>
+
+<p>It feels really powerful and magical to put code like this in a <a href="http://en.wikipedia.org/wiki/Domain-specific_language">DSL</a> in your initializer or other setup code. However, when we started creating apps that had many subscriptions, it got to be a little overwhelming. For this we created an Object mixin for subscription.</p>
+
+<p>```ruby
+class TaskChangesSubscriber
+  include ResqueBus::Subscriber
+  subscribe :task_changed
+  subscribe :changed_when_opened, "bus_event_type" => "task_changed", "state" => "opened"</p>
+
+<p>  def task_changed(attributes)</p>
+
+<pre><code># gets called for all task changes
+</code></pre>
+
+<p>  end</p>
+
+<p>  def changed_when_opened</p>
+
+<pre><code># only gets called when state == "opened"
+</code></pre>
+
+<p>  end
+end</p>
+
+<p>```</p>
+
+<p>This really cleaned up subscription-heavy apps.</p>
+
+<p>Note: This subscribes when this class is loaded, so it needs to be in your load or otherwise referenced/required during app initialization to work properly.</p>
+
+<h3>More to come</h3>
+
+<p>If people seem to like this approach and gem, we have lots of approaches and tools built on top of it that I'd be excited to make available. Let us know on <a href="https://github.com/taskrabbit/resque-bus">Github</a> that you like it by watching, starring, or creating issues with questions, etc.</p>
+]]></content>
+  </entry>
+  
+</feed>

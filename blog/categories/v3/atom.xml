@@ -1,0 +1,700 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: v3 | BLog]]></title>
+  <link href="http://bleonard.github.com/blog/categories/v3/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.com/"/>
+  <updated>2017-02-25T21:54:36-08:00</updated>
+  <id>http://bleonard.github.com/</id>
+  <author>
+    <name><![CDATA[Brian Leonard]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[To rewrite or not to rewrite?]]></title>
+    <link href="http://bleonard.github.com/blog/2015/10/26/rewrite/"/>
+    <updated>2015-10-26T00:00:00-07:00</updated>
+    <id>http://bleonard.github.com/blog/2015/10/26/rewrite</id>
+    <content type="html"><![CDATA[<p><code>
+To rewrite, or not to rewrite- that is the question:
+Whether 'tis better for the product to suffer
+The features and debt of outrageous history
+Or to once again battle a sea of edge cases,
+And by forgetting relive them. To wish- to hope-
+No more; and by hope to say we end
+The heartache, and the thousand unnatural cases
+That code can error to. 'Tis a codebase
+Devoutly to be wish'd. To wish- to hope.
+To hope- perchance to rebuild: ay, there's the rub!
+For in that hope of clarity what simplicity comes
+When we have removed this outdated cruft
+Must give us success. But give the respect
+To the current repo of such long life.
+For who would bear the features of the past,
+High expectations, the race conditions,
+The admin tools, the product delay,
+The exhaustion overcome, and the data
+That shall posthaste be moved to a new store
+As each mistake of the past be brought back
+With sighs of regret? Who would these issues bear,
+To toil and code under a weary life,
+But that the chance of something rebuilt
+That undiscover'd codebase, from whose lines
+No complexity returns- tempts the will,
+And makes us choose between those ills we have
+Than sprint towards others we know not of?
+Thus the unknowns make cowards of us all,
+And thus the heavy weight of such choice
+Is oft tempered by promises of thought,
+And refactorings of great scope and breadth
+With this regard the hope does turn awry
+And lose the name of action.- What say you?
+The lauded pivot! Siren of opportunity
+May all our sins be forgotten.
+</code></p>
+
+<p>The internal struggle of the rewrite decision eats away at developers. It could be so much better. We have learned so much. Let's start over. It causes inaction over months accompanied by much grumbling. But if you do it, how can you make sure it doesn't turn into a tragedy?</p>
+
+<p>I can't say that I am happy or proud that we have rewritten TaskRabbit twice. That doesn't feel right. Conceptually, if we would have done it correctly the first time, then it wouldn't have been needed. Or maybe we should have done it in place. I would say that's absolutely fair, but doesn't capture the reality of development of the last 6 years.</p>
+
+<p>When I started writing this post, I just felt like mapping my existential crisis to Hamlet's and now I'm heading towards defending myself against Joel's famous <a href="http://www.joelonsoftware.com/articles/fog0000000069.html">post</a> stating the fact that you should never do a rewrite. I just went back and read it (again) and I (still) agree. It's hard to argue with. Maybe it's best to discuss the times we did rewrite to the times we didn't.</p>
+
+<!-- more -->
+
+
+<h3>Refactor</h3>
+
+<p>The <a href="/blog/2015/10/06/v2-retrospective/">V2 timeline</a> notes the rewrites and some of the major refactoring efforts that we've gone though. There were obviously many times that we did <em>not</em> rewrite the whole system. Ha.</p>
+
+<p>A few of those projects:</p>
+
+<ul>
+<li>Switching out Delayed Job for Resque</li>
+<li>Refactoring the ratings system</li>
+<li>Extracting local services out into external ones</li>
+<li>Allowing multiple Taskers on a Task (1 to N change)</li>
+<li>Making it possible to have hourly rates.</li>
+<li>Doing more things asynchronously using Resque Bus</li>
+<li>Allowing users to "half sign up" for the site</li>
+</ul>
+
+
+<p>Most of these things were somewhere on the spectrum between features and major refactors, but all of them had some key components that might have been a trigger to consider a rewrite.</p>
+
+<p>Usually, it's when some underlying assumption is just no longer the case. For example, a task no longer has a single Tasker, but rather can have many. Or the <code>current_user</code> might only be partially "logged-in" to the site. Much of the code has to be touched to undo that assumption.</p>
+
+<p>Or maybe it's a data migration/timing issue. When switching background job processors, there is plenty of coordination to do. When changing the table(s) that data is stored in there is a double-write situation like in a completely new system. This is because they <em>are</em> new systems, just in the shell of the current one.</p>
+
+<h3>Service-Oriented</h3>
+
+<p>That architectures move towards being service-oriented seems to be common knowledge. We found that there are various <a href="/blog/2015/10/06/v2-retrospective/">pros and cons</a> with the approach. However, I would say that what we did was a type of rewrite.</p>
+
+<p>It's a more gradual and sustainable version, though, because it's a continuum. Very gradually, we moved functionality to new apps that leveraged the original app's APIs. The stuff inside that shell didn't really change. It just got a new face and became the data provider.</p>
+
+<p>It seems likely that something like this is the recommended path of handling a rewrite. First, you draw a line around the system that needs the overhaul. Then you encapsulate that system and expose an API. You write lots of tests on the API and have other things depend on it. Then you swap in the system. Ideally, you are <a href="http://onstartups.com/tabid/3339/bid/97052/How-To-Survive-a-Ground-Up-Rewrite-Without-Losing-Your-Sanity.aspx">double-writing</a> just like in the minor refactor so you can do it gradually and in parallel to see issues.</p>
+
+<h3>Rewrite</h3>
+
+<p>So what is the right time to make a completely new shell (app/repo)? I'll agree that the correct answer could be "never." However, the siren song of the full rewrite is strong.</p>
+
+<p>The main thing to understand is that the goal was to test a new business model. We had experimented with many different ways to get tasks done and thought that we now knew the single, best way. The "single" is the important part there. As <a href="/blog/2015/10/06/v2-retrospective/">noted</a>, the current codebase had support for many iterations and combinations that were created in search of product-market fit. While it would have been technically possible to shoehorn the new model in as yet another variation, we were already overrun with combinations.</p>
+
+<p>The second note is that this was to be a test in a new market. Specifically, we were going to launch this test in London. While Londoners do speak English, we really wanted to do full translation the right way on the whole site. It would have taken a really long time to do i18n right in the current app. It was just not build with that in mind. And the majority wouldn't have been needed. To do it correctly would have also meant spreading the notion of "locale" through the entire ecosystem including the payment system, database, background workers, etc. Overall, it was much easier to start with the requirement of i18n than bolt it on.</p>
+
+<p>The main locale changes could have taken place in the core app and most of the translation could have occurred in another SOA app that used the APIs just like our US app. The truth is that we had definitely grown weary of that whole pattern. The coupling would have been even stronger between the two systems. The core app took forever to boot up. The test suite took days on days. It was a new direction for the company that we thought was the future. We could leave the baggage behind and simplify.</p>
+
+<p>We could launch this simplified experience and codebase in a new country and see if it worked. Specifically, it's not the case that we were changing the airplane in flight. Because of the market segmentation, it was closer to a new startup. It would start with one person in London posting just like we did years ago in Boston instead of the whole load of our US app. This minimized the risk of technical glitches and being wrong about the business model substantially. I found it hard to argue with <code>rails new</code> in that reduced-risk environment.</p>
+
+<h3>Merge</h3>
+
+<p>When the new product did very well in London, the next step was to bring it to the US. It now went from being a new startup to having a merger with the old one. That's the part of the scenario where things get tricky, of course. I'll talk about the technical details of the migration some other time, but it actually went really smoothly. Because all the code was already running the London marketplace, there were no real technical issues either.</p>
+
+<p>If there was a reason to do it all in the same ecosystem, it would have been the more human factor. It would have been easier/necessary to evolve towards the new product. This would have been a more gradual change for the people used to the way the site worked. It likely would have been a smoother transition, but also very painful behind the scenes. We would not have the clarity, simplicity, and improved power to innovate that we got from the rewrite.</p>
+
+<p>A year and a half later, it's pretty clear we made the right choice. The business is great and the tech stack is still pretty fresh and clean. At least it worked out better than it did for Hamlet and that's all we can really hope for.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[V2 - Retrospective]]></title>
+    <link href="http://bleonard.github.com/blog/2015/10/06/v2-retrospective/"/>
+    <updated>2015-10-06T00:00:00-07:00</updated>
+    <id>http://bleonard.github.com/blog/2015/10/06/v2-retrospective</id>
+    <content type="html"><![CDATA[<p>TaskRabbit began as <a href="http://www.boston.com/business/technology/articles/2009/07/05/web_start_up_takes_entrepreneurs_idea_and_runs_with_it/">RunMyErrand</a> in 2008 when Leah had the <a href="http://techli.com/2011/09/taskrabbit-interview-leah-busque/">idea</a> and coded up the first version of the site. In 2009, I had the opportunity to help out in little ways like adding Facebook Connect support just after it launched and Leah got into <a href="http://techcrunch.com/2009/05/28/facebook-names-first-class-of-fbfund-rev-its-new-incubator/">Facebook Fund</a>. From there, she raised a <a href="http://www.xconomy.com/boston/2009/10/30/runmyerrand-picks-up-1-million-from-west-coast-venture-firms/">seed round</a> and I came on full-time.</p>
+
+<p>For a few weeks after starting, I worked on the RunMyErrand codebase, adding features and fixing bugs. Quickly, though, a few things became clear. First, we were probably going to change our name. RunMyErrand made people think only about laundry. Second, the changes we wanted to make drastic and hard to make with confidence in a codebase with no tests. I was hoping to work and live with this code for several years and we did not have the foundation that would make that a productive and enjoyable experience.</p>
+
+<p>So around Christmas 2009, I started a new Rails project. It was still called <code>runmyerrand</code> because we still didn't have a new name. For a while at the end we called it <code>core</code> because it was at the center of a large service-oriented architecture. Today, we call it <code>V2</code> because it has now itself been replaced.</p>
+
+<p>It's been a year and half. It's never too late for a retrospective.</p>
+
+<h2>Launch</h2>
+
+<p>The original site was my first Rails project to work on and V2 was my first one from scratch. Rails 3 wasn't yet released so I was nervous to get on that bleeding edge because most of the gems didn't work quite yet. I had been immersing myself in Ruby news. In particular, I'd been listening to <a href="http://ruby5.envylabs.com/">Ruby5</a> and others podcasts and been taking notes about gems/tools that seemed relevant. In hindsight and with experience, it was a problem to rely on gems for fairly simple things, but at the time they seemed sent from heaven to solve my problems.</p>
+
+<p>I started over Christmas at the very beginning.</p>
+
+<div class="jumbotron">
+  <image src="http://bleonard.github.com/images/posts/v2-retrospective/tracker2009.png" alternate="Tracker 2009" class="bigPicture" />
+</div>
+
+
+<p>The site was black and white with a simple layout. At some point in January, Leah saw what I was working on. I, of course, discussed with her the notion of rebuilding the site, but I don't think the ramifications quite came across until she saw the starkness of that layout. It was probably a huge leap of faith for her at that moment to have the trust in me that she did.</p>
+
+<p>I worked on both sites through January and February, eventually getting to 100% on new stuff. For the most part, I was building a feature-complete version of RunMyErrand with TBD branding and stronger Rails conventions like <a href="http://weblog.jamisbuck.org/2006/10/18/skinny-controller-fat-model">skinny controllers</a> and tests. There were some new features and many minor upgrades from the learnings we'd had.</p>
+
+<p>By the end of April, it was about ready to go. We had <a href="http://blog.taskrabbit.com/2010/04/08/runmyerrand-is-now-taskrabbit/">picked a name</a>, gotten help from <a href="http://www.mikekivikoski.com/">designers</a> and <a href="https://twitter.com/dpickett">Dan</a>, a great contractor to pull it over the finish line. In one hour on <a href="http://bostinno.streetwise.co/2010/04/13/runmyerrand-relaunches-with-new-name/">April 5th</a>, we launched the new code and rebranded the company.</p>
+
+<!-- more -->
+
+
+<p>```bash
++----------------------+-------+-------+---------+---------+-----+-------+
+| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
++----------------------+-------+-------+---------+---------+-----+-------+
+| Controllers          |  1848 |  1483 |      32 |     174 |   5 |     6 |
+| Helpers              |  2257 |  1892 |      45 |     245 |   5 |     5 |
+| Jobs                 |   399 |   295 |      11 |      33 |   3 |     6 |
+| Models               |  4584 |  3509 |      61 |     526 |   8 |     4 |
+| Observers            |    42 |    22 |       2 |       5 |   2 |     2 |
+| Libraries            |  2987 |  2272 |      30 |     287 |   9 |     5 |
+| Configuration        |  1233 |   669 |       4 |      17 |   4 |    37 |
+| Spec Support         |  1416 |  1152 |       4 |      30 |   7 |    36 |
+| Integration Tests    |    91 |    73 |       0 |       1 |   0 |    71 |
+| Lib Tests            |   101 |    83 |       0 |       1 |   0 |    81 |
+| Model Tests          |  3397 |  2522 |       0 |      18 |   0 |   138 |
+| Cucumber Support     |   739 |   521 |       0 |       1 |   0 |   519 |
+| Cucumber Features    |  2711 |  2487 |      29 |     145 |   5 |    15 |
++----------------------+-------+-------+---------+---------+-----+-------+
+| Total                | 21805 | 16980 |     218 |    1483 |   6 |     9 |
++----------------------+-------+-------+---------+---------+-----+-------+
+  Code LOC: 10142     Test LOC: 6838     Code to Test Ratio: 1:0.7</p>
+
+<p>```</p>
+
+<h2>Iteration</h2>
+
+<p>In the three or so years that followed, we <a href="http://www.bizjournals.com/boston/blog/mass-high-tech/2010/03/web-startup-runmyerrand-to-move-execs-west.html?page=all">moved to San Francisco</a>, worked at <a href="http://fourhourworkweek.com/2011/06/07/whats-your-start-up-bus-count-7-myths-of-entrepreneurship-and-programming/">Pivotal Labs</a> a bit, grew the team, <a href="http://techcrunch.com/2011/07/28/taskrabbit-drops-its-amazing-iphone-app/">launched a mobile app</a>, and kept building things in the codebase. It held up fairly well. The test suite gave us the confidence that we weren't breaking anything and we forged ahead. What follows are some of the quirks and learnings from that time.</p>
+
+<h3>Timeline Events</h3>
+
+<p>One of the major new changes in the TaskRabbit site was the idea of the timeline. Facebook's news feed was sort of a new thing and lots of people were showing activity in that way. We also wanted to show people that things were actually being done on the site. I used and adapted version of <a href="https://github.com/jamesgolick/timeline_fu">timeline_fu</a> to record all of these events.</p>
+
+<p>Fairly soon, everything revolved around this concept. It was just me making a fairly full-featured site so I made it very easy to show lists of objects or timeline events that pointed to objects. There were various helper functions and something like <a href="http://robertomurray.co.uk/blog/2014/decorators-presenters-delegators-rails/">presenters</a> before I knew to call it that. These facilitated handling rendering of <a href="http://railscasts.com/episodes/154-polymorphic-association">polymorphic</a> lists in a seamless way.</p>
+
+<p>I was (am) also a fan of modeling everything strictly as a state machine. The site used <a href="https://github.com/aasm/aasm">aasm</a> with several additions. One of them came out of the understanding that the most interesting times in the system were when state changed. One of the additions was to automatically create a timeline event on that transition. It would be hard to count the number of times over those 4 years that I was glad we did that. It's a lot. It is useful because it provides a history of the lifecycle of every object in the system.</p>
+
+<p>The next thing I noticed was that these were the same times that we wanted to send notifications like email or SMS. Because of that, as the timeline event was being saved, it checked if there were messages to send to the people associated and queued up workers to do that. The result of this was more or less magic when, for example, a Task was assigned. The <code>task_assigned</code> timeline event would be saved, it would show up on the global timeline and the one for that city as well as the one for that task, and two mails and/or push notifications would be sent. If you wanted to send a new mail that had nothing to do with state changes (5%), then you'd make a timeline event. This turned out to be a great record as well to note things that were happening.</p>
+
+<p>Eventually, as the ecosystem grew to disparate systems, we also added publishing to <a href="https://github.com/taskrabbit/resque-bus">Resque Bus</a> to the list so those systems could subscribe to be notified of the changes as they occurred. Overall, this is great pattern. Being event-driven is very effective in a lot of cases and is the reason V3 still uses Resque Bus for all the reasons I talked about in <a href="/blog/2013/09/28/resque-bus/">that article</a>. Having strong patterns like this is also important. Once you understand the pattern and have the mental model, you can easily grasp most concepts in the system.</p>
+
+<p>However, few things easily stand the test of time and evolving requirements. It seems possible that the stronger the pattern, the less likely it will hold up because it made some assumptions about the older world. As more and more features and nuance we added to the system, those helpers got crazier and crazier with <code>if</code> or <code>case</code> statements about exactly what kind of task we were trying to show (for example). Also, not every event should be public, different people should see different events, or the same same events but with different content. This, along with the polymorphic nature to begin with, really hurt performance because we couldn't cache it very well. Over time, we relied less and less on the actual display of timeline. Each list became more custom for the case at hand. That was probably a good thing, but it was a good crutch at the beginning.</p>
+
+<p>The events themselves were still there, of course. Which was good. There were a lot of them though and the list was growing exponentially. In V3, we have the same concept, but it subscribes to the Resque Bus instead doing the publishing and stores them in <a href="http://www.elasticsearch.org/">Elastic Search</a> instead of <a href="http://www.mysql.com/">MySQL</a>.</p>
+
+<h3>API</h3>
+
+<p>A similar type of tradeoff was made when developing the API. That is, we made choices that made it very easy to handle requests and respond with JSON, but it had nuances and performance implications that ultimately led to us abandoning the approach.</p>
+
+<p>The system had several primary objects like Task, User, Location, and Offer. Any given call had a response of some combination of these objects and their relationships. A User had posted Tasks or was doing Tasks. Tasks had Locations and Offers. And so on. At the time, it seemed fairly obvious to have a standard JSON representation of these things and piece them together.</p>
+
+<p>The standard at the time was to use the <code>to_json</code> (or maybe <code>as_json</code>) method on the object, but I found that to be quite messy. It did not elevate the API to a first class citizen or allow much flexibility. So I made a presenter object sort of thing for each that produced a <code>Hash</code> to output as JSON. For example there was a <code>UserHash</code> class that was instantiated with a User object. Calling <code>to_h</code> on it would output what should be in the JSON. It was used something like this:</p>
+
+<p><code>ruby
+def show
+  @hash = Api::V1::UserHash.show(@user, params)
+  render json: @hash
+end
+</code></p>
+
+<p>This seemed much better than <code>to_json</code> and it was. Whatever logic that needed to determine what to show could go in these objects and patterns could be shared between them all. They could also be reused. For example, the <code>TaskHash</code> had two user involved and could just use the <code>UserHash</code> to show more info about them. It was very DRY. And it worked.</p>
+
+<p>I think the primary mistake was still being somewhat in the mindset of the <code>to_json</code> pattern. That is, that every object type had a single JSON representation. That is just not the case. The information that is needed about a User is different when it is a child of a Task and not a specific fetch of the User. Thinking about that after the fact, you end up with all these little nuances about what to display from the presenter.</p>
+
+<p>Even that wasn't totally crazy. If I was on that path again, I'd probably just have a <code>SimpleUserHash</code> or something like that instead of passing <code>{simple: true}</code> to the regular <code>UserHash</code>. The main issue was that, because of this single representation notion, I made it really easy to nest these objects and provide that full presentation. The goal should have been providing explicitly what was needed by the consumer.</p>
+
+<p>Because of the completeness, performance really suffered. The requests themselves were slow for two reasons. The first was all the various SQL fetches and string rendering to just make it happen. The hidden issue was around garbage collection. Because of all these objects being created, which created hashes, which got rendered to strings, the number of Ruby Objects created in each request was massive. This led to frequent garbage collection, which led to wildly varying (and often very high) request times.</p>
+
+<p>Our V3 API is much more use case driven and uses <a href="https://github.com/rails/jbuilder">jbuilder</a> to render the JSON. By focusing on what the clients actually need, we minimize the data needed and request time. Jbuilder templates are much easier to understand and focused. We have noticed that jbuilder is the slowest part of that request, so maybe there will be changes there too. Interestingly, the most recent option we've been trying is <a href="https://github.com/rails-api/active_model_serializers">serializers</a>. It seems a lot like the earlier approach by using these presenter objects. Maybe there's just a trick in there that we missed.</p>
+
+<h3>Feature Set</h3>
+
+<p>TaskRabbit is a simple idea that is difficult to execute. There are lots of people and factors involved. Also, there are lots of different product choices that could be made about how the work gets done. If you've heard of TaskRabbit and had an idea about how it could work, we've probably talked about it and/or tried it.</p>
+
+<p>I've learned that combinatorics can be the death of a product.</p>
+
+<p>There was a great <a href="http://firstround.com/article/the-one-cost-engineers-and-product-managers-dont-consider">article</a> that spoke to this a while ago. It was about the hidden cost of adding features because of their maintenance and cognitive overhead. The more options we add into our product, the more paths there are through the code and experience flowchart. This slows down all future development. Even the 2010 launch of TaskRabbit had these branches. The primary one was the choice when you posted your task for it be auto-assigned or receive offers. Over the years, the options expanded in pricing (named by client, fixed, market bid), pricing units (project, hourly), number of taskers (single, team, multiple asynchronously), type of assignment (direct hire, immediate, consideration, bid, from a favorites list), recurring (yes, no). These along with different categories and A/B tests combinatorially to thousands of types of tasks.</p>
+
+<p>Many of these options affected any given task at any given point in it's lifecycle. That caused much time in design/development to consider these cases. Or it led to bugs when they were not considered. At the very least, it led to many tests for the interplay between the options. Projected out a few more options, something major had to change to get this under control or progress would grind to a halt.</p>
+
+<h3>God Models</h3>
+
+<p>In a system trying to follow the conventional "fat model, skinny controllers" paradigm, all of these options made the models morbidly obese. In particular, the Task and User models were huge.</p>
+
+<p>We did our best to keep it clean, mostly by putting functionality related to the above characteristics into their own modules. This did a reasonably good job of keeping related functionality together and you could even test it in isolation. However, it was still hard to reason about the whole system.</p>
+
+<p>```ruby
+class Task &lt; ActiveRecord::Base
+  include Rabbit::HasMoney
+  include Rabbit::HasVehicles
+  include Rabbit::StateTransition
+  include Rabbit::WithGeography
+  include Rabbit::Cached</p>
+
+<p>  include Task::Properties
+  include Task::MultiLocation
+  include Task::TaskProgress
+  include Task::WithPromotion
+  include Task::Recurring
+  include Task::Multi
+  include Task::Runners
+  include Task::Times
+  include Task::Counting
+  include Task::Pricing
+  include Task::Timing
+  include Task::PriceComponents
+  include Task::Hourly
+  include Task::HasLocations
+  include Task::HasTaskType
+  include Task::HasStore</p>
+
+<p>  # and on and on...
+end
+```</p>
+
+<p>It became doubly-complicated when each of these modules added their own callbacks. ActiveRecord callbacks are a powerful thing but we've found that they can easily get out of control. Based on our current thinking, they were already being used for too many things such as enqueuing background workers. When you add in all of these different modules injecting their own behavior in the middle of the save process, it became very difficult to track down where things happened.</p>
+
+<p>That being said, it almost always worked quite well. Once someone understood the system, it did become fairly clear and it was very well tested. The real issue was in making fast progress and introducing new team members to the beast we had created.</p>
+
+<h3>Gem Usage</h3>
+
+<p>V2 was my first Rails project and I was (and continue to be) amazed by the Ruby community. Everything that I wanted to do had already been done, more or less, before. I now realize that will probably always be the case. There are only so many patterns out there and building just about any app is probably about putting them together for a specific purpose. The amazing thing (and the trap) of the Ruby community is that there is already a <a href="http://rubygems.org/">gem</a> or ten available for each of those patterns.</p>
+
+<div class="jumbotron">
+  <image src="http://bleonard.github.com/images/posts/v2-retrospective/trap.jpg" alternate="It's a trap!" class="bigPicture" />
+</div>
+
+
+<p>I used (and continue to use) lots of gems. However, in retrospect, I was a bit too enthralled with leveraging work that already been done. There probably are really perfect use cases out there that truly cut across all apps. Building blocks like <a href="https://github.com/intridea/omniauth">authentication</a>, <a href="https://github.com/resque/resque">background processing</a>, <a href="https://github.com/lostisland/faraday">http libraries</a>, <a href="https://github.com/mperham/dalli">and</a> <a href="https://github.com/elasticsearch/elasticsearch-ruby">other</a> <a href="https://github.com/redis/redis-rb">data</a> or <a href="https://github.com/twilio/twilio-ruby">external</a> gems seem like obvious candidates. But things start getting weird when you depend on gems for your core functionality.</p>
+
+<p>At the time, <code>acts_as_x</code> gems where very popular. This pattern was (usually) about factoring out common model behaviors into gems. Instead of building a commenting system for example, you would include <code>acts_as_commentor</code> gem and call specific methods on the <code>User</code> and the <code>Comment</code> models. This has more or less fallen out of favor as far as I can tell. I think it's because it's important for the app itself to own its business logic. In any given case, the value added by the gem will likely be negated that first time you need to customize the behavior to provide more value in your specific app. As a rule of thumb, I am very skeptical of any gem that includes it's own migrations.</p>
+
+<p>The main mistake that comes to mind was using a <a href="https://github.com/edgarjs/ajaxful-rating">gem</a> to handle our ratings system. There were <a href="https://www.ruby-toolbox.com/categories/rails_ratings">many</a> options available, but what I didn't consider is that it's just not that complicated.</p>
+
+<p>```ruby
+class Task &lt; ActiveRecord::Base
+  ajaxful_rateable :stars => 5, :dimensions => [:poster, :tasker]
+end</p>
+
+<p>class User &lt; ActiveRecord::Base
+  ajaxful_rater
+end
+```</p>
+
+<p>In the end, this just created more technical debt. We ended up switching to our own after a while just so we could have a better handle on performance and customize the behaviors a bit.</p>
+
+<p>```ruby
+class Task &lt; ActiveRecord::Base
+  has_many :rates
+  has_many :runner_rates, :class_name => "Rate", :conditions => {:dimension => "runner"}
+  has_many :poster_rates, :class_name => "Rate", :conditions => {:dimension => "poster"}
+end</p>
+
+<p>class Rate &lt; ActiveRecord::Base
+  belongs_to :task
+  belongs_to :ratee, :class_name => "User"
+  belongs_to :rater, :class_name => "User"
+end</p>
+
+<p>class User &lt; ActiveRecord::Base
+  has_many :poster_rates, :class_name => 'Rate', :foreign_key => :ratee_id, :conditions => "rates.dimension = 'poster'"
+  has_many :rabbit_rates, :class_name => 'Rate', :foreign_key => :ratee_id, :conditions => "rates.dimension = 'rabbit'"
+end
+```</p>
+
+<p>Using lots of gems also made upgrading Rails more difficult and well as dependency management. We ended up creating our own gem server just to handle the minor changes that we made to gems for these reasons. In the upgrade case, maybe there was something deprecated or just not working in the next version of Rails. In the management case, it was usually a stricter dependency on something very common, like only allowing a specific version of <a href="https://github.com/intridea/multi_json">multi_json</a> that we had to loosen up.</p>
+
+<h3>Tests</h3>
+
+<p>Part of the reason of starting over to create V2 was to bake in really good test coverage. On launch, it had model, controller, and request <a href="http://rspec.info/">rspec</a> tests as well as <a href="http://cukes.info/">Cucumber</a> integration tests. Cucumber was the new hotness at the time and I remember going to a workshop in Boston extolling it's many virtues.</p>
+
+<p>I never kidded myself into thinking that some "business owner" would write the features for me and it would add massive value in that way. Obviously, the syntax was just too specific with all the regular expressions and such. But what I did like was that it was as close to the user experience as possible, which is the ultimate point of the system. Those tests gave me the confidence to know everything was working well.</p>
+
+<p>Over the years, the whole suite (and especially the Cucumber tests) took longer and longer. Some improvements over time included:</p>
+
+<ul>
+<li><a href="https://github.com/vcr/vcr">vcr</a> to remove all external dependencies</li>
+<li><a href="https://github.com/rdy/fixture_builder">fixture_builder</a> to prevent having to fully use <a href="https://github.com/thoughtbot/factory_girl">factory_girl</a> to create basic objects each test</li>
+<li><a href="https://github.com/grosser/parallel_tests">parallel_tests</a> on a beefy local jenkins box to be able to run 8 threads at once</li>
+<li>porting Cucumber tests over to <a href="https://github.com/jnicklas/capybara">Capybara</a></li>
+<li><a href="https://www.tddium.com/">tddium</a> on its remote servers to be able to run 15 threads at once and have multiple builds going in parallel</li>
+</ul>
+
+
+<p>Each of the tactics showing major gains. The most laborious was porting the Cucumber tests over to Capybara. At some point, we got tired of the interpretation layer between the "test" and the code and started writing new tests in rspec/capybara. It was just more straightforward. It also seemed better at handling the Javascript on the page. Eventually, we bit the bullet and ported over the Cukes to new rspec files. This gave about a 2x improvement in running time and simplified the testing stack as well.</p>
+
+<p>At the end of it's life, the suite on tddium was running in 50 minutes. That was on 15 threads, so the actual running time was probably more like 12 hours. Obviously that is absurd. Making major improvements at that point would have been very difficult. It would have been about finding the slowest tests and making sure we really needed it or rewriting it. There was probably a lot of double coverage. We could have used more stubbing, but I tend to be fairly skeptical of that. It has often turned out to be quite implementation dependent and more brittle.</p>
+
+<p>At launch, the V3 test suite was running 2 minutes on tddium. As such things happen, it's now at 10. Will we ever learn? I've seen a huge organization-wide boost with the difference between a 15 (not to mention 50) minute build and a 2 minute build. In the longer case, you tend to break the flow and work on something else to stay productive (or go play ping pong). At 2 minutes, the flow seems to continue. I obviously wish it was just a few seconds locally, but we haven't been able to hit those times and get the coverage we are looking for.</p>
+
+<h3>Delayed Job</h3>
+
+<p>Another major change during this time was switching from <a href="https://github.com/collectiveidea/delayed_job">Delayed Job</a> to <a href="https://github.com/resque/resque">Resque</a>. We had started to see our MySQL server resources being used up from all the Delayed Job queries and sometimes emails would send multiple times. We never could quite figure out how it was misconfigured. By that time, though, Resque was a very popular solution with plenty of helpful plugins that added value to the system.</p>
+
+<p>In particular, I am a big fan of the the locking mechanisms that we can use in Resque because of Redis. We used various plugins to make sure there was only one job of a certain type in the queue, or that only one was running at the a time for a certain set of inputs. That kind of thing.</p>
+
+<p>Another issue we had in both system was about class existence and method signatures. Delayed Job had a <code>struct</code> with certain inputs and Resque had a <code>perform</code> method. When queueing up a job, you would send the inputs to those spots. The gotcha in that is around what to do when changes occur. For example, when adding a new input to the job, you have to remember that there may be jobs queued with one less input and handle that gracefully. Also, when you no longer need a worker, you can't just delete it because there may still be some in the queue that will try to initialize it. In both systems and both cases, we found that the whole thread would go down and not work any more jobs. Bad news.</p>
+
+<p>Towards the end of V2 and now in V3, we mix(ed) in a module into our workers that standardizes these benefits and issues. Instead of using several plugins, it makes it really easy to do the locking stuff from the <a href="http://redis.io/commands/setnx">examples</a> as well as scheduling. It also makes it so that we enqueue the workers with a hash instead of a list of arguments. This has made minor signature changes much easier.</p>
+
+<h3>A/B Testing</h3>
+
+<p>At the top of every agile playbook is the A/B test. V2 had a system in place that worked fairly well. It would bucket new users into 100 groups. At at any given time, a group be assigned into a single test (or control). A set of the groups were also always in the control for a pure baseline. When you wanted to run a test (say "blue_botton"), you would reserve the number of groups that got you the percentage that you needed. In the Ruby or Javascript code, you could then see if that user was in the "blue_button" group.</p>
+
+<p>This worked out fairly well, especially for the simple A/B cases like showing a blue button instead of a orange one. Marketplace dynamics proved very difficult though when the test was something much bigger. This was especially true if the test produced a new variant of task as that drastically effected both the client and the tasker and goal was to see the overall effectiveness through to completion.</p>
+
+<p>In that case, the task itself was marked as being inside the test, not just the user and now the tasker had to do something differently as well. Maybe they were bidding hourly instead of by project. At the point, you have to decide if the test is still valid if one side of the marketplace gets both the A and the B. There are cases where that would make the test invalid. So then, it's really more about lining up the clients in the A group with the taskers in the A group and the same with the B group (with no cross-over). Then the marketplace is much less efficient so there is a high cost to that test and my mind is a little too blown to be sure of what's happening in the first place. The really troublesome part of these kinds of tests that affect the task dynamics is that it's really hard to end that test. Most of the code for all those tests stayed in V2 permanently (or at least a very long time) because some of the tasks posted under some test lingered in the marketplace or became weekly tasks, or whatever.</p>
+
+<p>All of this led to a much higher bar for doing really important tests than I would have liked to do. And when we did do them, they were often less clear that I had hoped. I'm sure there are techniques that make this kind of thing easier, but I don't think we've quite found them yet.</p>
+
+<h3>Summary</h3>
+
+<p>This post has trended towards saying things that were wrong with the code or approach, but that is mostly just me trying to capture the learnings that we had. Overall, the code was working well. Strong patterns were put in place and followed. Once learned, it was easy to add new features and things were where you expected them to be.</p>
+
+<p>There was the one codebase that some, including us, would have called a <a href="http://en.wikipedia.org/wiki/Monolithic_application">monolith</a>. I'd say this era lasted until about the end of September 2012. That's when we started building out new apps.</p>
+
+<p><code>
++----------------------+-------+-------+---------+---------+-----+-------+
+| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
++----------------------+-------+-------+---------+---------+-----+-------+
+| Awards               |   470 |   354 |      18 |      57 |   3 |     4 |
+| Commands             |   220 |   149 |       3 |      28 |   9 |     3 |
+| Controllers          |  9732 |  7826 |     123 |     880 |   7 |     6 |
+| Filters              |  1556 |  1276 |      10 |     137 |  13 |     7 |
+| Helpers              |  9359 |  7830 |     105 |     978 |   9 |     6 |
+| Jobs                 |  1936 |  1523 |      75 |     219 |   2 |     4 |
+| Mailers              |  1059 |   844 |       8 |     118 |  14 |     5 |
+| Models               | 26014 | 20161 |     243 |    2771 |  11 |     5 |
+| Observers            |    95 |    74 |       4 |       9 |   2 |     6 |
+| Syncs                |   369 |   308 |       9 |      35 |   3 |     6 |
+| Validators           |    47 |    42 |       1 |       4 |   4 |     8 |
+| Webhooks             |    47 |    33 |       2 |       6 |   3 |     3 |
+| Libraries            |  8006 |  6511 |     170 |     786 |   4 |     6 |
+| Configuration        |  5100 |  3676 |      20 |      96 |   4 |    36 |
+| Spec Support         |  4531 |  3477 |      18 |     147 |   8 |    21 |
+| Other Tests          | 28476 | 18543 |       1 |     168 | 168 |   108 |
+| Award Tests          |   561 |   461 |       0 |       0 |   0 |     0 |
+| Command Tests        |   306 |   218 |       2 |       4 |   2 |    52 |
+| Controller Tests     | 11246 |  9144 |      10 |      91 |   9 |    98 |
+| Helper Tests         |   645 |   526 |       0 |       2 |   0 |   261 |
+| Integration Tests    |    55 |    35 |       0 |       1 |   0 |    33 |
+| Job Tests            |  3310 |  2563 |       4 |      14 |   3 |   181 |
+| Lib Tests            |  8809 |  7126 |      20 |      29 |   1 |   243 |
+| Model Tests          | 28178 | 22837 |      12 |      42 |   3 |   541 |
+| Request Tests        |  1098 |   865 |       0 |       6 |   0 |   142 |
+| Routing Tests        |   297 |   233 |       0 |       3 |   0 |    75 |
+| Sync Tests           |   382 |   303 |       0 |       0 |   0 |     0 |
+| Webhook Tests        |    40 |    35 |       0 |       0 |   0 |     0 |
++----------------------+-------+-------+---------+---------+-----+-------+
+| Total                | 151944| 116973|     858 |    6631 |   7 |    15 |
++----------------------+-------+-------+---------+---------+-----+-------+
+  Code LOC: 50607     Test LOC: 66366     Code to Test Ratio: 1:1.3
+</code></p>
+
+<h2>Service-Oriented</h2>
+
+<p>The codebase evolved in a major way during the year that followed. We started creating satellite apps with the V2 codebase as the "core" in the center.</p>
+
+<p>The main experiences shifted to apps targeting the primary user segments:</p>
+
+<ul>
+<li>Business clients</li>
+<li>Taskers browsing for tasks to do</li>
+<li>Consumer clients</li>
+<li>People applying to be taskers</li>
+<li>Admin tools</li>
+<li>Static site for high-traffic marketing pages</li>
+</ul>
+
+
+<p>Additionally, there were several apps for specific functionality defined as "Bus Apps" in the <a href="/blog/2013/09/28/resque-bus/">Resque Bus post</a>:</p>
+
+<ul>
+<li>Sending emails, text messages, and push messages</li>
+<li>Recording metrics</li>
+<li>Fraud analysis</li>
+<li>Determining and tagging category of a task</li>
+</ul>
+
+
+<p>Finally, there were several specific apps that were <a href="http://en.wikipedia.org/wiki/Microsite">microsites</a> or for a partnership agreement that used the API.</p>
+
+<p>It was fun and somewhat liberating to say "Make a new app!" when there was a new problem domain to tackle. We also used it as a way to handle our growing organization. We could ask Team A to work on App A and know that they could run faster by understanding the scope was limited to that. As a side-note and in retrospect, we probably let organizational factors affect architecture way more than appropriate.</p>
+
+<h3>Gems</h3>
+
+<p>One great thing was the gem situation was more under control because any given app had less dependencies. App B could upgrade Rack (or whatever) because it did not depend on the crazy thing that App A depended on. App C had the terrible native code-dependent gem and we only had to put that on the App C servers. Memory usage was kept lower, allowing us to run more background workers and unicorn threads.</p>
+
+<p>To coordinate common behaviors across the apps, we made several internal gems. For example, there we gems that handled data access, deployment, authentication, shared assets, and things like that. It was sometimes a full-time job to change these shared gems. You have to bump the version of the gem, then either tag it or put it on an internal gem server, go through each of the apps and bump the version in those gem files, and then install, test, and deploy each of them in some coordinated way.</p>
+
+<p>Eventually, a meta-app that knew about all of other other apps. One of the things that it knew how to do was upgrade a gem in all of the apps. It would check them all out locally, create a new branch, edit the Gemfile, <code>bundle install</code>, check in the changes, push to the git server (which ran the tests), and created a pull request on <a href="https://help.github.com/articles/using-pull-requests/">Github</a>. Collectively, this saved us a ton of time as the process is very tedious.</p>
+
+<h3>Routing</h3>
+
+<p>I'm not actually sure if "Service-Oriented" is the right description of this setup. Yes, there were a few "pure services" that I didn't mention, but many of these apps were directly user facing. Maybe I should call it "modular" or something like that. Anyway, in this modular approach, all of the user segments had their own app but they still had to be on the same (taskrabbit.com) domain. Because of this, it was important to put a routing scheme in place.</p>
+
+<p>Each of the apps was given a primary namespace. For example, the business app had the namespace <code>business</code>. Most of its routes went under that path. These namespaces were them codified in our load balancer. So if the load balancer received a request to <code>/business/anything</code>, it would know to route it to the business app.</p>
+
+<p>One easy thing to forget is to also put the assets under that namespace. This is done in the application config:</p>
+
+<p><code>ruby
+  config.assets.prefix = "/business/assets"
+</code></p>
+
+<p>We conformed to the single namespace as much as possible, but there were always exceptions. It was usually for SEO reasons or because the URL had to be particularly easy to remember. For example, the static page app had mostly root-level pages such as <code>/how-it-works</code>. These each also had to be added to the load balancer rules. The meta-app knew about these routes as well and another one it its tricks was to be able to generate the rule definition that the load balancer needed.</p>
+
+<h3>Data</h3>
+
+<p>All of the apps used APIs to write anything to the core app that was not in their own databases. They were allowed read-only access to the core database. They used <a href="https://github.com/taskrabbit/resque-bus">Resque Bus</a> to know about relevant changes.</p>
+
+<p>I realize this direct database access is a failure of the service-oriented mindset, but it seemed necessary. It allowed development to go much faster by preventing creation of many GET endpoints and new possible points of failure. We had started down that road and the endpoints looked like direct table reads anyway, so we just allowed that access. I believe it was the right call.</p>
+
+<p>Some reads and all writes used the API. There were gems to standardize this interaction. They used local (intra-network) IP addresses. To our knowledge, the sites were not down, but we still got HTTP issues between the apps every now and then and never fully figured out why.</p>
+
+<p>Each app could have its own database. These used the standard Active Record pattern. These database had somewhat tertiary information but sometimes we wanted to analyze it in combination with the core database. We learned all about joining across databases. We also dumped them all into one database using <a href="https://github.com/taskrabbit/forklift">Forklift</a>, a tool we created to snapshot and transform data.</p>
+
+<h3>Development</h3>
+
+<p>Setting up a development environment was considerably more complicated than back in the monolith days.</p>
+
+<p>Having everything up to date is the first step. At any given time, someone was usually working on something that needed one satellite app and the core one. So first, you had to make sure each was rebased, bundled, and migrated. Then you'd launch the core app first (because it's important but also because it took twice as long to start up). Then you'd launch the app you're working on.</p>
+
+<p>Each had it's own port. We standardized so that we could set up YML files and such. We found it was best to override the default port so each just had to run <code>rails s</code> locally. Here is the business app on port <code>5002</code>.</p>
+
+<p>```ruby</p>
+
+<h1>script/rails</h1>
+
+<h1>!/usr/bin/env ruby</h1>
+
+<p>APP_PATH = File.expand_path('../../config/application',  <strong>FILE</strong>)
+require File.expand_path('../../config/boot',  <strong>FILE</strong>)</p>
+
+<p>require 'rails/commands/server'
+module Rails
+  class Server</p>
+
+<pre><code>def default_options
+  super.merge({ :Port =&gt; 5002 })
+end
+</code></pre>
+
+<p>  end
+end
+require 'rails/commands'
+```</p>
+
+<p>This would be enough if you were just working on one app. You would work on <code>http://localhost:5002/yourapp</code> and it would read the core database and/or use the API right to its port. However, if the flow you were working on redirected between apps, you'd want to run them all in a mounted fashion similar to the production load balancer environment. One example would be updated the home page. This was in the static app that used the core API via Javascript. Filling out an email address would use the API and the redirect to signup in the consumer app. So what we'd want to do is mount them all under <code>http://localhost:5000</code>. This was accomplished using nginx serving that port and mimicking the load balancer rules to delegate to ports 5001+.</p>
+
+<p>```</p>
+
+<h1>nginx.conf</h1>
+
+<p>server {</p>
+
+<pre><code>listen       5000;
+server_name  localhost;
+
+location ~* /business(/.*)*(/|$) {
+    proxy_pass  http://localhost:5002;
+    proxy_buffering off;
+    tcp_nodelay on;
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p><code>
+$ nginx -c /path/to/nginx.conf
+</code></p>
+
+<p>This will route <code>/business</code> and <code>/business/anything</code> to port 5002 locally. Of course, setting up this situation was pretty tedious too and we already had a place that knew all the routes. So the meta-app could also generate nginx configurations. It had a command line script that would allow you to launch everything in one go via a command like <code>trdev core business static</code>. This would generate a configuration file and run nginx and give instructions to launch each app such as <code>cd /path/to/business &amp;&amp; rails s -p 5002</code>.</p>
+
+<p>The goal was to have minimal dependencies (and frustrations) of course. When you are working on some app, you'd have to run core. That's just how it is. But I don't think you should have to run the static app just to not 404 when you go to root or some other app just to be able to login. The goal was to work just on that one app and this modularization was supposed to keep us focused. So I made a middleware that was automatically inserted in development mode to handle really important paths.</p>
+
+<p>With that, if you did hit <code>http://localhost:5002/login</code> just in your app, it would serve a bootstrap-looking login experience. Or if you hit root, it would redirect to <code>/dashboard</code> if you were logged in, just like the Javascript from the static app did. It also served <code>/dashboard</code>. One interesting thing is that each app had the ability to override what was shown on root and dashboard so that it could give helpful links to the developer to the main spots in this app. All of this was possible on things that were handled in middleware such as authentication.</p>
+
+<p>This setup prevented having to do the whole nginx thing very often and a developer could just focus on running the one app and getting things done.</p>
+
+<h3>Tests</h3>
+
+<p>When testing a Rails app, it is very common to use a gem like <a href="https://github.com/vcr/vcr">vcr</a> to record the external interactions. Usually these external interactions are somewhat inconsequential in the grand scheme of things. They are also usually stateless. Examples that come to mind are geocoding an address or sending an SMS.</p>
+
+<p>With one of these satellite apps, the core app was the opposite. It is quite important and quite stateful. The whole app depended on the current state of things and needed it to change. It was also complicated by the direct database access which generally had to line up with what the API was returning. I spent some time stubbing ActiveRecord/MySQL and that was somewhat interesting, but in the end, it was not a stable combination. It also did not fully inspire confidence about the whole system and the interplay between services. To be clear, there were several stubbed (internal) services, but we decided that core one should be tested in tandem.</p>
+
+<p>To solve this problem, we created <a href="https://github.com/taskrabbit/offshore">offshore</a> which I have <a href="/blog/2014/03/16/offshore/">written about before</a>. It ran and refreshed a fixtured and factory-able version of the core platform for the satellite apps to use which testing. It clearly added overhead, but was the best combination of confidence, running time, and maintainability that we found.</p>
+
+<p>The core test suite itself was more standard. It simulated the various requests that external and internal components made to it and checked the results. Of course, the suite itself was taking an hour to run, even when in parallel.</p>
+
+<h3>Denormalized Experiences</h3>
+
+<p>Splitting up the apps into specific user experiences had an interesting side effect that I did not predict. Because each app did a few very specific things and served very specific pages, we ended up really optimizing those experiences. Of course, there's no reason that we couldn't have done this in the monolithic app, but the focus seemed to empower us to customize.</p>
+
+<p>The improved experience usually came from a specific focus on the data that targeted the use case instead of "proper" storage. For example, the primary driver of the tasker application was an <a href="http://www.elasticsearch.org/">ElasticSearch</a> index that contained all tasks currently available. It was all the same data that was somewhere in the core database, but it was stored in a way to optimize the tasker browsing experience. I'm not sure why did didn't add this early to the core app. It's probably because all the data was already there and we could get by with SQL queries. Or maybe adding <em>yet another</em> thing to the app was too much to think about. But in it's own app, it was liberating.</p>
+
+<p>The app would subscribe to the <a href="/blog/2013/09/28/resque-bus/">bus</a> to get changes and keep it's index up to to date. It served it's own API that the app used. This API mostly just hit the ElasticSearch index. I believe it also did a quick sanity check against the task state by checking ids in SQL just to make sure the data was not stale as the tasks got picked up quickly and the bus could take a few seconds.</p>
+
+<h3>Back Together</h3>
+
+<p>This is the kind of thing that's exciting about making new apps. The plumbing was exhausting and we never really got it to a spot without friction, but we did end up creating better user experiences because of the focus. Of course, we retreated almost completely from this approach with the creation of V3. A few <a href="/blog/2013/09/28/resque-bus/">bus apps</a> exist but the whole experience in now in one app/codebase.</p>
+
+<p>The main trick was to drastically simply what the app did in the first place by limiting feature set. On the technical level, the primary goal is to still feel that same freedom and focus when developing the features you do build. We've primarily done this through the use of <a href="/blog/2014/02/11/rails-4-engines/">engines</a>.</p>
+
+<h2>Final Words</h2>
+
+<p>So there you go: a (short - ha) blog post about four years of my technical life.</p>
+
+<p>My colleagues and I poured our hearts into that code. There were many great pieces and if I've left them out it's either because it was too much to explain, I've already forgotten, or that I was mostly hoping to point out various problems we encountered along the way. It's not often when there is a such a clear start and beginning to an era of a company and even less so when the codebase clearly reflects it. We have that case here and I hope the journey is helpful to others.</p>
+
+<p>So farewell <code>runmyerrand</code>. One day, years from now, I will find the DVD with you on it and smile. I hope I can still find a DVD drive so I can copy and paste that code I'm sure I'll be looking for.</p>
+
+<p>Numbers just before it went to the DVD:</p>
+
+<p>```
+Core
++----------------------+-------+-------+---------+---------+-----+-------+
+| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
++----------------------+-------+-------+---------+---------+-----+-------+
+| Apis                 |  2523 |  1806 |      61 |     192 |   3 |     7 |
+| Awards               |   488 |   351 |      19 |      57 |   3 |     4 |
+| Controllers          |  9890 |  7777 |     126 |     880 |   6 |     6 |
+| Filters              |  1563 |  1274 |      10 |     136 |  13 |     7 |
+| Helpers              |  9890 |  8107 |      93 |     984 |  10 |     6 |
+| Inputs               |   111 |    95 |       5 |       6 |   1 |    13 |
+| Mailers              |  1034 |   784 |       9 |      99 |  11 |     5 |
+| Models               | 28708 | 21854 |     258 |    2914 |  11 |     5 |
+| Observers            |   244 |   172 |       9 |      29 |   3 |     3 |
+| Presenters           |   193 |   136 |       5 |      29 |   5 |     2 |
+| Services             |  1034 |   864 |       7 |      84 |  12 |     8 |
+| Syncs                |  1042 |   849 |      23 |      94 |   4 |     7 |
+| Validators           |   277 |   195 |       9 |      27 |   3 |     5 |
+| Widgets              |   560 |   447 |      13 |      60 |   4 |     5 |
+| Workers              |  2036 |  1515 |      81 |     237 |   2 |     4 |
+| Javascripts          | 47956 | 30588 |       0 |    3275 |   0 |     7 |
+| Adapters             |   535 |   429 |      12 |      39 |   3 |     9 |
+| Libraries            |  8193 |  6591 |     170 |     771 |   4 |     6 |
+| Configuration        |  5453 |  3837 |      21 |     103 |   4 |    35 |
+| Gems                 |   863 |   672 |      15 |      93 |   6 |     5 |
+| Other Tests          | 26052 | 17280 |      23 |     167 |   7 |   101 |
+| Spec Support         |  4987 |  3707 |      19 |     215 |  11 |    15 |
+| Api Tests            |  8650 |  6909 |       7 |      55 |   7 |   123 |
+| Widget Tests         |   812 |   608 |       0 |       0 |   0 |     0 |
+| Award Tests          |   541 |   437 |       0 |       0 |   0 |     0 |
+| Controller Tests     |  6405 |  5135 |       8 |      40 |   5 |   126 |
+| Model Tests          | 31273 | 24952 |      10 |      46 |   4 |   540 |
+| Helper Tests         |   816 |   651 |       0 |       2 |   0 |   323 |
+| Lib Tests            |  4695 |  3677 |       4 |      33 |   8 |   109 |
+| Observer Tests       |   299 |   219 |       1 |       0 |   0 |     0 |
+| Request Tests        |  4472 |  3400 |       0 |      11 |   0 |   307 |
+| Service Tests        |   635 |   487 |       0 |      11 |   0 |    42 |
+| Presenter Tests      |    12 |     9 |       0 |       0 |   0 |     0 |
+| Routing Tests        |   269 |   202 |       1 |       3 |   3 |    65 |
+| Sync Tests           |  1274 |   988 |       0 |       1 |   0 |   986 |
+| Validator Tests      |    78 |    61 |       0 |       0 |   0 |     0 |
+| Worker Tests         |  2911 |  2161 |       7 |      14 |   2 |   152 |
++----------------------+-------+-------+---------+---------+-----+-------+
+| Total                | 216774| 159226|    1026 |   10707 |  10 |    12 |
++----------------------+-------+-------+---------+---------+-----+-------+
+  Code LOC: 88343     Test LOC: 70883     Code to Test Ratio: 1:0.8</p>
+
+<p>Other Rails Apps
++----------------------+-------+-------+---------+---------+-----+-------+
+| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
++----------------------+-------+-------+---------+---------+-----+-------+
+| Controllers          |  5457 |  4138 |      98 |     463 |   4 |     6 |
+| Helpers              |  2336 |  1787 |       1 |     250 | 250 |     5 |
+| Models               | 12440 |  9359 |     245 |    1054 |   4 |     6 |
+| Javascripts          | 54742 | 35636 |       2 |    4357 | 2178 |     6 |
+| Processors           |   142 |    70 |       4 |       9 |   2 |     5 |
+| Workers              |   273 |   203 |      12 |      31 |   2 |     4 |
+| Widgets              |   432 |   314 |       9 |      49 |   5 |     4 |
+| Forms                |   192 |   149 |       4 |      27 |   6 |     3 |
+| Interactions         |   627 |   442 |      20 |      70 |   3 |     4 |
+| Apis                 |   542 |   324 |      13 |      46 |   3 |     5 |
+| Decorators           |    92 |    78 |       1 |      13 |  13 |     4 |
+| External Services    |   712 |   527 |      13 |      98 |   7 |     3 |
+| Geography Models     |    18 |    15 |       4 |       1 |   0 |    13 |
+| Notifiers            |   474 |   368 |      12 |      52 |   4 |     5 |
+| Policies             |   128 |    91 |       7 |      23 |   3 |     1 |
+| Remote Models        |   707 |   557 |      36 |      55 |   1 |     8 |
+| Services             |   948 |   802 |      12 |      75 |   6 |     8 |
+| Uploaders            |    28 |    20 |       1 |       3 |   3 |     4 |
+| Validators           |    36 |    27 |       3 |       3 |   1 |     7 |
+| Modules              |    43 |    31 |       1 |       6 |   6 |     3 |
+| Repos                |    90 |    72 |       1 |      10 |  10 |     5 |
+| Concerns             |    23 |    20 |       0 |       3 |   0 |     4 |
+| Jobs                 |   154 |   109 |       7 |      20 |   2 |     3 |
+| Presenters           |   153 |   118 |       2 |      26 |  13 |     2 |
+| Mailers              |    25 |    21 |       1 |       3 |   3 |     5 |
+| Gems                 |  3879 |  2814 |      29 |     348 |  12 |     6 |
+| Controller Tests     |  3422 |  2604 |       0 |       7 |   0 |   370 |
+| Spec Support         |  3368 |  2518 |      30 |     250 |   8 |     8 |
+| Helper Tests         |   248 |   147 |       0 |       0 |   0 |     0 |
+| Integration Tests    |   307 |   229 |       0 |       0 |   0 |     0 |
+| Model Tests          |  8841 |  6868 |       1 |       3 |   3 |  2287 |
+| Other Tests          |  1597 |  1257 |       0 |       2 |   0 |   626 |
+| Request Tests        |  1496 |  1198 |       0 |       0 |   0 |     0 |
+| Feature Tests        |  6388 |  5082 |       0 |      15 |   0 |   336 |
+| Form Tests           |    74 |    53 |       0 |       0 |   0 |     0 |
+| Interaction Tests    |   831 |   586 |       0 |       0 |   0 |     0 |
+| External Service Test|   907 |   650 |       0 |       0 |   0 |     0 |
+| Notifier Tests       |  1172 |   938 |       2 |       3 |   1 |   310 |
+| Policy Tests         |    27 |    20 |       0 |       0 |   0 |     0 |
+| Service Tests        |   727 |   563 |       0 |       0 |   0 |     0 |
+| Worker Tests         |   252 |   182 |       0 |       0 |   0 |     0 |
+| Lib Tests            |   727 |   572 |       0 |       1 |   0 |   570 |
+| Concern Tests        |    15 |    12 |       0 |       0 |   0 |     0 |
+| Job Tests            |   129 |    93 |       0 |       0 |   0 |     0 |
+| Presenter Tests      |   144 |   114 |       0 |       0 |   0 |     0 |
+| Remote Model Tests   |   386 |   305 |       0 |       0 |   0 |     0 |
+| Validator Tests      |    21 |    16 |       0 |       0 |   0 |     0 |
+| Decorator Tests      |   154 |   130 |       0 |       1 |   0 |   128 |
+| Mailer Tests         |     5 |     4 |       0 |       0 |   0 |     0 |
++----------------------+-------+-------+---------+---------+-----+-------+
+| Total                | 115931| 82233 |     571 |    7377 |  12 |     9 |
++----------------------+-------+-------+---------+---------+-----+-------+
+  Code LOC: 58092     Test LOC: 24141     Code to Test Ratio: 1:0.4</p>
+
+<p>Shared Gems
++----------------------+-------+-------+---------+---------+-----+-------+
+| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
++----------------------+-------+-------+---------+---------+-----+-------+
+| Controllers          |   736 |   576 |      17 |      82 |   4 |     5 |
+| Helpers              |   238 |   167 |       0 |      17 |   0 |     7 |
+| Models               |   491 |   387 |      13 |      59 |   4 |     4 |
+| Widgets              |   220 |   175 |       8 |      22 |   2 |     5 |
+| Javascripts          | 12695 |  7840 |       0 |     819 |   0 |     7 |
+| Adapters             |    69 |    51 |       1 |       8 |   8 |     4 |
+| Gems                 | 10310 |  7982 |     153 |    1034 |   6 |     5 |
+| Other Tests          |  2244 |  1712 |      17 |      30 |   1 |    55 |
+| Spec Support         |   619 |   374 |      11 |      31 |   2 |    10 |
+| Lib Tests            |   619 |   498 |      14 |      14 |   1 |    33 |
+| Model Tests          |    15 |    13 |       0 |       0 |   0 |     0 |
++----------------------+-------+-------+---------+---------+-----+-------+
+| Total                | 28256 | 19775 |     234 |    2116 |   9 |     7 |
++----------------------+-------+-------+---------+---------+-----+-------+
+  Code LOC: 17178     Test LOC: 2597     Code to Test Ratio: 1:0.2
+```</p>
+
+<div class="jumbotron">
+  <image src="http://bleonard.github.com/images/posts/v2-retrospective/dvd.jpg" alternate="BL DVD" class="bigPicture" />
+</div>
+
+]]></content>
+  </entry>
+  
+</feed>
