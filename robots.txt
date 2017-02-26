@@ -1,4 +1,4 @@
 User-agent: *
 Disallow: 
 
-Sitemap: http://bleonard.github.com/sitemap.xml
+Sitemap: http://bleonard.github.io/sitemap.xml

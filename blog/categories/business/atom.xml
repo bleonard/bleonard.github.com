@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: business | BLog]]></title>
-  <link href="http://bleonard.github.com/blog/categories/business/atom.xml" rel="self"/>
-  <link href="http://bleonard.github.com/"/>
-  <updated>2017-02-25T21:54:36-08:00</updated>
-  <id>http://bleonard.github.com/</id>
+  <link href="http://bleonard.github.io/blog/categories/business/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.io/"/>
+  <updated>2017-02-25T22:05:39-08:00</updated>
+  <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Post Election]]></title>
-    <link href="http://bleonard.github.com/blog/2016/11/10/post-election/"/>
+    <link href="http://bleonard.github.io/blog/2016/11/10/post-election/"/>
     <updated>2016-11-10T00:00:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2016/11/10/post-election</id>
+    <id>http://bleonard.github.io/blog/2016/11/10/post-election</id>
     <content type="html"><![CDATA[<p>I've been thinking a lot about the book <a href="https://en.wikipedia.org/wiki/The_City_%26_the_City"><em>The City &amp; the City</em></a> by China Miéville. It describes a town in which two sets of people share the same physical space but do not acknowledge each other. For that matter, they are forbidden to do so.</p>
 
 <p>I remember being surprised in 1992 when Bill Clinton won the election. I lived in Texas and everyone I knew was voting for Bush. Now, I live in California and the same thing snuck up on me again this week. There's very little learning there.</p>
@@ -40,9 +40,9 @@
   
   <entry>
     <title type="html"><![CDATA[OKRs]]></title>
-    <link href="http://bleonard.github.com/blog/2015/07/01/okrs/"/>
+    <link href="http://bleonard.github.io/blog/2015/07/01/okrs/"/>
     <updated>2015-07-01T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/07/01/okrs</id>
+    <id>http://bleonard.github.io/blog/2015/07/01/okrs</id>
     <content type="html"><![CDATA[<p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, we have something called Objectives and Key Results or <a href="https://en.wikipedia.org/wiki/OKR">OKRs</a> for short. Many companies do the same.</p>
 
 <p>We've always talked about them as one thing. As in, "What's the OKR?" That would more or less mean, "What number are we trying to hit?" An example would be getting better at fulfilling tasks by focusing on moving up the percentage of tasks that are posted and get successfully completed.</p>

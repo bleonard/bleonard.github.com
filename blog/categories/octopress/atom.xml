@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: octopress | BLog]]></title>
-  <link href="http://bleonard.github.com/blog/categories/octopress/atom.xml" rel="self"/>
-  <link href="http://bleonard.github.com/"/>
-  <updated>2017-02-25T21:54:36-08:00</updated>
-  <id>http://bleonard.github.com/</id>
+  <link href="http://bleonard.github.io/blog/categories/octopress/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.io/"/>
+  <updated>2017-02-25T22:05:39-08:00</updated>
+  <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Jekyll Slides]]></title>
-    <link href="http://bleonard.github.com/blog/2014/03/06/jekyll-slides/"/>
+    <link href="http://bleonard.github.io/blog/2014/03/06/jekyll-slides/"/>
     <updated>2014-03-06T15:57:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2014/03/06/jekyll-slides</id>
+    <id>http://bleonard.github.io/blog/2014/03/06/jekyll-slides</id>
     <content type="html"><![CDATA[<p>I really like <a href="http://jekyllrb.com/">Jekyll</a>/<a href="http://octopress.org/">Octopress</a> and have aspirations to make my presentations in HTML instead of Powerpoint. For my last <a href="http://www.meetup.com/San-Francisco-Redis-Meetup/events/164972192/">presentation to the Redis Meetup</a>, I combined the two. I found it really easy to "blog" the talk and created a <a href="https://github.com/bleonard/jekyll-slides">plugin</a> to convert <a href="http://www.bleonard.com/blog/2014/02/16/resque-bus-presentation/">that</a> to a <a href="http://lab.hakim.se/reveal-js">reveal.js</a> <a href="http://www.bleonard.com/blog/2014/02/16/resque-bus-presentation/slides">presentation</a> from the same source. It's my first Jekyll plugin, but it got the job done. Check it out <a href="https://github.com/bleonard/jekyll-slides">here</a>.</p>
 
 <h2>Usage</h2>
@@ -108,7 +108,7 @@ Questions?
 <p>It also will add a link to <code>/assets/slides/css/for_blog.css</code> in the custom head.html file that <a href="http://octopress.org/">octopress</a> uses within _includes. If you have another setup, you'll have to add something like this to your normal blog layout:</p>
 
 <p><code>html
-&lt;link rel="stylesheet" href="http://bleonard.github.com/assets/slides/css/for_blog.css"&gt;
+&lt;link rel="stylesheet" href="http://bleonard.github.io/assets/slides/css/for_blog.css"&gt;
 </code></p>
 
 <p>That should be it. I couldn't find a best practice for installing these plugins so I made this script. I've tested it on a fresh octopress install and it works as expected. If you have another setup or other issues, please let me know.</p>

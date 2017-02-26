@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: refactor | BLog]]></title>
-  <link href="http://bleonard.github.com/blog/categories/refactor/atom.xml" rel="self"/>
-  <link href="http://bleonard.github.com/"/>
-  <updated>2017-02-25T21:54:36-08:00</updated>
-  <id>http://bleonard.github.com/</id>
+  <link href="http://bleonard.github.io/blog/categories/refactor/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.io/"/>
+  <updated>2017-02-25T22:05:39-08:00</updated>
+  <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Singletons, Threads, and Flexibility]]></title>
-    <link href="http://bleonard.github.com/blog/2013/01/18/singletons/"/>
+    <link href="http://bleonard.github.io/blog/2013/01/18/singletons/"/>
     <updated>2013-01-18T08:50:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2013/01/18/singletons</id>
+    <id>http://bleonard.github.io/blog/2013/01/18/singletons</id>
     <content type="html"><![CDATA[<p>In Ruby, we often like very simple APIs, but this often comes at the price of thread safety and code flexibility. I've found that if you use a few tricks from the start, you can get the best of it all.</p>
 
 <p>I recently did a <a href="/blog/2013/01/11/hubtime">project</a> where I tried to use the <a href="https://github.com/vcr/vcr">VCR</a> gem, but it went awry when working in multiple threads. This is a great gem that, like many of my own, falls into the trap of module/class level singleton configuration/execution.</p>

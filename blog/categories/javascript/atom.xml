@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: javascript | BLog]]></title>
-  <link href="http://bleonard.github.com/blog/categories/javascript/atom.xml" rel="self"/>
-  <link href="http://bleonard.github.com/"/>
-  <updated>2017-02-25T21:54:36-08:00</updated>
-  <id>http://bleonard.github.com/</id>
+  <link href="http://bleonard.github.io/blog/categories/javascript/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.io/"/>
+  <updated>2017-02-25T22:05:39-08:00</updated>
+  <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[React Native Android Launch]]></title>
-    <link href="http://bleonard.github.com/blog/2016/03/24/react-native-android-launch/"/>
+    <link href="http://bleonard.github.io/blog/2016/03/24/react-native-android-launch/"/>
     <updated>2016-03-24T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2016/03/24/react-native-android-launch</id>
+    <id>http://bleonard.github.io/blog/2016/03/24/react-native-android-launch</id>
     <content type="html"><![CDATA[<p>Yesterday, we launched our updated Tasker app to our Android community. As noted <a href="/blog/2015/12/17/react-native-launch/">before</a> on the iOS launch, this is the app that Taskers use to get their work done. This completes our migration to <a href="https://facebook.github.io/react-native/">React Native</a>.</p>
 
 <p>All of the credit goes to the team that made this happen, especially <a href="https://twitter.com/jrichardlai">JR</a> and <a href="http://jeremyeaton.co/">Jeremy</a>. It was a lot harder than expected to get everything working on both platforms and they showed great dedication and persistence.</p>
@@ -35,7 +35,7 @@
 <p>Of course, there was also the more extensive testing to do. Our Android pile:</p>
 
 <div class="jumbotron">
-  <img src="http://bleonard.github.com/images/posts/react-native-android-launch/pile.jpg" class="bigPicture"/>
+  <img src="http://bleonard.github.io/images/posts/react-native-android-launch/pile.jpg" class="bigPicture"/>
 </div>
 
 
@@ -71,9 +71,9 @@
   
   <entry>
     <title type="html"><![CDATA[React Native Launch]]></title>
-    <link href="http://bleonard.github.com/blog/2015/12/17/react-native-launch/"/>
+    <link href="http://bleonard.github.io/blog/2015/12/17/react-native-launch/"/>
     <updated>2015-12-17T00:00:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2015/12/17/react-native-launch</id>
+    <id>http://bleonard.github.io/blog/2015/12/17/react-native-launch</id>
     <content type="html"><![CDATA[<p>This week, we launched our updated Tasker app to the community. This is not the app on the app store, but rather the one the Taskers use to get their work done. Functionally, not much has changed since the last release. But underneath, the app has been completely rewritten in <a href="https://facebook.github.io/react-native/">React Native</a>.</p>
 
 <p>First and foremost, a huge congratulations needs to go out to the team, especially <a href="https://twitter.com/jrichardlai">JR</a>. I've never been on an engineering project that went as smoothly or was as fun as this one. So good!</p>
@@ -149,9 +149,9 @@
   
   <entry>
     <title type="html"><![CDATA[React Native Integration Tests]]></title>
-    <link href="http://bleonard.github.com/blog/2015/11/08/react-native-integration-tests/"/>
+    <link href="http://bleonard.github.io/blog/2015/11/08/react-native-integration-tests/"/>
     <updated>2015-11-08T00:00:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2015/11/08/react-native-integration-tests</id>
+    <id>http://bleonard.github.io/blog/2015/11/08/react-native-integration-tests</id>
     <content type="html"><![CDATA[<p>Coming from a Rails <a href="http://guides.rubyonrails.org/testing.html">background</a>, we are very familiar with testing our code. While writing our new <a href="/blog/2015/09/21/react-native-example-app/">React Native app</a>, we found ourself missing a way to test it and ship with confidence. I've updated the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">sample app</a> with the approach we are using for integration tests.</p>
 
 <h2>Test Levels</h2>
@@ -183,7 +183,7 @@
 <p>Running <code>npm test</code> will launch the simulator and the robots take over.</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/react-native-integration-tests/follows.gif" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/react-native-integration-tests/follows.gif" class="bigPicture" />
 </div>
 
 
@@ -281,7 +281,7 @@ done();
 <p>Here it is running:</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/react-native-integration-tests/new_post.gif" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/react-native-integration-tests/new_post.gif" class="bigPicture" />
 </div>
 
 
@@ -299,9 +299,9 @@ done();
   
   <entry>
     <title type="html"><![CDATA[Building React Native Apps]]></title>
-    <link href="http://bleonard.github.com/blog/2015/10/18/building-react-native-apps/"/>
+    <link href="http://bleonard.github.io/blog/2015/10/18/building-react-native-apps/"/>
     <updated>2015-10-18T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/10/18/building-react-native-apps</id>
+    <id>http://bleonard.github.io/blog/2015/10/18/building-react-native-apps</id>
     <content type="html"><![CDATA[<p>We've been using and loving React Native as noted in my <a href="/blog/2015/09/21/react-native-example-app">previous post</a>. As we are working towards rolling out a fully-featured app, one thing that needed solved was how we should build the app for different environments. For example, how can we make (slightly different) development, staging, and production builds?</p>
 
 <p>In a <a href="https://github.com/facebook/react-native/issues/2246">Github issue</a>, I ran into a few other people also wondering how to do this, so I've added a few ways to the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">Example App</a> to show the approaches we are using.</p>
@@ -477,15 +477,15 @@ cd ${PROJECT_DIR}/.. &amp;&amp; react-native bundle --minify
   
   <entry>
     <title type="html"><![CDATA[React Native Example App: Navigation]]></title>
-    <link href="http://bleonard.github.com/blog/2015/09/21/react-native-example-app/"/>
+    <link href="http://bleonard.github.io/blog/2015/09/21/react-native-example-app/"/>
     <updated>2015-09-21T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/09/21/react-native-example-app</id>
+    <id>http://bleonard.github.io/blog/2015/09/21/react-native-example-app</id>
     <content type="html"><![CDATA[<p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, we have been looking into building an iOS application in <a href="https://facebook.github.io/react-native/">React Native</a>. This is probably the first pure technology that I've been this excited about since moving from C to Ruby.</p>
 
 <p>However, it's definitely still in its early days. There are not many examples of how people are doing things out there. To help remedy this and share what we are learning, I made a <a href="https://github.com/taskrabbit/ReactNativeSampleApp">sample React Native application</a>.</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/react-native-navigation/screenshots.png" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/react-native-navigation/screenshots.png" class="bigPicture" />
 </div>
 
 
@@ -554,7 +554,7 @@ cd ${PROJECT_DIR}/.. &amp;&amp; react-native bundle --minify
 
 <p>Here what I mean by recursive. This is sample://dashboard/follows/jrichardlai/follows/taskrabbit/follows/bleonard/follows/taskrabbit/follows/bleonard/follows/jrichardlai/post (and back):</p>
 
-<p><image src="http://bleonard.github.com/images/posts/react-native-navigation/nested.gif" style="max-width: 300px"/></p>
+<p><image src="http://bleonard.github.io/images/posts/react-native-navigation/nested.gif" style="max-width: 300px"/></p>
 
 <h2>Actions</h2>
 

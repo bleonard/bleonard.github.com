@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: manager | BLog]]></title>
-  <link href="http://bleonard.github.com/blog/categories/manager/atom.xml" rel="self"/>
-  <link href="http://bleonard.github.com/"/>
-  <updated>2017-02-25T21:54:36-08:00</updated>
-  <id>http://bleonard.github.com/</id>
+  <link href="http://bleonard.github.io/blog/categories/manager/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.io/"/>
+  <updated>2017-02-25T22:05:39-08:00</updated>
+  <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Review: 2012]]></title>
-    <link href="http://bleonard.github.com/blog/2012/12/31/review-2012/"/>
+    <link href="http://bleonard.github.io/blog/2012/12/31/review-2012/"/>
     <updated>2012-12-31T10:39:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2012/12/31/review-2012</id>
+    <id>http://bleonard.github.io/blog/2012/12/31/review-2012</id>
     <content type="html"><![CDATA[<p>I honestly can't remember anything from January or even October very specifically. It sure felt like I was busy as we doubled the TaskRabbit engineering team and scaled the site to get a lot more stuff done for real people in the real world.</p>
 
 <p>I can't even decide what the best way is to see what I did in January. I could look at my email or calendar, but I strive not to make those the center of my world. Maybe in Evernote. My git commits are probably a bit too granular, but maybe there is something in the aggregate.</p>

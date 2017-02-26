@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: architecture | BLog]]></title>
-  <link href="http://bleonard.github.com/blog/categories/architecture/atom.xml" rel="self"/>
-  <link href="http://bleonard.github.com/"/>
-  <updated>2017-02-25T21:54:36-08:00</updated>
-  <id>http://bleonard.github.com/</id>
+  <link href="http://bleonard.github.io/blog/categories/architecture/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.io/"/>
+  <updated>2017-02-25T22:05:39-08:00</updated>
+  <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Architecture: Models]]></title>
-    <link href="http://bleonard.github.com/blog/2017/02/24/architecture-models/"/>
+    <link href="http://bleonard.github.io/blog/2017/02/24/architecture-models/"/>
     <updated>2017-02-24T00:00:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2017/02/24/architecture-models</id>
+    <id>http://bleonard.github.io/blog/2017/02/24/architecture-models</id>
     <content type="html"><![CDATA[<p>This is the first post in what I hope will be a series of articles about how we build things at <a href="https://www.taskrabbit.com">TaskRabbit</a>. Over time, we/I have internalized all kinds of lessons and patterns, but have never written them down explicitly and publicly. So let's give that a try.</p>
 
 <p>I thought we'd start with models. That's what <a href="http://api.rubyonrails.org/classes/ActiveRecord/Base.html">Rails</a> calls database tables where each row is an instance of that model class.</p>
@@ -54,7 +54,7 @@
 <p>For example, there is a <code>PaymentTransaction</code> model. It has an initial "pending" state that represents the time between when an invoice is submitted and when we charge the credit card. During this time, it can move to a "canceled" state if tit should not happen. Or, if things go as planned, it can transition to a "settled" state. After that, if there is an issue of some sort, it would go to a "refunded" state. Notably, going from "pending" to "refunded" is <em>not</em> a valid transition.</p>
 
 <div class="jumbotron">
-<img src="http://bleonard.github.com/images/posts/architecture-models/states.png" class="bigPicture" />
+<img src="http://bleonard.github.io/images/posts/architecture-models/states.png" class="bigPicture" />
 </div>
 
 
@@ -75,7 +75,7 @@
 <p>For example, the <code>Invitation</code> model is created first to note the decision the Tasker must make. It then either transitions to <code>accepted</code> or <code>declined</code>.  If accepted, it spawns an <code>Assignment</code>. It, in turn, can move to states like <code>completed</code> or <code>ongoing</code>.</p>
 
 <div class="jumbotron">
-<img src="http://bleonard.github.com/images/posts/architecture-models/invitations.png" class="bigPicture" />
+<img src="http://bleonard.github.io/images/posts/architecture-models/invitations.png" class="bigPicture" />
 </div>
 
 
@@ -122,9 +122,9 @@
   
   <entry>
     <title type="html"><![CDATA[To rewrite or not to rewrite?]]></title>
-    <link href="http://bleonard.github.com/blog/2015/10/26/rewrite/"/>
+    <link href="http://bleonard.github.io/blog/2015/10/26/rewrite/"/>
     <updated>2015-10-26T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/10/26/rewrite</id>
+    <id>http://bleonard.github.io/blog/2015/10/26/rewrite</id>
     <content type="html"><![CDATA[<p><code>
 To rewrite, or not to rewrite- that is the question:
 Whether 'tis better for the product to suffer
@@ -227,9 +227,9 @@ May all our sins be forgotten.
   
   <entry>
     <title type="html"><![CDATA[V2 - Retrospective]]></title>
-    <link href="http://bleonard.github.com/blog/2015/10/06/v2-retrospective/"/>
+    <link href="http://bleonard.github.io/blog/2015/10/06/v2-retrospective/"/>
     <updated>2015-10-06T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/10/06/v2-retrospective</id>
+    <id>http://bleonard.github.io/blog/2015/10/06/v2-retrospective</id>
     <content type="html"><![CDATA[<p>TaskRabbit began as <a href="http://www.boston.com/business/technology/articles/2009/07/05/web_start_up_takes_entrepreneurs_idea_and_runs_with_it/">RunMyErrand</a> in 2008 when Leah had the <a href="http://techli.com/2011/09/taskrabbit-interview-leah-busque/">idea</a> and coded up the first version of the site. In 2009, I had the opportunity to help out in little ways like adding Facebook Connect support just after it launched and Leah got into <a href="http://techcrunch.com/2009/05/28/facebook-names-first-class-of-fbfund-rev-its-new-incubator/">Facebook Fund</a>. From there, she raised a <a href="http://www.xconomy.com/boston/2009/10/30/runmyerrand-picks-up-1-million-from-west-coast-venture-firms/">seed round</a> and I came on full-time.</p>
 
 <p>For a few weeks after starting, I worked on the RunMyErrand codebase, adding features and fixing bugs. Quickly, though, a few things became clear. First, we were probably going to change our name. RunMyErrand made people think only about laundry. Second, the changes we wanted to make drastic and hard to make with confidence in a codebase with no tests. I was hoping to work and live with this code for several years and we did not have the foundation that would make that a productive and enjoyable experience.</p>
@@ -245,7 +245,7 @@ May all our sins be forgotten.
 <p>I started over Christmas at the very beginning.</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/v2-retrospective/tracker2009.png" alternate="Tracker 2009" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/v2-retrospective/tracker2009.png" alternate="Tracker 2009" class="bigPicture" />
 </div>
 
 
@@ -381,7 +381,7 @@ end
 <p>V2 was my first Rails project and I was (and continue to be) amazed by the Ruby community. Everything that I wanted to do had already been done, more or less, before. I now realize that will probably always be the case. There are only so many patterns out there and building just about any app is probably about putting them together for a specific purpose. The amazing thing (and the trap) of the Ruby community is that there is already a <a href="http://rubygems.org/">gem</a> or ten available for each of those patterns.</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/v2-retrospective/trap.jpg" alternate="It's a trap!" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/v2-retrospective/trap.jpg" alternate="It's a trap!" class="bigPicture" />
 </div>
 
 
@@ -798,7 +798,7 @@ Core
 ```</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/v2-retrospective/dvd.jpg" alternate="BL DVD" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/v2-retrospective/dvd.jpg" alternate="BL DVD" class="bigPicture" />
 </div>
 
 ]]></content>
@@ -806,15 +806,15 @@ Core
   
   <entry>
     <title type="html"><![CDATA[React Native Example App: Navigation]]></title>
-    <link href="http://bleonard.github.com/blog/2015/09/21/react-native-example-app/"/>
+    <link href="http://bleonard.github.io/blog/2015/09/21/react-native-example-app/"/>
     <updated>2015-09-21T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/09/21/react-native-example-app</id>
+    <id>http://bleonard.github.io/blog/2015/09/21/react-native-example-app</id>
     <content type="html"><![CDATA[<p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, we have been looking into building an iOS application in <a href="https://facebook.github.io/react-native/">React Native</a>. This is probably the first pure technology that I've been this excited about since moving from C to Ruby.</p>
 
 <p>However, it's definitely still in its early days. There are not many examples of how people are doing things out there. To help remedy this and share what we are learning, I made a <a href="https://github.com/taskrabbit/ReactNativeSampleApp">sample React Native application</a>.</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/react-native-navigation/screenshots.png" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/react-native-navigation/screenshots.png" class="bigPicture" />
 </div>
 
 
@@ -883,7 +883,7 @@ Core
 
 <p>Here what I mean by recursive. This is sample://dashboard/follows/jrichardlai/follows/taskrabbit/follows/bleonard/follows/taskrabbit/follows/bleonard/follows/jrichardlai/post (and back):</p>
 
-<p><image src="http://bleonard.github.com/images/posts/react-native-navigation/nested.gif" style="max-width: 300px"/></p>
+<p><image src="http://bleonard.github.io/images/posts/react-native-navigation/nested.gif" style="max-width: 300px"/></p>
 
 <h2>Actions</h2>
 
@@ -1017,9 +1017,9 @@ AppActions.launchRoutePath(previous.routePath);
   
   <entry>
     <title type="html"><![CDATA[Queue Bus]]></title>
-    <link href="http://bleonard.github.com/blog/2015/04/02/queue-bus/"/>
+    <link href="http://bleonard.github.io/blog/2015/04/02/queue-bus/"/>
     <updated>2015-04-02T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/04/02/queue-bus</id>
+    <id>http://bleonard.github.io/blog/2015/04/02/queue-bus</id>
     <content type="html"><![CDATA[<p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, we have been using <a href="/blog/2013/09/28/resque-bus/">resque-bus</a> for about two years. It has continued to provide value by  linking components via a loosely coupled publish/subscription model. We have seen 10x the number of events going through it, but have not yet hit any scaling issues. The benefit of using the tools we already have continues to be a huge win.</p>
 
 <p>But other teams are using other tools like <a href="http://sidekiq.org/">Sidekiq</a>. We're also interested in trying it out, but resque-bus (unsurprisingly) was tied closely to <a href="https://github.com/resque/resque">Resque</a>. We've changed that by creating <a href="https://github.com/queue-bus/queue-bus">queue-bus</a> and using an adapter pattern. There are now adapters in <a href="https://github.com/queue-bus/resque-bus">resque-bus</a> and <a href="https://github.com/queue-bus/sidekiq-bus">sidekiq-bus</a>, as well as a compatible version in <a href="https://github.com/queue-bus/node-queue-bus">node-queue-bus</a>.</p>

@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: android | BLog]]></title>
-  <link href="http://bleonard.github.com/blog/categories/android/atom.xml" rel="self"/>
-  <link href="http://bleonard.github.com/"/>
-  <updated>2017-02-25T21:54:36-08:00</updated>
-  <id>http://bleonard.github.com/</id>
+  <link href="http://bleonard.github.io/blog/categories/android/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.io/"/>
+  <updated>2017-02-25T22:05:39-08:00</updated>
+  <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[React Native Android Launch]]></title>
-    <link href="http://bleonard.github.com/blog/2016/03/24/react-native-android-launch/"/>
+    <link href="http://bleonard.github.io/blog/2016/03/24/react-native-android-launch/"/>
     <updated>2016-03-24T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2016/03/24/react-native-android-launch</id>
+    <id>http://bleonard.github.io/blog/2016/03/24/react-native-android-launch</id>
     <content type="html"><![CDATA[<p>Yesterday, we launched our updated Tasker app to our Android community. As noted <a href="/blog/2015/12/17/react-native-launch/">before</a> on the iOS launch, this is the app that Taskers use to get their work done. This completes our migration to <a href="https://facebook.github.io/react-native/">React Native</a>.</p>
 
 <p>All of the credit goes to the team that made this happen, especially <a href="https://twitter.com/jrichardlai">JR</a> and <a href="http://jeremyeaton.co/">Jeremy</a>. It was a lot harder than expected to get everything working on both platforms and they showed great dedication and persistence.</p>
@@ -35,7 +35,7 @@
 <p>Of course, there was also the more extensive testing to do. Our Android pile:</p>
 
 <div class="jumbotron">
-  <img src="http://bleonard.github.com/images/posts/react-native-android-launch/pile.jpg" class="bigPicture"/>
+  <img src="http://bleonard.github.io/images/posts/react-native-android-launch/pile.jpg" class="bigPicture"/>
 </div>
 
 

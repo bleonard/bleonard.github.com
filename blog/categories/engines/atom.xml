@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: engines | BLog]]></title>
-  <link href="http://bleonard.github.com/blog/categories/engines/atom.xml" rel="self"/>
-  <link href="http://bleonard.github.com/"/>
-  <updated>2017-02-25T21:54:36-08:00</updated>
-  <id>http://bleonard.github.com/</id>
+  <link href="http://bleonard.github.io/blog/categories/engines/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.io/"/>
+  <updated>2017-02-25T22:05:39-08:00</updated>
+  <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Rails 4 Engines]]></title>
-    <link href="http://bleonard.github.com/blog/2014/02/11/rails-4-engines/"/>
+    <link href="http://bleonard.github.io/blog/2014/02/11/rails-4-engines/"/>
     <updated>2014-02-11T16:27:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2014/02/11/rails-4-engines</id>
+    <id>http://bleonard.github.io/blog/2014/02/11/rails-4-engines</id>
     <content type="html"><![CDATA[<p>At <a href="https://www.taskrabbit.com">TaskRabbit</a>, we have gone through a few iterations on how we make our app(s). In the beginning, there was the monolithic Rails app in the standard way with 100+ models and their many corresponding controllers and views. Then we moved to several apps with their own logic and often using the big one via API. Our newest <a href="https://taskrabbit.co.uk">project</a> is a single "app" made up of several Rails engines. We have found that this strikes a great balance between the (initial) straightforwardness of the single Rails app and the modularity of the more service-oriented architecture.</p>
 
 <p>We've talked about this approach with a few people and they often ask very specific questions about the tactics used to make this happen, so let's go through it here and via a <a href="https://github.com/taskrabbit/rails_engines_example">sample application</a>.</p>

@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: projects | BLog]]></title>
-  <link href="http://bleonard.github.com/blog/categories/projects/atom.xml" rel="self"/>
-  <link href="http://bleonard.github.com/"/>
-  <updated>2017-02-25T21:54:36-08:00</updated>
-  <id>http://bleonard.github.com/</id>
+  <link href="http://bleonard.github.io/blog/categories/projects/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.io/"/>
+  <updated>2017-02-25T22:05:39-08:00</updated>
+  <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Hubtime]]></title>
-    <link href="http://bleonard.github.com/blog/2013/01/11/hubtime/"/>
+    <link href="http://bleonard.github.io/blog/2013/01/11/hubtime/"/>
     <updated>2013-01-11T18:03:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2013/01/11/hubtime</id>
+    <id>http://bleonard.github.io/blog/2013/01/11/hubtime</id>
     <content type="html"><![CDATA[<p>I got pretty sidetracked during my <a href="/blog/2012/12/31/review-2012/">2012 Review</a> and ended up making a new tool called <a href="https://github.com/bleonard/hubtime">Hubtime</a>. It lets you graph your activity in a variety aways across Github repositories.</p>
 
 <p>The inspiration came from Github's own <a href="https://github.com/bleonard/daily/graphs">reports</a>, but I made Hubtime because those reports are only at a repository level. I was looking to see patterns across the many repositories that I worked on over the year. It seems that Github agrees to some degree because they have since <a href="https://github.com/blog/1360-introducing-contributions">launched</a> metric overviews on user profile pages.</p>

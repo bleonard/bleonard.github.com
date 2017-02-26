@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: testing | BLog]]></title>
-  <link href="http://bleonard.github.com/blog/categories/testing/atom.xml" rel="self"/>
-  <link href="http://bleonard.github.com/"/>
-  <updated>2017-02-25T21:54:36-08:00</updated>
-  <id>http://bleonard.github.com/</id>
+  <link href="http://bleonard.github.io/blog/categories/testing/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.io/"/>
+  <updated>2017-02-25T22:05:39-08:00</updated>
+  <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[React Native Integration Tests]]></title>
-    <link href="http://bleonard.github.com/blog/2015/11/08/react-native-integration-tests/"/>
+    <link href="http://bleonard.github.io/blog/2015/11/08/react-native-integration-tests/"/>
     <updated>2015-11-08T00:00:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2015/11/08/react-native-integration-tests</id>
+    <id>http://bleonard.github.io/blog/2015/11/08/react-native-integration-tests</id>
     <content type="html"><![CDATA[<p>Coming from a Rails <a href="http://guides.rubyonrails.org/testing.html">background</a>, we are very familiar with testing our code. While writing our new <a href="/blog/2015/09/21/react-native-example-app/">React Native app</a>, we found ourself missing a way to test it and ship with confidence. I've updated the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">sample app</a> with the approach we are using for integration tests.</p>
 
 <h2>Test Levels</h2>
@@ -49,7 +49,7 @@
 <p>Running <code>npm test</code> will launch the simulator and the robots take over.</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/react-native-integration-tests/follows.gif" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/react-native-integration-tests/follows.gif" class="bigPicture" />
 </div>
 
 
@@ -147,7 +147,7 @@ done();
 <p>Here it is running:</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/react-native-integration-tests/new_post.gif" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/react-native-integration-tests/new_post.gif" class="bigPicture" />
 </div>
 
 

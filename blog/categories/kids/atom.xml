@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: kids | BLog]]></title>
-  <link href="http://bleonard.github.com/blog/categories/kids/atom.xml" rel="self"/>
-  <link href="http://bleonard.github.com/"/>
-  <updated>2017-02-25T21:54:36-08:00</updated>
-  <id>http://bleonard.github.com/</id>
+  <link href="http://bleonard.github.io/blog/categories/kids/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.io/"/>
+  <updated>2017-02-25T22:05:39-08:00</updated>
+  <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Cakewalk]]></title>
-    <link href="http://bleonard.github.com/blog/2014/04/03/cakewalk/"/>
+    <link href="http://bleonard.github.io/blog/2014/04/03/cakewalk/"/>
     <updated>2014-04-03T21:10:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2014/04/03/cakewalk</id>
+    <id>http://bleonard.github.io/blog/2014/04/03/cakewalk</id>
     <content type="html"><![CDATA[<p>It's nice to be useful. I was glad to be able to help out my wife and her partner make a new iPhone app called <a href="http://www.cakewalkapp.com">Cakewalk</a>.</p>
 
 <p>I really like the counter-culture situation of it. Technology has become a way to distract the kids or something you can hand them when you are out of other things to do. <a href="http://www.personify.us">Krista</a> and <a href="http://www.textunvexed.com">Marijane</a> had the idea to use technology to go the other way by giving parents an app that was for them, not the kids. And the goal of the app is to stop using the app and start real playtime with the kids.</p>

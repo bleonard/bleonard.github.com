@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: dashboard | BLog]]></title>
-  <link href="http://bleonard.github.com/blog/categories/dashboard/atom.xml" rel="self"/>
-  <link href="http://bleonard.github.com/"/>
-  <updated>2017-02-25T21:54:36-08:00</updated>
-  <id>http://bleonard.github.com/</id>
+  <link href="http://bleonard.github.io/blog/categories/dashboard/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.io/"/>
+  <updated>2017-02-25T22:05:39-08:00</updated>
+  <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Apple TV Dashboard]]></title>
-    <link href="http://bleonard.github.com/blog/2015/02/16/apple-tv-dashboard/"/>
+    <link href="http://bleonard.github.io/blog/2015/02/16/apple-tv-dashboard/"/>
     <updated>2015-02-16T00:00:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2015/02/16/apple-tv-dashboard</id>
+    <id>http://bleonard.github.io/blog/2015/02/16/apple-tv-dashboard</id>
     <content type="html"><![CDATA[<p>So you have all these screens around and you want to have something awesome like on those one that Panic <a href="http://www.panic.com/blog/panic-status-board-2013-edition/">made</a>. You may also already have Apple TVs on these TVs because AirPlay is an effective way to project screens in an office full of Macs. This is position we were in at <a href="https://www.taskrabbit.com">TaskRabbit</a> and we'd tried a few things.</p>
 
 <p>The most recent iteration was to have one Mac Mini in a closet and lots of very long wires into the TVs. It displayed a web page that cycled through the content. This wasn't bad, but had a few issues. First, the screens all had to show the same thing. I wanted to be able to have different content on each. For example, in addition to key metrics, the conference rooms would have who had the room booked or the one by customer support would have more data on the call volume. But it just isn't worth it to have 10 Mac Minis for this purpose. The other issue is that people still wanted to use Airplay, so they would switch the input and then not switch it back to the ambient content.</p>
@@ -31,7 +31,7 @@
 <p>It uses the new gems, <a href="https://github.com/taskrabbit/dashing-screenshots">dashing-screenshots</a> and <a href="https://github.com/taskrabbit/icloud-photo">icloud-photo</a>, to take screenshots and upload them to iCloud. These then show up on an Apple TV</p>
 
 <div class="jumbotron">
-<img alt="Sample dashboard on the wall" src="http://bleonard.github.com/images/posts/appletv/sampletv.jpg" class="bigPicture" />
+<img alt="Sample dashboard on the wall" src="http://bleonard.github.io/images/posts/appletv/sampletv.jpg" class="bigPicture" />
 </div>
 
 

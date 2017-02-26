@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: git | BLog]]></title>
-  <link href="http://bleonard.github.com/blog/categories/git/atom.xml" rel="self"/>
-  <link href="http://bleonard.github.com/"/>
-  <updated>2017-02-25T21:54:36-08:00</updated>
-  <id>http://bleonard.github.com/</id>
+  <link href="http://bleonard.github.io/blog/categories/git/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.io/"/>
+  <updated>2017-02-25T22:05:39-08:00</updated>
+  <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Hubtime]]></title>
-    <link href="http://bleonard.github.com/blog/2013/01/11/hubtime/"/>
+    <link href="http://bleonard.github.io/blog/2013/01/11/hubtime/"/>
     <updated>2013-01-11T18:03:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2013/01/11/hubtime</id>
+    <id>http://bleonard.github.io/blog/2013/01/11/hubtime</id>
     <content type="html"><![CDATA[<p>I got pretty sidetracked during my <a href="/blog/2012/12/31/review-2012/">2012 Review</a> and ended up making a new tool called <a href="https://github.com/bleonard/hubtime">Hubtime</a>. It lets you graph your activity in a variety aways across Github repositories.</p>
 
 <p>The inspiration came from Github's own <a href="https://github.com/bleonard/daily/graphs">reports</a>, but I made Hubtime because those reports are only at a repository level. I was looking to see patterns across the many repositories that I worked on over the year. It seems that Github agrees to some degree because they have since <a href="https://github.com/blog/1360-introducing-contributions">launched</a> metric overviews on user profile pages.</p>
@@ -162,9 +162,9 @@ OPTIONS:
   
   <entry>
     <title type="html"><![CDATA[Review: 2012]]></title>
-    <link href="http://bleonard.github.com/blog/2012/12/31/review-2012/"/>
+    <link href="http://bleonard.github.io/blog/2012/12/31/review-2012/"/>
     <updated>2012-12-31T10:39:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2012/12/31/review-2012</id>
+    <id>http://bleonard.github.io/blog/2012/12/31/review-2012</id>
     <content type="html"><![CDATA[<p>I honestly can't remember anything from January or even October very specifically. It sure felt like I was busy as we doubled the TaskRabbit engineering team and scaled the site to get a lot more stuff done for real people in the real world.</p>
 
 <p>I can't even decide what the best way is to see what I did in January. I could look at my email or calendar, but I strive not to make those the center of my world. Maybe in Evernote. My git commits are probably a bit too granular, but maybe there is something in the aggregate.</p>

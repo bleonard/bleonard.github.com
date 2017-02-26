@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: home | BLog]]></title>
-  <link href="http://bleonard.github.com/blog/categories/home/atom.xml" rel="self"/>
-  <link href="http://bleonard.github.com/"/>
-  <updated>2017-02-25T21:54:36-08:00</updated>
-  <id>http://bleonard.github.com/</id>
+  <link href="http://bleonard.github.io/blog/categories/home/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.io/"/>
+  <updated>2017-02-25T22:05:39-08:00</updated>
+  <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Teaching CSS]]></title>
-    <link href="http://bleonard.github.com/blog/2015/08/01/teaching-css/"/>
+    <link href="http://bleonard.github.io/blog/2015/08/01/teaching-css/"/>
     <updated>2015-08-01T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/08/01/teaching-css</id>
+    <id>http://bleonard.github.io/blog/2015/08/01/teaching-css</id>
     <content type="html"><![CDATA[<p>To my surprise, my daughter asked me if I would teach her how to build a web site today. She more or less wants a blog to keep track of what is going on at a recess club she made at school: regular notes, calendar, things like that.</p>
 
 <p>I had her draw out on paper what she wanted to build. It was interesting to see her reinvent the concept of a blog. For example, her first iteration only showed the post from "Today." I asked her how you would see yesterday's post. So she add a "Today" and a "Yesterday" button. So I asked her how to see the post from last week. Her answer was approximately, "Well, they just need to keep up!" However, she eventually conceded to a "Previous" and "Next" button.</p>
@@ -96,9 +96,9 @@
   
   <entry>
     <title type="html"><![CDATA[Playing Work]]></title>
-    <link href="http://bleonard.github.com/blog/2013/01/02/playing-work/"/>
+    <link href="http://bleonard.github.io/blog/2013/01/02/playing-work/"/>
     <updated>2013-01-02T19:59:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2013/01/02/playing-work</id>
+    <id>http://bleonard.github.io/blog/2013/01/02/playing-work</id>
     <content type="html"><![CDATA[<p>We didn't go anywhere over the holidays and had a nice Christmas at home. It's possible that I'm incapable of taking a vacation at all, but this is particularly true when on a stay-cation. Other than Christmas day itself, I was coding on a normal schedule for most of the week.</p>
 
 <p>My daughter (4.5) was around most of the week too, often with the normal babysitter that comes for my younger son. So all week, our house had me coding, my wife editing, and her hanging out with the babysitter. She even brought us lunch like it was restaurant including a fork wrapped up in a napkin.</p>
@@ -119,9 +119,9 @@
   
   <entry>
     <title type="html"><![CDATA[Review: 2012]]></title>
-    <link href="http://bleonard.github.com/blog/2012/12/31/review-2012/"/>
+    <link href="http://bleonard.github.io/blog/2012/12/31/review-2012/"/>
     <updated>2012-12-31T10:39:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2012/12/31/review-2012</id>
+    <id>http://bleonard.github.io/blog/2012/12/31/review-2012</id>
     <content type="html"><![CDATA[<p>I honestly can't remember anything from January or even October very specifically. It sure felt like I was busy as we doubled the TaskRabbit engineering team and scaled the site to get a lot more stuff done for real people in the real world.</p>
 
 <p>I can't even decide what the best way is to see what I did in January. I could look at my email or calendar, but I strive not to make those the center of my world. Maybe in Evernote. My git commits are probably a bit too granular, but maybe there is something in the aggregate.</p>

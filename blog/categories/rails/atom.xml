@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: rails | BLog]]></title>
-  <link href="http://bleonard.github.com/blog/categories/rails/atom.xml" rel="self"/>
-  <link href="http://bleonard.github.com/"/>
-  <updated>2017-02-25T21:54:36-08:00</updated>
-  <id>http://bleonard.github.com/</id>
+  <link href="http://bleonard.github.io/blog/categories/rails/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.io/"/>
+  <updated>2017-02-25T22:05:39-08:00</updated>
+  <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Architecture: Models]]></title>
-    <link href="http://bleonard.github.com/blog/2017/02/24/architecture-models/"/>
+    <link href="http://bleonard.github.io/blog/2017/02/24/architecture-models/"/>
     <updated>2017-02-24T00:00:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2017/02/24/architecture-models</id>
+    <id>http://bleonard.github.io/blog/2017/02/24/architecture-models</id>
     <content type="html"><![CDATA[<p>This is the first post in what I hope will be a series of articles about how we build things at <a href="https://www.taskrabbit.com">TaskRabbit</a>. Over time, we/I have internalized all kinds of lessons and patterns, but have never written them down explicitly and publicly. So let's give that a try.</p>
 
 <p>I thought we'd start with models. That's what <a href="http://api.rubyonrails.org/classes/ActiveRecord/Base.html">Rails</a> calls database tables where each row is an instance of that model class.</p>
@@ -54,7 +54,7 @@
 <p>For example, there is a <code>PaymentTransaction</code> model. It has an initial "pending" state that represents the time between when an invoice is submitted and when we charge the credit card. During this time, it can move to a "canceled" state if tit should not happen. Or, if things go as planned, it can transition to a "settled" state. After that, if there is an issue of some sort, it would go to a "refunded" state. Notably, going from "pending" to "refunded" is <em>not</em> a valid transition.</p>
 
 <div class="jumbotron">
-<img src="http://bleonard.github.com/images/posts/architecture-models/states.png" class="bigPicture" />
+<img src="http://bleonard.github.io/images/posts/architecture-models/states.png" class="bigPicture" />
 </div>
 
 
@@ -75,7 +75,7 @@
 <p>For example, the <code>Invitation</code> model is created first to note the decision the Tasker must make. It then either transitions to <code>accepted</code> or <code>declined</code>.  If accepted, it spawns an <code>Assignment</code>. It, in turn, can move to states like <code>completed</code> or <code>ongoing</code>.</p>
 
 <div class="jumbotron">
-<img src="http://bleonard.github.com/images/posts/architecture-models/invitations.png" class="bigPicture" />
+<img src="http://bleonard.github.io/images/posts/architecture-models/invitations.png" class="bigPicture" />
 </div>
 
 
@@ -122,9 +122,9 @@
   
   <entry>
     <title type="html"><![CDATA[Developing an Amazon Alexa Skill on Rails]]></title>
-    <link href="http://bleonard.github.com/blog/2016/12/02/amazon-alexa-rails/"/>
+    <link href="http://bleonard.github.io/blog/2016/12/02/amazon-alexa-rails/"/>
     <updated>2016-12-02T00:00:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2016/12/02/amazon-alexa-rails</id>
+    <id>http://bleonard.github.io/blog/2016/12/02/amazon-alexa-rails</id>
     <content type="html"><![CDATA[<p>In March, we had a hack day at <a href="https://www.taskrabbit.com">TaskRabbit</a> and I did a demo of posting a task using a borrowed new-ish (at the time) Amazon <a href="https://www.amazon.com/echo">Echo</a> via <a href="https://developer.amazon.com/alexa">Alexa</a>. For the first time in a year, I made a new <a href="/blog/2014/02/11/rails-4-engines/">engine</a> that would handle all these new-fangled conversational UIs and bots and stuff.</p>
 
 <p>The hack day came and went (I didn't win) and this branch was just sitting there every time I did a <code>git branch</code> command. I only have a few there. Keep it clean, people! Then I saw the Cyber Monday deals on Amazon. I decided that it had sat there long enough so I dusted it off to try and bring it to the finish line.</p>
@@ -132,7 +132,7 @@
 <p>I more or less started over, of course, because that's how it goes. I thought I would document the process for anyone else on the trail.</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/alexa/skill_store.png" class="bigPicture"/>
+  <image src="http://bleonard.github.io/images/posts/alexa/skill_store.png" class="bigPicture"/>
 </div>
 
 
@@ -482,9 +482,9 @@ end
   
   <entry>
     <title type="html"><![CDATA[To rewrite or not to rewrite?]]></title>
-    <link href="http://bleonard.github.com/blog/2015/10/26/rewrite/"/>
+    <link href="http://bleonard.github.io/blog/2015/10/26/rewrite/"/>
     <updated>2015-10-26T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/10/26/rewrite</id>
+    <id>http://bleonard.github.io/blog/2015/10/26/rewrite</id>
     <content type="html"><![CDATA[<p><code>
 To rewrite, or not to rewrite- that is the question:
 Whether 'tis better for the product to suffer
@@ -587,9 +587,9 @@ May all our sins be forgotten.
   
   <entry>
     <title type="html"><![CDATA[V2 - Retrospective]]></title>
-    <link href="http://bleonard.github.com/blog/2015/10/06/v2-retrospective/"/>
+    <link href="http://bleonard.github.io/blog/2015/10/06/v2-retrospective/"/>
     <updated>2015-10-06T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/10/06/v2-retrospective</id>
+    <id>http://bleonard.github.io/blog/2015/10/06/v2-retrospective</id>
     <content type="html"><![CDATA[<p>TaskRabbit began as <a href="http://www.boston.com/business/technology/articles/2009/07/05/web_start_up_takes_entrepreneurs_idea_and_runs_with_it/">RunMyErrand</a> in 2008 when Leah had the <a href="http://techli.com/2011/09/taskrabbit-interview-leah-busque/">idea</a> and coded up the first version of the site. In 2009, I had the opportunity to help out in little ways like adding Facebook Connect support just after it launched and Leah got into <a href="http://techcrunch.com/2009/05/28/facebook-names-first-class-of-fbfund-rev-its-new-incubator/">Facebook Fund</a>. From there, she raised a <a href="http://www.xconomy.com/boston/2009/10/30/runmyerrand-picks-up-1-million-from-west-coast-venture-firms/">seed round</a> and I came on full-time.</p>
 
 <p>For a few weeks after starting, I worked on the RunMyErrand codebase, adding features and fixing bugs. Quickly, though, a few things became clear. First, we were probably going to change our name. RunMyErrand made people think only about laundry. Second, the changes we wanted to make drastic and hard to make with confidence in a codebase with no tests. I was hoping to work and live with this code for several years and we did not have the foundation that would make that a productive and enjoyable experience.</p>
@@ -605,7 +605,7 @@ May all our sins be forgotten.
 <p>I started over Christmas at the very beginning.</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/v2-retrospective/tracker2009.png" alternate="Tracker 2009" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/v2-retrospective/tracker2009.png" alternate="Tracker 2009" class="bigPicture" />
 </div>
 
 
@@ -741,7 +741,7 @@ end
 <p>V2 was my first Rails project and I was (and continue to be) amazed by the Ruby community. Everything that I wanted to do had already been done, more or less, before. I now realize that will probably always be the case. There are only so many patterns out there and building just about any app is probably about putting them together for a specific purpose. The amazing thing (and the trap) of the Ruby community is that there is already a <a href="http://rubygems.org/">gem</a> or ten available for each of those patterns.</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/v2-retrospective/trap.jpg" alternate="It's a trap!" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/v2-retrospective/trap.jpg" alternate="It's a trap!" class="bigPicture" />
 </div>
 
 
@@ -1158,7 +1158,7 @@ Core
 ```</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/v2-retrospective/dvd.jpg" alternate="BL DVD" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/v2-retrospective/dvd.jpg" alternate="BL DVD" class="bigPicture" />
 </div>
 
 ]]></content>
@@ -1166,9 +1166,9 @@ Core
   
   <entry>
     <title type="html"><![CDATA[Translating Rails fields]]></title>
-    <link href="http://bleonard.github.com/blog/2015/01/06/translating-rails-fields/"/>
+    <link href="http://bleonard.github.io/blog/2015/01/06/translating-rails-fields/"/>
     <updated>2015-01-06T00:00:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2015/01/06/translating-rails-fields</id>
+    <id>http://bleonard.github.io/blog/2015/01/06/translating-rails-fields</id>
     <content type="html"><![CDATA[<p>When we launched <a href="https://www.taskrabbit.com">TaskRabbit</a> in London, one of our goals was to have a fully localized product. There are enough differences between British English and US English to not cut (m)any corners. Of course, it's even more important in completely different languages.</p>
 
 <p>An issue that I noticed one day was in our signup flow. It said "Last name is required." This was caused by a blank field and a model-level validation.</p>

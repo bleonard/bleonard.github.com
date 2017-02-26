@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: code | BLog]]></title>
-  <link href="http://bleonard.github.com/blog/categories/code/atom.xml" rel="self"/>
-  <link href="http://bleonard.github.com/"/>
-  <updated>2017-02-25T21:54:36-08:00</updated>
-  <id>http://bleonard.github.com/</id>
+  <link href="http://bleonard.github.io/blog/categories/code/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.io/"/>
+  <updated>2017-02-25T22:05:39-08:00</updated>
+  <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[To rewrite or not to rewrite?]]></title>
-    <link href="http://bleonard.github.com/blog/2015/10/26/rewrite/"/>
+    <link href="http://bleonard.github.io/blog/2015/10/26/rewrite/"/>
     <updated>2015-10-26T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/10/26/rewrite</id>
+    <id>http://bleonard.github.io/blog/2015/10/26/rewrite</id>
     <content type="html"><![CDATA[<p><code>
 To rewrite, or not to rewrite- that is the question:
 Whether 'tis better for the product to suffer
@@ -120,9 +120,9 @@ May all our sins be forgotten.
   
   <entry>
     <title type="html"><![CDATA[V2 - Retrospective]]></title>
-    <link href="http://bleonard.github.com/blog/2015/10/06/v2-retrospective/"/>
+    <link href="http://bleonard.github.io/blog/2015/10/06/v2-retrospective/"/>
     <updated>2015-10-06T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/10/06/v2-retrospective</id>
+    <id>http://bleonard.github.io/blog/2015/10/06/v2-retrospective</id>
     <content type="html"><![CDATA[<p>TaskRabbit began as <a href="http://www.boston.com/business/technology/articles/2009/07/05/web_start_up_takes_entrepreneurs_idea_and_runs_with_it/">RunMyErrand</a> in 2008 when Leah had the <a href="http://techli.com/2011/09/taskrabbit-interview-leah-busque/">idea</a> and coded up the first version of the site. In 2009, I had the opportunity to help out in little ways like adding Facebook Connect support just after it launched and Leah got into <a href="http://techcrunch.com/2009/05/28/facebook-names-first-class-of-fbfund-rev-its-new-incubator/">Facebook Fund</a>. From there, she raised a <a href="http://www.xconomy.com/boston/2009/10/30/runmyerrand-picks-up-1-million-from-west-coast-venture-firms/">seed round</a> and I came on full-time.</p>
 
 <p>For a few weeks after starting, I worked on the RunMyErrand codebase, adding features and fixing bugs. Quickly, though, a few things became clear. First, we were probably going to change our name. RunMyErrand made people think only about laundry. Second, the changes we wanted to make drastic and hard to make with confidence in a codebase with no tests. I was hoping to work and live with this code for several years and we did not have the foundation that would make that a productive and enjoyable experience.</p>
@@ -138,7 +138,7 @@ May all our sins be forgotten.
 <p>I started over Christmas at the very beginning.</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/v2-retrospective/tracker2009.png" alternate="Tracker 2009" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/v2-retrospective/tracker2009.png" alternate="Tracker 2009" class="bigPicture" />
 </div>
 
 
@@ -274,7 +274,7 @@ end
 <p>V2 was my first Rails project and I was (and continue to be) amazed by the Ruby community. Everything that I wanted to do had already been done, more or less, before. I now realize that will probably always be the case. There are only so many patterns out there and building just about any app is probably about putting them together for a specific purpose. The amazing thing (and the trap) of the Ruby community is that there is already a <a href="http://rubygems.org/">gem</a> or ten available for each of those patterns.</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/v2-retrospective/trap.jpg" alternate="It's a trap!" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/v2-retrospective/trap.jpg" alternate="It's a trap!" class="bigPicture" />
 </div>
 
 
@@ -691,7 +691,7 @@ Core
 ```</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/v2-retrospective/dvd.jpg" alternate="BL DVD" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/v2-retrospective/dvd.jpg" alternate="BL DVD" class="bigPicture" />
 </div>
 
 ]]></content>
@@ -699,9 +699,9 @@ Core
   
   <entry>
     <title type="html"><![CDATA[Singletons, Threads, and Flexibility]]></title>
-    <link href="http://bleonard.github.com/blog/2013/01/18/singletons/"/>
+    <link href="http://bleonard.github.io/blog/2013/01/18/singletons/"/>
     <updated>2013-01-18T08:50:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2013/01/18/singletons</id>
+    <id>http://bleonard.github.io/blog/2013/01/18/singletons</id>
     <content type="html"><![CDATA[<p>In Ruby, we often like very simple APIs, but this often comes at the price of thread safety and code flexibility. I've found that if you use a few tricks from the start, you can get the best of it all.</p>
 
 <p>I recently did a <a href="/blog/2013/01/11/hubtime">project</a> where I tried to use the <a href="https://github.com/vcr/vcr">VCR</a> gem, but it went awry when working in multiple threads. This is a great gem that, like many of my own, falls into the trap of module/class level singleton configuration/execution.</p>
@@ -912,9 +912,9 @@ end
   
   <entry>
     <title type="html"><![CDATA[Hubtime]]></title>
-    <link href="http://bleonard.github.com/blog/2013/01/11/hubtime/"/>
+    <link href="http://bleonard.github.io/blog/2013/01/11/hubtime/"/>
     <updated>2013-01-11T18:03:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2013/01/11/hubtime</id>
+    <id>http://bleonard.github.io/blog/2013/01/11/hubtime</id>
     <content type="html"><![CDATA[<p>I got pretty sidetracked during my <a href="/blog/2012/12/31/review-2012/">2012 Review</a> and ended up making a new tool called <a href="https://github.com/bleonard/hubtime">Hubtime</a>. It lets you graph your activity in a variety aways across Github repositories.</p>
 
 <p>The inspiration came from Github's own <a href="https://github.com/bleonard/daily/graphs">reports</a>, but I made Hubtime because those reports are only at a repository level. I was looking to see patterns across the many repositories that I worked on over the year. It seems that Github agrees to some degree because they have since <a href="https://github.com/blog/1360-introducing-contributions">launched</a> metric overviews on user profile pages.</p>

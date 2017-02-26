@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: css | BLog]]></title>
-  <link href="http://bleonard.github.com/blog/categories/css/atom.xml" rel="self"/>
-  <link href="http://bleonard.github.com/"/>
-  <updated>2017-02-25T21:54:36-08:00</updated>
-  <id>http://bleonard.github.com/</id>
+  <link href="http://bleonard.github.io/blog/categories/css/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.io/"/>
+  <updated>2017-02-25T22:05:39-08:00</updated>
+  <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Teaching CSS]]></title>
-    <link href="http://bleonard.github.com/blog/2015/08/01/teaching-css/"/>
+    <link href="http://bleonard.github.io/blog/2015/08/01/teaching-css/"/>
     <updated>2015-08-01T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/08/01/teaching-css</id>
+    <id>http://bleonard.github.io/blog/2015/08/01/teaching-css</id>
     <content type="html"><![CDATA[<p>To my surprise, my daughter asked me if I would teach her how to build a web site today. She more or less wants a blog to keep track of what is going on at a recess club she made at school: regular notes, calendar, things like that.</p>
 
 <p>I had her draw out on paper what she wanted to build. It was interesting to see her reinvent the concept of a blog. For example, her first iteration only showed the post from "Today." I asked her how you would see yesterday's post. So she add a "Today" and a "Yesterday" button. So I asked her how to see the post from last week. Her answer was approximately, "Well, they just need to keep up!" However, she eventually conceded to a "Previous" and "Next" button.</p>

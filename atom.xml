@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[BLog]]></title>
-  <link href="http://bleonard.github.com/atom.xml" rel="self"/>
-  <link href="http://bleonard.github.com/"/>
-  <updated>2017-02-25T21:54:36-08:00</updated>
-  <id>http://bleonard.github.com/</id>
+  <link href="http://bleonard.github.io/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.io/"/>
+  <updated>2017-02-25T22:05:39-08:00</updated>
+  <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Architecture: Models]]></title>
-    <link href="http://bleonard.github.com/blog/2017/02/24/architecture-models/"/>
+    <link href="http://bleonard.github.io/blog/2017/02/24/architecture-models/"/>
     <updated>2017-02-24T00:00:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2017/02/24/architecture-models</id>
+    <id>http://bleonard.github.io/blog/2017/02/24/architecture-models</id>
     <content type="html"><![CDATA[<p>This is the first post in what I hope will be a series of articles about how we build things at <a href="https://www.taskrabbit.com">TaskRabbit</a>. Over time, we/I have internalized all kinds of lessons and patterns, but have never written them down explicitly and publicly. So let&#8217;s give that a try.</p>
 
 <p>I thought we&#8217;d start with models. That&#8217;s what <a href="http://api.rubyonrails.org/classes/ActiveRecord/Base.html">Rails</a> calls database tables where each row is an instance of that model class.</p>
@@ -54,7 +54,7 @@
 <p>For example, there is a <code>PaymentTransaction</code> model. It has an initial &#8220;pending&#8221; state that represents the time between when an invoice is submitted and when we charge the credit card. During this time, it can move to a &#8220;canceled&#8221; state if tit should not happen. Or, if things go as planned, it can transition to a &#8220;settled&#8221; state. After that, if there is an issue of some sort, it would go to a &#8220;refunded&#8221; state. Notably, going from &#8220;pending&#8221; to &#8220;refunded&#8221; is <em>not</em> a valid transition.</p>
 
 <div class="jumbotron">
-<img src="http://bleonard.github.com/images/posts/architecture-models/states.png" class="bigPicture" />
+<img src="http://bleonard.github.io/images/posts/architecture-models/states.png" class="bigPicture" />
 </div>
 
 
@@ -75,7 +75,7 @@
 <p>For example, the <code>Invitation</code> model is created first to note the decision the Tasker must make. It then either transitions to <code>accepted</code> or <code>declined</code>.  If accepted, it spawns an <code>Assignment</code>. It, in turn, can move to states like <code>completed</code> or <code>ongoing</code>.</p>
 
 <div class="jumbotron">
-<img src="http://bleonard.github.com/images/posts/architecture-models/invitations.png" class="bigPicture" />
+<img src="http://bleonard.github.io/images/posts/architecture-models/invitations.png" class="bigPicture" />
 </div>
 
 
@@ -101,7 +101,7 @@
 
 <p>On write to an object, we can update a central model with the current situation for that <code>Job</code>. For example, when an <code>Assignment</code> gets created, we recalculate and store data in two different tables. One for both the Tasker and the Client on what they should be seeing on their respective dashboards. Thus, the API call to &#8220;get all my stuff&#8221; uses one of those tables. That is done in the same transaction as the original write.</p>
 
-<p>The other option is basically the same thing but for either less time-sensitive data or more complicated queries. We use a <a href="http://bleonard.github.com/blog/2015/04/02/queue-bus/">message bus</a> to observe changes. We then denormalize applicable data for a specific use case into a table or <a href="http://www.elastic.co">Elasticsearch</a>. For example, when an <code>Appointment</code> is created, we would update the Taskers availability schedule in the database. Updating this schedule would also trigger an update to our recommendation algorithm which uses Elasticsearch.</p>
+<p>The other option is basically the same thing but for either less time-sensitive data or more complicated queries. We use a <a href="http://bleonard.github.io/blog/2015/04/02/queue-bus/">message bus</a> to observe changes. We then denormalize applicable data for a specific use case into a table or <a href="http://www.elastic.co">Elasticsearch</a>. For example, when an <code>Appointment</code> is created, we would update the Taskers availability schedule in the database. Updating this schedule would also trigger an update to our recommendation algorithm which uses Elasticsearch.</p>
 
 <p>One important note: all of these denormalizations should be <a href="http://www.restapitutorial.com/lessons/idempotency.html">idempotent</a>. This allows us to recreate the whole thing from the source of truth or recover if any given event is dropped.</p>
 
@@ -122,17 +122,17 @@
   
   <entry>
     <title type="html"><![CDATA[Developing an Amazon Alexa Skill on Rails]]></title>
-    <link href="http://bleonard.github.com/blog/2016/12/02/amazon-alexa-rails/"/>
+    <link href="http://bleonard.github.io/blog/2016/12/02/amazon-alexa-rails/"/>
     <updated>2016-12-02T00:00:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2016/12/02/amazon-alexa-rails</id>
-    <content type="html"><![CDATA[<p>In March, we had a hack day at <a href="https://www.taskrabbit.com">TaskRabbit</a> and I did a demo of posting a task using a borrowed new-ish (at the time) Amazon <a href="https://www.amazon.com/echo">Echo</a> via <a href="https://developer.amazon.com/alexa">Alexa</a>. For the first time in a year, I made a new <a href="http://bleonard.github.com/blog/2014/02/11/rails-4-engines/">engine</a> that would handle all these new-fangled conversational UIs and bots and stuff.</p>
+    <id>http://bleonard.github.io/blog/2016/12/02/amazon-alexa-rails</id>
+    <content type="html"><![CDATA[<p>In March, we had a hack day at <a href="https://www.taskrabbit.com">TaskRabbit</a> and I did a demo of posting a task using a borrowed new-ish (at the time) Amazon <a href="https://www.amazon.com/echo">Echo</a> via <a href="https://developer.amazon.com/alexa">Alexa</a>. For the first time in a year, I made a new <a href="http://bleonard.github.io/blog/2014/02/11/rails-4-engines/">engine</a> that would handle all these new-fangled conversational UIs and bots and stuff.</p>
 
 <p>The hack day came and went (I didn&#8217;t win) and this branch was just sitting there every time I did a <code>git branch</code> command. I only have a few there. Keep it clean, people! Then I saw the Cyber Monday deals on Amazon. I decided that it had sat there long enough so I dusted it off to try and bring it to the finish line.</p>
 
 <p>I more or less started over, of course, because that&#8217;s how it goes. I thought I would document the process for anyone else on the trail.</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/alexa/skill_store.png" class="bigPicture"/>
+  <image src="http://bleonard.github.io/images/posts/alexa/skill_store.png" class="bigPicture"/>
 </div>
 
 
@@ -684,9 +684,9 @@
   
   <entry>
     <title type="html"><![CDATA[Post Election]]></title>
-    <link href="http://bleonard.github.com/blog/2016/11/10/post-election/"/>
+    <link href="http://bleonard.github.io/blog/2016/11/10/post-election/"/>
     <updated>2016-11-10T00:00:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2016/11/10/post-election</id>
+    <id>http://bleonard.github.io/blog/2016/11/10/post-election</id>
     <content type="html"><![CDATA[<p>I&#8217;ve been thinking a lot about the book <a href="https://en.wikipedia.org/wiki/The_City_%26_the_City"><em>The City &amp; the City</em></a> by China Miéville. It describes a town in which two sets of people share the same physical space but do not acknowledge each other. For that matter, they are forbidden to do so.</p>
 
 <p>I remember being surprised in 1992 when Bill Clinton won the election. I lived in Texas and everyone I knew was voting for Bush. Now, I live in California and the same thing snuck up on me again this week. There&#8217;s very little learning there.</p>
@@ -709,10 +709,10 @@
   
   <entry>
     <title type="html"><![CDATA[React Native Android Launch]]></title>
-    <link href="http://bleonard.github.com/blog/2016/03/24/react-native-android-launch/"/>
+    <link href="http://bleonard.github.io/blog/2016/03/24/react-native-android-launch/"/>
     <updated>2016-03-24T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2016/03/24/react-native-android-launch</id>
-    <content type="html"><![CDATA[<p>Yesterday, we launched our updated Tasker app to our Android community. As noted <a href="http://bleonard.github.com/blog/2015/12/17/react-native-launch/">before</a> on the iOS launch, this is the app that Taskers use to get their work done. This completes our migration to <a href="https://facebook.github.io/react-native/">React Native</a>.</p>
+    <id>http://bleonard.github.io/blog/2016/03/24/react-native-android-launch</id>
+    <content type="html"><![CDATA[<p>Yesterday, we launched our updated Tasker app to our Android community. As noted <a href="http://bleonard.github.io/blog/2015/12/17/react-native-launch/">before</a> on the iOS launch, this is the app that Taskers use to get their work done. This completes our migration to <a href="https://facebook.github.io/react-native/">React Native</a>.</p>
 
 <p>All of the credit goes to the team that made this happen, especially <a href="https://twitter.com/jrichardlai">JR</a> and <a href="http://jeremyeaton.co/">Jeremy</a>. It was a lot harder than expected to get everything working on both platforms and they showed great dedication and persistence.</p>
 
@@ -722,14 +722,14 @@
 
 <h2>Differences</h2>
 
-<p>I&#8217;ll let JR do a followup to his <a href="http://bleonard.github.com/blog/2016/01/11/react-native-android/">previous post</a> of all the differences, but the biggest ones in my mind were the handling of the hardware back button and different pickers (date, for example) in the forms. The <code>Platform</code> directory strategy we had put in place during the first cycle worked out pretty well.</p>
+<p>I&#8217;ll let JR do a followup to his <a href="http://bleonard.github.io/blog/2016/01/11/react-native-android/">previous post</a> of all the differences, but the biggest ones in my mind were the handling of the hardware back button and different pickers (date, for example) in the forms. The <code>Platform</code> directory strategy we had put in place during the first cycle worked out pretty well.</p>
 
 <p>We also really struggled with getting push notifications right. This is key for our business and there were many more nuances on the Android platform to work out. We hope to publish what we came up with.</p>
 
 <p>Of course, there was also the more extensive testing to do. Our Android pile:</p>
 
 <div class="jumbotron">
-  <img src="http://bleonard.github.com/images/posts/react-native-android-launch/pile.jpg" class="bigPicture"/>
+  <img src="http://bleonard.github.io/images/posts/react-native-android-launch/pile.jpg" class="bigPicture"/>
 </div>
 
 
@@ -765,9 +765,9 @@
   
   <entry>
     <title type="html"><![CDATA[React Native Launch]]></title>
-    <link href="http://bleonard.github.com/blog/2015/12/17/react-native-launch/"/>
+    <link href="http://bleonard.github.io/blog/2015/12/17/react-native-launch/"/>
     <updated>2015-12-17T00:00:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2015/12/17/react-native-launch</id>
+    <id>http://bleonard.github.io/blog/2015/12/17/react-native-launch</id>
     <content type="html"><![CDATA[<p>This week, we launched our updated Tasker app to the community. This is not the app on the app store, but rather the one the Taskers use to get their work done. Functionally, not much has changed since the last release. But underneath, the app has been completely rewritten in <a href="https://facebook.github.io/react-native/">React Native</a>.</p>
 
 <p>First and foremost, a huge congratulations needs to go out to the team, especially <a href="https://twitter.com/jrichardlai">JR</a>. I&#8217;ve never been on an engineering project that went as smoothly or was as fun as this one. So good!</p>
@@ -789,13 +789,13 @@
 
 <p>I can&#8217;t imagine anyone saying that I&#8217;m a very good PM. In particular, my story acceptance followup is horrendous. Fortunately, <a href="https://twitter.com/pdevine">Paul</a> helped me out. I did do a pretty good job of writing the stories and putting them in the right order.</p>
 
-<p>One decision made this project work, though. It was to acknowledge that this is an engineering project, not a product one. It&#8217;s so very tempting to update the functionality of the app &#8220;while you&#8217;re at it.&#8221; But opening that door would have doubled the length of the project. Those discussions with design and others would eat up the development time. It would have made the rollout harder. We could do a soft release because it&#8217;s basically the same app. I&#8217;ve written about <a href="http://bleonard.github.com/blog/2015/10/26/rewrite/">rewrites</a> before, but that was to drastically change the product. If you can get away with it, do it in place and keep it the same. At least we followed one of those.</p>
+<p>One decision made this project work, though. It was to acknowledge that this is an engineering project, not a product one. It&#8217;s so very tempting to update the functionality of the app &#8220;while you&#8217;re at it.&#8221; But opening that door would have doubled the length of the project. Those discussions with design and others would eat up the development time. It would have made the rollout harder. We could do a soft release because it&#8217;s basically the same app. I&#8217;ve written about <a href="http://bleonard.github.io/blog/2015/10/26/rewrite/">rewrites</a> before, but that was to drastically change the product. If you can get away with it, do it in place and keep it the same. At least we followed one of those.</p>
 
 <p>So I dragged stories around while JR worked his butt off. This is not a small app and we hit critical functional parity (with many UI tweaks needed) at the beginning of October. We put this in the hands of some Taskers and got their feedback. From there it was getting the less critical features done, getting feedback, shipping new builds, making it prettier, and fixing bugs.</p>
 
 <h2>Shipping</h2>
 
-<p>By last week, we felt really good about it but needed to buckle down to get the release out. We&#8217;d been working so quickly that it was hard to slow down and be more methodical in the final run up. We felt good because <a href="http://jeremyeaton.co/">Jeremy</a> joined the team, we had great <a href="http://bleonard.github.com/blog/2015/11/08/react-native-integration-tests/">test coverage</a>, and real Taskers in multiple countries were actually using the thing.</p>
+<p>By last week, we felt really good about it but needed to buckle down to get the release out. We&#8217;d been working so quickly that it was hard to slow down and be more methodical in the final run up. We felt good because <a href="http://jeremyeaton.co/">Jeremy</a> joined the team, we had great <a href="http://bleonard.github.io/blog/2015/11/08/react-native-integration-tests/">test coverage</a>, and real Taskers in multiple countries were actually using the thing.</p>
 
 <p>We put out another release to a wider audience and incorporated a few final items. Then&#8230; ship it. The reception has been neutral. Nothing good or bad. This is amazing! That means success in a technology project with no new features except all of the old ones.</p>
 
@@ -806,7 +806,7 @@
 <ul>
 <li><p>We have been beta testing React Native integration from <a href="https://realm.io">Realm</a>. All of our lists (non-singletons) stores are backed by a Realm database. For example, we use this for storing tasks. The various lists and drill-down screens all use the same data. That means its very likely to be always up to date. If you&#8217;re interested in trying it out, sign up <a href="http://goo.gl/forms/UvS8ZM9LOA">here</a>.</p></li>
 <li><p>Be careful about the JS runtime (iOS version). We&#8217;ve been testing in iOS 9. Right before release, we realized a library we use was using <code>new Symbol()</code>. It works in 9.0+ but not in 8.x versions of the OS.</p></li>
-<li><p>Our navigation scheme really is awesome. It makes everything easier. Check out more information <a href="http://bleonard.github.com/blog/2015/09/21/react-native-example-app/">here</a>.</p></li>
+<li><p>Our navigation scheme really is awesome. It makes everything easier. Check out more information <a href="http://bleonard.github.io/blog/2015/09/21/react-native-example-app/">here</a>.</p></li>
 <li><p>Internationalization was really interesting. I&#8217;ll write up more on this topic but, briefly: each component declares its own words and we have code to go through all the components and collect them up. Then we can send that off for translation.</p></li>
 <li><p><a href="https://facebook.github.io/react/docs/flux-overview.html">Flux</a> and event dispatching in general really worked out well. Just having minor piece of indirection reduces coupling and leads to great results</p></li>
 <li><p>JR is trying to convert me to ES2015 and also away from <a href="https://facebook.github.io/react/docs/reusable-components.html#mixins">mixins</a>. He did this <a href="https://github.com/taskrabbit/react-component-extension">extension</a> thing. He&#8217;s probably right.</p></li>
@@ -843,10 +843,10 @@
   
   <entry>
     <title type="html"><![CDATA[React Native Integration Tests]]></title>
-    <link href="http://bleonard.github.com/blog/2015/11/08/react-native-integration-tests/"/>
+    <link href="http://bleonard.github.io/blog/2015/11/08/react-native-integration-tests/"/>
     <updated>2015-11-08T00:00:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2015/11/08/react-native-integration-tests</id>
-    <content type="html"><![CDATA[<p>Coming from a Rails <a href="http://guides.rubyonrails.org/testing.html">background</a>, we are very familiar with testing our code. While writing our new <a href="http://bleonard.github.com/blog/2015/09/21/react-native-example-app/">React Native app</a>, we found ourself missing a way to test it and ship with confidence. I&#8217;ve updated the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">sample app</a> with the approach we are using for integration tests.</p>
+    <id>http://bleonard.github.io/blog/2015/11/08/react-native-integration-tests</id>
+    <content type="html"><![CDATA[<p>Coming from a Rails <a href="http://guides.rubyonrails.org/testing.html">background</a>, we are very familiar with testing our code. While writing our new <a href="http://bleonard.github.io/blog/2015/09/21/react-native-example-app/">React Native app</a>, we found ourself missing a way to test it and ship with confidence. I&#8217;ve updated the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">sample app</a> with the approach we are using for integration tests.</p>
 
 <h2>Test Levels</h2>
 
@@ -877,7 +877,7 @@
 <p>Running <code>npm test</code> will launch the simulator and the robots take over.</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/react-native-integration-tests/follows.gif" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/react-native-integration-tests/follows.gif" class="bigPicture" />
 </div>
 
 
@@ -918,7 +918,7 @@
 
 <p>The concept of &#8220;Bootstrap&#8221; might warrant a little more explanation.</p>
 
-<p>The sample app has been set up to use the <a href="https://facebook.github.io/react/docs/flux-overview.html">flux pattern</a> and <a href="http://bleonard.github.com/blog/2015/09/21/react-native-example-app/">url-based routing</a>. These two things allow a test to put the world in the state it needs to check the behavior.</p>
+<p>The sample app has been set up to use the <a href="https://facebook.github.io/react/docs/flux-overview.html">flux pattern</a> and <a href="http://bleonard.github.io/blog/2015/09/21/react-native-example-app/">url-based routing</a>. These two things allow a test to put the world in the state it needs to check the behavior.</p>
 
 <p>When writing Appium tests on our Objective-C app, to test an acount management feature, it would log in, tap the sidebar, tap the gear, then tap &#8220;Change Password&#8221; or whatever. Then the test really starts. This time really adds up.</p>
 
@@ -1002,7 +1002,7 @@
 <p>Here it is running:</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/react-native-integration-tests/new_post.gif" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/react-native-integration-tests/new_post.gif" class="bigPicture" />
 </div>
 
 
@@ -1020,9 +1020,9 @@
   
   <entry>
     <title type="html"><![CDATA[To rewrite or not to rewrite?]]></title>
-    <link href="http://bleonard.github.com/blog/2015/10/26/rewrite/"/>
+    <link href="http://bleonard.github.io/blog/2015/10/26/rewrite/"/>
     <updated>2015-10-26T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/10/26/rewrite</id>
+    <id>http://bleonard.github.io/blog/2015/10/26/rewrite</id>
     <content type="html"><![CDATA[<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -1106,7 +1106,7 @@
 
 <h3>Refactor</h3>
 
-<p>The <a href="http://bleonard.github.com/blog/2015/10/06/v2-retrospective/">V2 timeline</a> notes the rewrites and some of the major refactoring efforts that we&#8217;ve gone though. There were obviously many times that we did <em>not</em> rewrite the whole system. Ha.</p>
+<p>The <a href="http://bleonard.github.io/blog/2015/10/06/v2-retrospective/">V2 timeline</a> notes the rewrites and some of the major refactoring efforts that we&#8217;ve gone though. There were obviously many times that we did <em>not</em> rewrite the whole system. Ha.</p>
 
 <p>A few of those projects:</p>
 
@@ -1129,7 +1129,7 @@
 
 <h3>Service-Oriented</h3>
 
-<p>That architectures move towards being service-oriented seems to be common knowledge. We found that there are various <a href="http://bleonard.github.com/blog/2015/10/06/v2-retrospective/">pros and cons</a> with the approach. However, I would say that what we did was a type of rewrite.</p>
+<p>That architectures move towards being service-oriented seems to be common knowledge. We found that there are various <a href="http://bleonard.github.io/blog/2015/10/06/v2-retrospective/">pros and cons</a> with the approach. However, I would say that what we did was a type of rewrite.</p>
 
 <p>It&#8217;s a more gradual and sustainable version, though, because it&#8217;s a continuum. Very gradually, we moved functionality to new apps that leveraged the original app&#8217;s APIs. The stuff inside that shell didn&#8217;t really change. It just got a new face and became the data provider.</p>
 
@@ -1139,7 +1139,7 @@
 
 <p>So what is the right time to make a completely new shell (app/repo)? I&#8217;ll agree that the correct answer could be &#8220;never.&#8221; However, the siren song of the full rewrite is strong.</p>
 
-<p>The main thing to understand is that the goal was to test a new business model. We had experimented with many different ways to get tasks done and thought that we now knew the single, best way. The &#8220;single&#8221; is the important part there. As <a href="http://bleonard.github.com/blog/2015/10/06/v2-retrospective/">noted</a>, the current codebase had support for many iterations and combinations that were created in search of product-market fit. While it would have been technically possible to shoehorn the new model in as yet another variation, we were already overrun with combinations.</p>
+<p>The main thing to understand is that the goal was to test a new business model. We had experimented with many different ways to get tasks done and thought that we now knew the single, best way. The &#8220;single&#8221; is the important part there. As <a href="http://bleonard.github.io/blog/2015/10/06/v2-retrospective/">noted</a>, the current codebase had support for many iterations and combinations that were created in search of product-market fit. While it would have been technically possible to shoehorn the new model in as yet another variation, we were already overrun with combinations.</p>
 
 <p>The second note is that this was to be a test in a new market. Specifically, we were going to launch this test in London. While Londoners do speak English, we really wanted to do full translation the right way on the whole site. It would have taken a really long time to do i18n right in the current app. It was just not build with that in mind. And the majority wouldn&#8217;t have been needed. To do it correctly would have also meant spreading the notion of &#8220;locale&#8221; through the entire ecosystem including the payment system, database, background workers, etc. Overall, it was much easier to start with the requirement of i18n than bolt it on.</p>
 
@@ -1159,10 +1159,10 @@
   
   <entry>
     <title type="html"><![CDATA[Building React Native Apps]]></title>
-    <link href="http://bleonard.github.com/blog/2015/10/18/building-react-native-apps/"/>
+    <link href="http://bleonard.github.io/blog/2015/10/18/building-react-native-apps/"/>
     <updated>2015-10-18T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/10/18/building-react-native-apps</id>
-    <content type="html"><![CDATA[<p>We&#8217;ve been using and loving React Native as noted in my <a href="http://bleonard.github.com/blog/2015/09/21/react-native-example-app">previous post</a>. As we are working towards rolling out a fully-featured app, one thing that needed solved was how we should build the app for different environments. For example, how can we make (slightly different) development, staging, and production builds?</p>
+    <id>http://bleonard.github.io/blog/2015/10/18/building-react-native-apps</id>
+    <content type="html"><![CDATA[<p>We&#8217;ve been using and loving React Native as noted in my <a href="http://bleonard.github.io/blog/2015/09/21/react-native-example-app">previous post</a>. As we are working towards rolling out a fully-featured app, one thing that needed solved was how we should build the app for different environments. For example, how can we make (slightly different) development, staging, and production builds?</p>
 
 <p>In a <a href="https://github.com/facebook/react-native/issues/2246">Github issue</a>, I ran into a few other people also wondering how to do this, so I&#8217;ve added a few ways to the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">Example App</a> to show the approaches we are using.</p>
 
@@ -1368,9 +1368,9 @@
   
   <entry>
     <title type="html"><![CDATA[V2 - Retrospective]]></title>
-    <link href="http://bleonard.github.com/blog/2015/10/06/v2-retrospective/"/>
+    <link href="http://bleonard.github.io/blog/2015/10/06/v2-retrospective/"/>
     <updated>2015-10-06T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/10/06/v2-retrospective</id>
+    <id>http://bleonard.github.io/blog/2015/10/06/v2-retrospective</id>
     <content type="html"><![CDATA[<p>TaskRabbit began as <a href="http://www.boston.com/business/technology/articles/2009/07/05/web_start_up_takes_entrepreneurs_idea_and_runs_with_it/">RunMyErrand</a> in 2008 when Leah had the <a href="http://techli.com/2011/09/taskrabbit-interview-leah-busque/">idea</a> and coded up the first version of the site. In 2009, I had the opportunity to help out in little ways like adding Facebook Connect support just after it launched and Leah got into <a href="http://techcrunch.com/2009/05/28/facebook-names-first-class-of-fbfund-rev-its-new-incubator/">Facebook Fund</a>. From there, she raised a <a href="http://www.xconomy.com/boston/2009/10/30/runmyerrand-picks-up-1-million-from-west-coast-venture-firms/">seed round</a> and I came on full-time.</p>
 
 <p>For a few weeks after starting, I worked on the RunMyErrand codebase, adding features and fixing bugs. Quickly, though, a few things became clear. First, we were probably going to change our name. RunMyErrand made people think only about laundry. Second, the changes we wanted to make drastic and hard to make with confidence in a codebase with no tests. I was hoping to work and live with this code for several years and we did not have the foundation that would make that a productive and enjoyable experience.</p>
@@ -1386,7 +1386,7 @@
 <p>I started over Christmas at the very beginning.</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/v2-retrospective/tracker2009.png" alternate="Tracker 2009" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/v2-retrospective/tracker2009.png" alternate="Tracker 2009" class="bigPicture" />
 </div>
 
 
@@ -1458,7 +1458,7 @@
 
 <p>The next thing I noticed was that these were the same times that we wanted to send notifications like email or SMS. Because of that, as the timeline event was being saved, it checked if there were messages to send to the people associated and queued up workers to do that. The result of this was more or less magic when, for example, a Task was assigned. The <code>task_assigned</code> timeline event would be saved, it would show up on the global timeline and the one for that city as well as the one for that task, and two mails and/or push notifications would be sent. If you wanted to send a new mail that had nothing to do with state changes (5%), then you&#8217;d make a timeline event. This turned out to be a great record as well to note things that were happening.</p>
 
-<p>Eventually, as the ecosystem grew to disparate systems, we also added publishing to <a href="https://github.com/taskrabbit/resque-bus">Resque Bus</a> to the list so those systems could subscribe to be notified of the changes as they occurred. Overall, this is great pattern. Being event-driven is very effective in a lot of cases and is the reason V3 still uses Resque Bus for all the reasons I talked about in <a href="http://bleonard.github.com/blog/2013/09/28/resque-bus/">that article</a>. Having strong patterns like this is also important. Once you understand the pattern and have the mental model, you can easily grasp most concepts in the system.</p>
+<p>Eventually, as the ecosystem grew to disparate systems, we also added publishing to <a href="https://github.com/taskrabbit/resque-bus">Resque Bus</a> to the list so those systems could subscribe to be notified of the changes as they occurred. Overall, this is great pattern. Being event-driven is very effective in a lot of cases and is the reason V3 still uses Resque Bus for all the reasons I talked about in <a href="http://bleonard.github.io/blog/2013/09/28/resque-bus/">that article</a>. Having strong patterns like this is also important. Once you understand the pattern and have the mental model, you can easily grasp most concepts in the system.</p>
 
 <p>However, few things easily stand the test of time and evolving requirements. It seems possible that the stronger the pattern, the less likely it will hold up because it made some assumptions about the older world. As more and more features and nuance we added to the system, those helpers got crazier and crazier with <code>if</code> or <code>case</code> statements about exactly what kind of task we were trying to show (for example). Also, not every event should be public, different people should see different events, or the same same events but with different content. This, along with the polymorphic nature to begin with, really hurt performance because we couldn&#8217;t cache it very well. Over time, we relied less and less on the actual display of timeline. Each list became more custom for the case at hand. That was probably a good thing, but it was a good crutch at the beginning.</p>
 
@@ -1573,7 +1573,7 @@
 <p>V2 was my first Rails project and I was (and continue to be) amazed by the Ruby community. Everything that I wanted to do had already been done, more or less, before. I now realize that will probably always be the case. There are only so many patterns out there and building just about any app is probably about putting them together for a specific purpose. The amazing thing (and the trap) of the Ruby community is that there is already a <a href="http://rubygems.org/">gem</a> or ten available for each of those patterns.</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/v2-retrospective/trap.jpg" alternate="It's a trap!" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/v2-retrospective/trap.jpg" alternate="It's a trap!" class="bigPicture" />
 </div>
 
 
@@ -1777,7 +1777,7 @@
 </ul>
 
 
-<p>Additionally, there were several apps for specific functionality defined as &#8220;Bus Apps&#8221; in the <a href="http://bleonard.github.com/blog/2013/09/28/resque-bus/">Resque Bus post</a>:</p>
+<p>Additionally, there were several apps for specific functionality defined as &#8220;Bus Apps&#8221; in the <a href="http://bleonard.github.io/blog/2013/09/28/resque-bus/">Resque Bus post</a>:</p>
 
 <ul>
 <li>Sending emails, text messages, and push messages</li>
@@ -1913,7 +1913,7 @@
 
 <p>With one of these satellite apps, the core app was the opposite. It is quite important and quite stateful. The whole app depended on the current state of things and needed it to change. It was also complicated by the direct database access which generally had to line up with what the API was returning. I spent some time stubbing ActiveRecord/MySQL and that was somewhat interesting, but in the end, it was not a stable combination. It also did not fully inspire confidence about the whole system and the interplay between services. To be clear, there were several stubbed (internal) services, but we decided that core one should be tested in tandem.</p>
 
-<p>To solve this problem, we created <a href="https://github.com/taskrabbit/offshore">offshore</a> which I have <a href="http://bleonard.github.com/blog/2014/03/16/offshore/">written about before</a>. It ran and refreshed a fixtured and factory-able version of the core platform for the satellite apps to use which testing. It clearly added overhead, but was the best combination of confidence, running time, and maintainability that we found.</p>
+<p>To solve this problem, we created <a href="https://github.com/taskrabbit/offshore">offshore</a> which I have <a href="http://bleonard.github.io/blog/2014/03/16/offshore/">written about before</a>. It ran and refreshed a fixtured and factory-able version of the core platform for the satellite apps to use which testing. It clearly added overhead, but was the best combination of confidence, running time, and maintainability that we found.</p>
 
 <p>The core test suite itself was more standard. It simulated the various requests that external and internal components made to it and checked the results. Of course, the suite itself was taking an hour to run, even when in parallel.</p>
 
@@ -1923,13 +1923,13 @@
 
 <p>The improved experience usually came from a specific focus on the data that targeted the use case instead of &#8220;proper&#8221; storage. For example, the primary driver of the tasker application was an <a href="http://www.elasticsearch.org/">ElasticSearch</a> index that contained all tasks currently available. It was all the same data that was somewhere in the core database, but it was stored in a way to optimize the tasker browsing experience. I&#8217;m not sure why did didn&#8217;t add this early to the core app. It&#8217;s probably because all the data was already there and we could get by with SQL queries. Or maybe adding <em>yet another</em> thing to the app was too much to think about. But in it&#8217;s own app, it was liberating.</p>
 
-<p>The app would subscribe to the <a href="http://bleonard.github.com/blog/2013/09/28/resque-bus/">bus</a> to get changes and keep it&#8217;s index up to to date. It served it&#8217;s own API that the app used. This API mostly just hit the ElasticSearch index. I believe it also did a quick sanity check against the task state by checking ids in SQL just to make sure the data was not stale as the tasks got picked up quickly and the bus could take a few seconds.</p>
+<p>The app would subscribe to the <a href="http://bleonard.github.io/blog/2013/09/28/resque-bus/">bus</a> to get changes and keep it&#8217;s index up to to date. It served it&#8217;s own API that the app used. This API mostly just hit the ElasticSearch index. I believe it also did a quick sanity check against the task state by checking ids in SQL just to make sure the data was not stale as the tasks got picked up quickly and the bus could take a few seconds.</p>
 
 <h3>Back Together</h3>
 
-<p>This is the kind of thing that&#8217;s exciting about making new apps. The plumbing was exhausting and we never really got it to a spot without friction, but we did end up creating better user experiences because of the focus. Of course, we retreated almost completely from this approach with the creation of V3. A few <a href="http://bleonard.github.com/blog/2013/09/28/resque-bus/">bus apps</a> exist but the whole experience in now in one app/codebase.</p>
+<p>This is the kind of thing that&#8217;s exciting about making new apps. The plumbing was exhausting and we never really got it to a spot without friction, but we did end up creating better user experiences because of the focus. Of course, we retreated almost completely from this approach with the creation of V3. A few <a href="http://bleonard.github.io/blog/2013/09/28/resque-bus/">bus apps</a> exist but the whole experience in now in one app/codebase.</p>
 
-<p>The main trick was to drastically simply what the app did in the first place by limiting feature set. On the technical level, the primary goal is to still feel that same freedom and focus when developing the features you do build. We&#8217;ve primarily done this through the use of <a href="http://bleonard.github.com/blog/2014/02/11/rails-4-engines/">engines</a>.</p>
+<p>The main trick was to drastically simply what the app did in the first place by limiting feature set. On the technical level, the primary goal is to still feel that same freedom and focus when developing the features you do build. We&#8217;ve primarily done this through the use of <a href="http://bleonard.github.io/blog/2014/02/11/rails-4-engines/">engines</a>.</p>
 
 <h2>Final Words</h2>
 
@@ -2197,7 +2197,7 @@
 
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/v2-retrospective/dvd.jpg" alternate="BL DVD" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/v2-retrospective/dvd.jpg" alternate="BL DVD" class="bigPicture" />
 </div>
 
 ]]></content>
@@ -2205,15 +2205,15 @@
   
   <entry>
     <title type="html"><![CDATA[React Native Example App: Navigation]]></title>
-    <link href="http://bleonard.github.com/blog/2015/09/21/react-native-example-app/"/>
+    <link href="http://bleonard.github.io/blog/2015/09/21/react-native-example-app/"/>
     <updated>2015-09-21T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/09/21/react-native-example-app</id>
+    <id>http://bleonard.github.io/blog/2015/09/21/react-native-example-app</id>
     <content type="html"><![CDATA[<p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, we have been looking into building an iOS application in <a href="https://facebook.github.io/react-native/">React Native</a>. This is probably the first pure technology that I&#8217;ve been this excited about since moving from C to Ruby.</p>
 
 <p>However, it&#8217;s definitely still in its early days. There are not many examples of how people are doing things out there. To help remedy this and share what we are learning, I made a <a href="https://github.com/taskrabbit/ReactNativeSampleApp">sample React Native application</a>.</p>
 
 <div class="jumbotron">
-  <image src="http://bleonard.github.com/images/posts/react-native-navigation/screenshots.png" class="bigPicture" />
+  <image src="http://bleonard.github.io/images/posts/react-native-navigation/screenshots.png" class="bigPicture" />
 </div>
 
 
@@ -2290,7 +2290,7 @@
 
 <p>Here what I mean by recursive. This is sample://dashboard/follows/jrichardlai/follows/taskrabbit/follows/bleonard/follows/taskrabbit/follows/bleonard/follows/jrichardlai/post (and back):</p>
 
-<p><image src="http://bleonard.github.com/images/posts/react-native-navigation/nested.gif" style="max-width: 300px"/></p>
+<p><image src="http://bleonard.github.io/images/posts/react-native-navigation/nested.gif" style="max-width: 300px"/></p>
 
 <h2>Actions</h2>
 
@@ -2449,9 +2449,9 @@
   
   <entry>
     <title type="html"><![CDATA[Teaching CSS]]></title>
-    <link href="http://bleonard.github.com/blog/2015/08/01/teaching-css/"/>
+    <link href="http://bleonard.github.io/blog/2015/08/01/teaching-css/"/>
     <updated>2015-08-01T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/08/01/teaching-css</id>
+    <id>http://bleonard.github.io/blog/2015/08/01/teaching-css</id>
     <content type="html"><![CDATA[<p>To my surprise, my daughter asked me if I would teach her how to build a web site today. She more or less wants a blog to keep track of what is going on at a recess club she made at school: regular notes, calendar, things like that.</p>
 
 <p>I had her draw out on paper what she wanted to build. It was interesting to see her reinvent the concept of a blog. For example, her first iteration only showed the post from &#8220;Today.&#8221; I asked her how you would see yesterday&#8217;s post. So she add a &#8220;Today&#8221; and a &#8220;Yesterday&#8221; button. So I asked her how to see the post from last week. Her answer was approximately, &#8220;Well, they just need to keep up!&#8221; However, she eventually conceded to a &#8220;Previous&#8221; and &#8220;Next&#8221; button.</p>
@@ -2530,9 +2530,9 @@
   
   <entry>
     <title type="html"><![CDATA[OKRs]]></title>
-    <link href="http://bleonard.github.com/blog/2015/07/01/okrs/"/>
+    <link href="http://bleonard.github.io/blog/2015/07/01/okrs/"/>
     <updated>2015-07-01T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/07/01/okrs</id>
+    <id>http://bleonard.github.io/blog/2015/07/01/okrs</id>
     <content type="html"><![CDATA[<p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, we have something called Objectives and Key Results or <a href="https://en.wikipedia.org/wiki/OKR">OKRs</a> for short. Many companies do the same.</p>
 
 <p>We&#8217;ve always talked about them as one thing. As in, &#8220;What&#8217;s the OKR?&#8221; That would more or less mean, &#8220;What number are we trying to hit?&#8221; An example would be getting better at fulfilling tasks by focusing on moving up the percentage of tasks that are posted and get successfully completed.</p>
@@ -2585,9 +2585,9 @@
   
   <entry>
     <title type="html"><![CDATA[Big Decimal]]></title>
-    <link href="http://bleonard.github.com/blog/2015/06/04/big-decimal/"/>
+    <link href="http://bleonard.github.io/blog/2015/06/04/big-decimal/"/>
     <updated>2015-06-04T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/06/04/big-decimal</id>
+    <id>http://bleonard.github.io/blog/2015/06/04/big-decimal</id>
     <content type="html"><![CDATA[<p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, people have hourly rates for the tasks that they do. They get paid based on the number of hours that they work.</p>
 
 <p>We try to deal in base units to remove ambiguity. For example, we store the hourly rate in cents as an integer instead of in dollars as a double. Reporting time worked occurs in seconds. When that reporting occurs, there is a calculation to do to understand how much the Tasker needs to be paid. It might go something like this:</p>
@@ -2709,10 +2709,10 @@
   
   <entry>
     <title type="html"><![CDATA[Queue Bus]]></title>
-    <link href="http://bleonard.github.com/blog/2015/04/02/queue-bus/"/>
+    <link href="http://bleonard.github.io/blog/2015/04/02/queue-bus/"/>
     <updated>2015-04-02T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/04/02/queue-bus</id>
-    <content type="html"><![CDATA[<p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, we have been using <a href="http://bleonard.github.com/blog/2013/09/28/resque-bus/">resque-bus</a> for about two years. It has continued to provide value by  linking components via a loosely coupled publish/subscription model. We have seen 10x the number of events going through it, but have not yet hit any scaling issues. The benefit of using the tools we already have continues to be a huge win.</p>
+    <id>http://bleonard.github.io/blog/2015/04/02/queue-bus</id>
+    <content type="html"><![CDATA[<p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, we have been using <a href="http://bleonard.github.io/blog/2013/09/28/resque-bus/">resque-bus</a> for about two years. It has continued to provide value by  linking components via a loosely coupled publish/subscription model. We have seen 10x the number of events going through it, but have not yet hit any scaling issues. The benefit of using the tools we already have continues to be a huge win.</p>
 
 <p>But other teams are using other tools like <a href="http://sidekiq.org/">Sidekiq</a>. We&#8217;re also interested in trying it out, but resque-bus (unsurprisingly) was tied closely to <a href="https://github.com/resque/resque">Resque</a>. We&#8217;ve changed that by creating <a href="https://github.com/queue-bus/queue-bus">queue-bus</a> and using an adapter pattern. There are now adapters in <a href="https://github.com/queue-bus/resque-bus">resque-bus</a> and <a href="https://github.com/queue-bus/sidekiq-bus">sidekiq-bus</a>, as well as a compatible version in <a href="https://github.com/queue-bus/node-queue-bus">node-queue-bus</a>.</p>
 
@@ -2788,9 +2788,9 @@
   
   <entry>
     <title type="html"><![CDATA[Apple TV Dashboard]]></title>
-    <link href="http://bleonard.github.com/blog/2015/02/16/apple-tv-dashboard/"/>
+    <link href="http://bleonard.github.io/blog/2015/02/16/apple-tv-dashboard/"/>
     <updated>2015-02-16T00:00:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2015/02/16/apple-tv-dashboard</id>
+    <id>http://bleonard.github.io/blog/2015/02/16/apple-tv-dashboard</id>
     <content type="html"><![CDATA[<p>So you have all these screens around and you want to have something awesome like on those one that Panic <a href="http://www.panic.com/blog/panic-status-board-2013-edition/">made</a>. You may also already have Apple TVs on these TVs because AirPlay is an effective way to project screens in an office full of Macs. This is position we were in at <a href="https://www.taskrabbit.com">TaskRabbit</a> and we&#8217;d tried a few things.</p>
 
 <p>The most recent iteration was to have one Mac Mini in a closet and lots of very long wires into the TVs. It displayed a web page that cycled through the content. This wasn&#8217;t bad, but had a few issues. First, the screens all had to show the same thing. I wanted to be able to have different content on each. For example, in addition to key metrics, the conference rooms would have who had the room booked or the one by customer support would have more data on the call volume. But it just isn&#8217;t worth it to have 10 Mac Minis for this purpose. The other issue is that people still wanted to use Airplay, so they would switch the input and then not switch it back to the ambient content.</p>
@@ -2804,7 +2804,7 @@
 <p>It uses the new gems, <a href="https://github.com/taskrabbit/dashing-screenshots">dashing-screenshots</a> and <a href="https://github.com/taskrabbit/icloud-photo">icloud-photo</a>, to take screenshots and upload them to iCloud. These then show up on an Apple TV</p>
 
 <div class="jumbotron">
-<img alt="Sample dashboard on the wall" src="http://bleonard.github.com/images/posts/appletv/sampletv.jpg" class="bigPicture" />
+<img alt="Sample dashboard on the wall" src="http://bleonard.github.io/images/posts/appletv/sampletv.jpg" class="bigPicture" />
 </div>
 
 
@@ -3417,9 +3417,9 @@ I also found it helpful to use <a href="http://semaja2.net/projects/insomniaxinf
   
   <entry>
     <title type="html"><![CDATA[Translating Rails fields]]></title>
-    <link href="http://bleonard.github.com/blog/2015/01/06/translating-rails-fields/"/>
+    <link href="http://bleonard.github.io/blog/2015/01/06/translating-rails-fields/"/>
     <updated>2015-01-06T00:00:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2015/01/06/translating-rails-fields</id>
+    <id>http://bleonard.github.io/blog/2015/01/06/translating-rails-fields</id>
     <content type="html"><![CDATA[<p>When we launched <a href="https://www.taskrabbit.com">TaskRabbit</a> in London, one of our goals was to have a fully localized product. There are enough differences between British English and US English to not cut (m)any corners. Of course, it&#8217;s even more important in completely different languages.</p>
 
 <p>An issue that I noticed one day was in our signup flow. It said &#8220;Last name is required.&#8221; This was caused by a blank field and a model-level validation.</p>
@@ -3639,9 +3639,9 @@ I also found it helpful to use <a href="http://semaja2.net/projects/insomniaxinf
   
   <entry>
     <title type="html"><![CDATA[Rails Dead Columns]]></title>
-    <link href="http://bleonard.github.com/blog/2014/11/13/rails-dead-columns/"/>
+    <link href="http://bleonard.github.io/blog/2014/11/13/rails-dead-columns/"/>
     <updated>2014-11-13T00:00:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2014/11/13/rails-dead-columns</id>
+    <id>http://bleonard.github.io/blog/2014/11/13/rails-dead-columns</id>
     <content type="html"><![CDATA[<p>It happens. This column has to go. But in a <a href="http://rubyonrails.org/">Rails</a> app, there are a few problems. You can&#8217;t just drop it.</p>
 
 <p>My first expectation is that we would create a <a href="http://guides.rubyonrails.org/migrations.html">migration</a> and do something like this.</p>
@@ -3878,7 +3878,7 @@ I also found it helpful to use <a href="http://semaja2.net/projects/insomniaxinf
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>This worked with a slightly modified version of the above code. We stopped using that version, though, when we switched to heavily using <a href="http://bleonard.github.com/blog/2014/02/11/rails-4-engines/">engines</a>, and now have many <code>User</code> (and other) models. The initializer works better to make sure it hits all of them.</p>
+<p>This worked with a slightly modified version of the above code. We stopped using that version, though, when we switched to heavily using <a href="http://bleonard.github.io/blog/2014/02/11/rails-4-engines/">engines</a>, and now have many <code>User</code> (and other) models. The initializer works better to make sure it hits all of them.</p>
 
 <h2>Conclusion</h2>
 
@@ -3888,9 +3888,9 @@ I also found it helpful to use <a href="http://semaja2.net/projects/insomniaxinf
   
   <entry>
     <title type="html"><![CDATA[Rails Stats]]></title>
-    <link href="http://bleonard.github.com/blog/2014/11/07/rails-stats/"/>
+    <link href="http://bleonard.github.io/blog/2014/11/07/rails-stats/"/>
     <updated>2014-11-07T00:00:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2014/11/07/rails-stats</id>
+    <id>http://bleonard.github.io/blog/2014/11/07/rails-stats</id>
     <content type="html"><![CDATA[<p>Summary: I extracted and improved on the Rails stats tool. The code is <a href="https://github.com/bleonard/rails_stats/">here</a>.</p>
 
 <h3>Process</h3>
@@ -3930,7 +3930,7 @@ I also found it helpful to use <a href="http://semaja2.net/projects/insomniaxinf
 <li>Anything added to the app directory (jobs, observers)</li>
 <li>Rspec tests (it only supports Test::Unit)</li>
 <li>Cucumber features</li>
-<li>Any code in <a href="http://bleonard.github.com/blog/2014/02/11/rails-4-engines/">Engines</a></li>
+<li>Any code in <a href="http://bleonard.github.io/blog/2014/02/11/rails-4-engines/">Engines</a></li>
 </ul>
 
 
@@ -4391,9 +4391,9 @@ I also found it helpful to use <a href="http://semaja2.net/projects/insomniaxinf
   
   <entry>
     <title type="html"><![CDATA[Rails Schema with LHM]]></title>
-    <link href="http://bleonard.github.com/blog/2014/10/30/rails-schema-with-lhm/"/>
+    <link href="http://bleonard.github.io/blog/2014/10/30/rails-schema-with-lhm/"/>
     <updated>2014-10-30T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2014/10/30/rails-schema-with-lhm</id>
+    <id>http://bleonard.github.io/blog/2014/10/30/rails-schema-with-lhm</id>
     <content type="html"><![CDATA[<p>At <a href="https://www.taskrabbit.com">TaskRabbit</a>, we like <a href="http://www.mysql.com/">MySQL</a>. As with everything, it has its own set of issues, though. One of these issues is that it locks the table while a column is added. This is not the biggest deal in the early days of a table, but once you start getting millions of rows and consistent traffic around the clock, this prevents the site from working as expected.</p>
 
 <p>The first way that we worked around this problem was with the <a href="http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html">pt-online-schema-change</a> tool. It does the following:</p>
@@ -4466,9 +4466,9 @@ I also found it helpful to use <a href="http://semaja2.net/projects/insomniaxinf
   
   <entry>
     <title type="html"><![CDATA[Geohashes]]></title>
-    <link href="http://bleonard.github.com/blog/2014/09/24/geohashes/"/>
+    <link href="http://bleonard.github.io/blog/2014/09/24/geohashes/"/>
     <updated>2014-09-24T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2014/09/24/geohashes</id>
+    <id>http://bleonard.github.io/blog/2014/09/24/geohashes</id>
     <content type="html"><![CDATA[<p>Over the years, we&#8217;ve struggled at <a href="https://www.taskrabbit.com">TaskRabbit</a> with a way to represent smaller geographic areas. Postal codes seems to be the most obvious but these vary dramatically in size. For example, there are postal codes that are just one building and ones that are bigger than some US states. We&#8217;ve also tried &#8220;neighborhood&#8221; data from various sources, but these are somewhat unreliable.</p>
 
 <p>I recently learned about and started using <a href="http://en.wikipedia.org/wiki/Geohash">geohashes</a> to break the world into boxes and have been very happy with the results. I gave a lightning talk last week at <a href="http://gogaruco.com/">GoGaRuCo</a> on the subject. Many of them had heard about it, but the talk went over fairly well.</p>
@@ -4485,24 +4485,24 @@ I also found it helpful to use <a href="http://semaja2.net/projects/insomniaxinf
 
 <p>Using the weight, I can combine and draw the geohashes (<a href="https://github.com/rgeo/rgeo">RGeo</a>/<a href="http://leafletjs.com/">Leaflet</a>). As an example, here is drawing where a particular Tasker is likely to want to work:</p>
 
-<p><img src="http://bleonard.github.com/images/posts/geohashes/medium.jpg" alt="Likely to Accept" /></p>
+<p><img src="http://bleonard.github.io/images/posts/geohashes/medium.jpg" alt="Likely to Accept" /></p>
 
 <!-- more -->
 
 
 <p>And where this Tasker is generally positive:</p>
 
-<p><img src="http://bleonard.github.com/images/posts/geohashes/low.jpg" alt="Positive" /></p>
+<p><img src="http://bleonard.github.io/images/posts/geohashes/low.jpg" alt="Positive" /></p>
 
 <p>And also where they have negative feedback:</p>
 
-<p><img src="http://bleonard.github.com/images/posts/geohashes/negative.jpg" alt="Negative" /></p>
+<p><img src="http://bleonard.github.io/images/posts/geohashes/negative.jpg" alt="Negative" /></p>
 
 <p>Using these tools and the fact that every Tasker&#8217;s map is different, we can make better recommendations. This reduces friction in the marketplace.</p>
 
 <p>One of the gotchas is mentioned in the <a href="http://www.bigfastblog.com/geohash-intro">article</a> I referenced earlier. If a point is on a border, especially at the beginning of the decision process, it can end up being massively off. I worked around this in my implementation by spreading out the weight to it&#8217;s neighbors. So if the location got 100 points, the neighbors would also get some, degrading as it spread out.</p>
 
-<p><img src="http://bleonard.github.com/images/posts/geohashes/boxes.jpg" alt="Spread out the weight" /></p>
+<p><img src="http://bleonard.github.io/images/posts/geohashes/boxes.jpg" alt="Spread out the weight" /></p>
 
 <p>This has proven to minimize the boundary issue.</p>
 

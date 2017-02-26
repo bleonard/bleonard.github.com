@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: ruby | BLog]]></title>
-  <link href="http://bleonard.github.com/blog/categories/ruby/atom.xml" rel="self"/>
-  <link href="http://bleonard.github.com/"/>
-  <updated>2017-02-25T21:54:36-08:00</updated>
-  <id>http://bleonard.github.com/</id>
+  <link href="http://bleonard.github.io/blog/categories/ruby/atom.xml" rel="self"/>
+  <link href="http://bleonard.github.io/"/>
+  <updated>2017-02-25T22:05:39-08:00</updated>
+  <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Big Decimal]]></title>
-    <link href="http://bleonard.github.com/blog/2015/06/04/big-decimal/"/>
+    <link href="http://bleonard.github.io/blog/2015/06/04/big-decimal/"/>
     <updated>2015-06-04T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2015/06/04/big-decimal</id>
+    <id>http://bleonard.github.io/blog/2015/06/04/big-decimal</id>
     <content type="html"><![CDATA[<p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, people have hourly rates for the tasks that they do. They get paid based on the number of hours that they work.</p>
 
 <p>We try to deal in base units to remove ambiguity. For example, we store the hourly rate in cents as an integer instead of in dollars as a double. Reporting time worked occurs in seconds. When that reporting occurs, there is a calculation to do to understand how much the Tasker needs to be paid. It might go something like this:</p>
@@ -118,9 +118,9 @@ big decimal static   2.620000   0.040000   2.660000 (  2.680582)
   
   <entry>
     <title type="html"><![CDATA[Rails Dead Columns]]></title>
-    <link href="http://bleonard.github.com/blog/2014/11/13/rails-dead-columns/"/>
+    <link href="http://bleonard.github.io/blog/2014/11/13/rails-dead-columns/"/>
     <updated>2014-11-13T00:00:00-08:00</updated>
-    <id>http://bleonard.github.com/blog/2014/11/13/rails-dead-columns</id>
+    <id>http://bleonard.github.io/blog/2014/11/13/rails-dead-columns</id>
     <content type="html"><![CDATA[<p>It happens. This column has to go. But in a <a href="http://rubyonrails.org/">Rails</a> app, there are a few problems. You can't just drop it.</p>
 
 <p>My first expectation is that we would create a <a href="http://guides.rubyonrails.org/migrations.html">migration</a> and do something like this.</p>
@@ -282,9 +282,9 @@ end
   
   <entry>
     <title type="html"><![CDATA[Geohashes]]></title>
-    <link href="http://bleonard.github.com/blog/2014/09/24/geohashes/"/>
+    <link href="http://bleonard.github.io/blog/2014/09/24/geohashes/"/>
     <updated>2014-09-24T00:00:00-07:00</updated>
-    <id>http://bleonard.github.com/blog/2014/09/24/geohashes</id>
+    <id>http://bleonard.github.io/blog/2014/09/24/geohashes</id>
     <content type="html"><![CDATA[<p>Over the years, we've struggled at <a href="https://www.taskrabbit.com">TaskRabbit</a> with a way to represent smaller geographic areas. Postal codes seems to be the most obvious but these vary dramatically in size. For example, there are postal codes that are just one building and ones that are bigger than some US states. We've also tried "neighborhood" data from various sources, but these are somewhat unreliable.</p>
 
 <p>I recently learned about and started using <a href="http://en.wikipedia.org/wiki/Geohash">geohashes</a> to break the world into boxes and have been very happy with the results. I gave a lightning talk last week at <a href="http://gogaruco.com/">GoGaRuCo</a> on the subject. Many of them had heard about it, but the talk went over fairly well.</p>
