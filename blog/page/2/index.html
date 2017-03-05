@@ -7,7 +7,7 @@
 	<meta name="author" content="Brian Leonard">
 
 	
-	<meta name="description" content="To my surprise, my daughter asked me if I would teach her how to build a web site today. She more or less wants a blog to keep track of what is &hellip;">
+	<meta name="description" content="At TaskRabbit, we have been looking into building an iOS application in React Native. This is probably the first pure technology that I&#8217;ve &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,59 @@
 			
 			<div class="mid-col-container">
 				<div id="content" class="inner">
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2015-09-21T00:00:00-07:00" pubdate data-updated="true">Sep 21<span>st</span>, 2015</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/architecture/'>architecture</a>, <a class='category' href='/blog/categories/ios/'>ios</a>, <a class='category' href='/blog/categories/javascript/'>javascript</a>, <a class='category' href='/blog/categories/react/'>react</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2015/09/21/react-native-example-app/">React Native Example App: Navigation</a></h1>
+	<div class="entry-content">
+		<p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, we have been looking into building an iOS application in <a href="https://facebook.github.io/react-native/">React Native</a>. This is probably the first pure technology that I&#8217;ve been this excited about since moving from C to Ruby.</p>
+
+<p>However, it&#8217;s definitely still in its early days. There are not many examples of how people are doing things out there. To help remedy this and share what we are learning, I made a <a href="https://github.com/taskrabbit/ReactNativeSampleApp">sample React Native application</a>.</p>
+
+<div class="jumbotron">
+  <image src="/images/posts/react-native-navigation/screenshots.png" class="bigPicture" />
+</div>
+
+
+<p>The app itself is vaguely like twitter and/or tumblr. There are users that make posts. They follow other users. You can look at users they follow follows and those users&#8217; posts. And on and on! The features (or styling) isn&#8217;t the main point. At this time, we&#8217;re mostly demonstrating architectural concepts.</p>
+
+<p>The app we&#8217;re working on is a bit ahead of this one, but I think it will be neat to have this one publicly walk through the same steps that we have done privately. Everything is pretty new and the patterns are not established. We&#8217;ll post here about some pattern or refactor and update the app and hopefully start a great conversation.</p>
+
+<h2>Navigation</h2>
+
+<p>The first pattern that I wanted to talk about is navigation. The web has a pretty solid navigation story (with the URLs and such) and some <a href="https://github.com/rackt/react-router">tools</a> to map that to React applications. I think it&#8217;s less clear on the phone.</p>
+
+<p>I&#8217;m not sure why it&#8217;s different, actually, because there is still usually a &#8220;Back&#8221; button and one screen at a time. Yet, iOS development seems to have evolved in another direction. Most apps are all about this <code>NavigationController</code> and we <code>push</code> and <code>pop</code> and stuff like that. Then things get totally weird when we try to put the URLs back in for something like <a href="http://blog.originate.com/blog/2014/04/22/deeplinking-in-ios/">deep linking</a>.</p>
+
+
+		
+		<a href="/blog/2015/09/21/react-native-example-app/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
 
 
     <article class="post">
@@ -893,58 +946,6 @@
 
 		
 		
-	</div>
-
-</article>
-
-
-    <article class="post">
-	<div class="meta">
-		<div class="date">
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-09-24T00:00:00-07:00" pubdate data-updated="true">Sep 24<span>th</span>, 2014</time></div>
-		<div class="tags">
-
-
-	<a class='category' href='/blog/categories/elasticsearch/'>elasticsearch</a>, <a class='category' href='/blog/categories/geohash/'>geohash</a>, <a class='category' href='/blog/categories/ruby/'>ruby</a>
-
-
-</div>
-		
-	</div>
-	<h1 class="title"><a href="/blog/2014/09/24/geohashes/">Geohashes</a></h1>
-	<div class="entry-content">
-		<p>Over the years, we&#8217;ve struggled at <a href="https://www.taskrabbit.com">TaskRabbit</a> with a way to represent smaller geographic areas. Postal codes seems to be the most obvious but these vary dramatically in size. For example, there are postal codes that are just one building and ones that are bigger than some US states. We&#8217;ve also tried &#8220;neighborhood&#8221; data from various sources, but these are somewhat unreliable.</p>
-
-<p>I recently learned about and started using <a href="http://en.wikipedia.org/wiki/Geohash">geohashes</a> to break the world into boxes and have been very happy with the results. I gave a lightning talk last week at <a href="http://gogaruco.com/">GoGaRuCo</a> on the subject. Many of them had heard about it, but the talk went over fairly well.</p>
-
-<h3>Use Case</h3>
-
-<p>The problem at hand is one of probabilities. Given a task, who are the best taskers for the job. Or conversely, given a tasker, what are the best few tasks for them. Taskers give us an idea of where they want to work but actions often speak louder than <s>words</s> user-drawn geographic polygons. So what I wanted to do was map their history into positive and negative areas of probability depending on what tasks they wanted to do and which they did not.</p>
-
-<p>I had all those points and it was fairly easy to draw a heatmap using <a href="https://www.mapbox.com/mapbox.js/example/v1.0.0/leaflet-heat/">this Leaflet plugin</a>, but that needed to be mapped to something more concrete. We would be using <a href="http://www.elasticsearch.org/">Elasticsearch</a> for the storage, so while researching it&#8217;s geo functions, I stumbled across the concept of <a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-aggregations-bucket-geohashgrid-aggregation.html">geohashes</a> which it evidently uses internally for such queries.</p>
-
-<p><a href="http://www.bigfastblog.com/geohash-intro">This</a> article gives a really good explanation of how it works. The short version is that if you were to start with the whole world and keep cutting it in half depending on where your lat/lng was, you&#8217;d end up with a lot of left/right (or top/bottom) choices. Those choices can be encoded into binary, which can be encoded into a simple string. So this spot in London (51.507794, -0.127952) would become the &#8220;gcpvj0dyds&#8221; geohash. It has the interesting property that strings (locations) that have the same start are known to be close to it. For example, the &#8220;gcpvj09swr&#8221; geohash has the first six characters in common, so we would know that is within half a mile or so of the first one.</p>
-
-<p>So now I have all of these points. I can map them to geohashes of the necessary precision (I chose 6) and give positive and negative weights for each user action. The actual calculation turns out to be really fast. I used the code from the <a href="https://github.com/masuidrive/pr_geohash/blob/master/lib/pr_geohash.rb">pr_geohash</a> gem and had no issues. It also calculates neighbors which turns out the be important.</p>
-
-<p>Using the weight, I can combine and draw the geohashes (<a href="https://github.com/rgeo/rgeo">RGeo</a>/<a href="http://leafletjs.com/">Leaflet</a>). As an example, here is drawing where a particular Tasker is likely to want to work:</p>
-
-<p><img src="/images/posts/geohashes/medium.jpg" alt="Likely to Accept" /></p>
-
-
-		
-		<a href="/blog/2014/09/24/geohashes/" class="more-link">Read on &rarr;</a>
 	</div>
 
 </article>

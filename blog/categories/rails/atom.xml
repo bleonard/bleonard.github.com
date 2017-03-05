@@ -4,7 +4,7 @@
   <title><![CDATA[Category: rails | BLog]]></title>
   <link href="http://bleonard.github.io/blog/categories/rails/atom.xml" rel="self"/>
   <link href="http://bleonard.github.io/"/>
-  <updated>2017-02-25T22:09:42-08:00</updated>
+  <updated>2017-03-05T14:05:31-08:00</updated>
   <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
@@ -12,6 +12,149 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Architecture: Service Objects]]></title>
+    <link href="http://bleonard.github.io/blog/2017/03/03/architecture-service-objects/"/>
+    <updated>2017-03-03T00:00:00-08:00</updated>
+    <id>http://bleonard.github.io/blog/2017/03/03/architecture-service-objects</id>
+    <content type="html"><![CDATA[<p>This is the second post in what is now indisputably a "series" of articles about how we build things at <a href="https://www.taskrabbit.com">TaskRabbit</a>. Over time, we/I have internalized all kinds of lessons and patterns and are trying to take the time to write some of the key things down.</p>
+
+<p>Building upwards from the <a href="/blog/2017/02/24/architecture-models/">last article about models</a>, let's talk about how we use them. The models represent rows in the database in the <a href="http://guides.rubyonrails.org/active_record_basics.html">Rails ORM</a>. What code is deciding what to put in those rows and which ones should be created, etc? In our architecture, this role is filled by <a href="https://www.netguru.co/blog/service-objects-in-rails-will-help">service objects</a>.</p>
+
+<p>Overall, we default to the following rules when using models in our system:</p>
+
+<ul>
+<li>Models contain data/state validations and methods tied directly to them</li>
+<li>Models are manipulated by service objects that reflect the user experience</li>
+</ul>
+
+
+<h3>Something has to be fat</h3>
+
+<p>In the beginning, there was <a href="http://ideum.com/2006/07/05/102/">Rails</a> and we saw that it was good. The world was optimized around the CRUD/REST use cases. Controllers had <code>update_attributes</code> and such. When there was more logic/nuance, it was put there in the controller (or the view).</p>
+
+<p>There was a backlash of sorts against that and the new paradigm was <a href="http://weblog.jamisbuck.org/2006/10/18/skinny-controller-fat-model">"Fat model, skinny controller"</a>. The controllers were simple and emphasized workflow instead of business logic. Views were simpler. That stuff was put in the models. Model code was easier to reuse.</p>
+
+<p>Thus arose the great <a href="http://blog.codeclimate.com/blog/2012/10/17/7-ways-to-decompose-fat-activerecord-models/">"God Model"</a> issue. Fat is one thing, but we had some seriously obese models. Things like <code>User</code> and <code>Task</code> simply had too much going on. We could put stuff in mixins/concerns but that didn't change the fact that there was tons of code that all could be subtly interacting with each other.</p>
+
+<p>Business logic has to go somewhere. For us, that somewhere is in service objects.</p>
+
+<h3>Operations</h3>
+
+<p>In our architecture, we call them "Operations" and they extend a class called <code>Backend::Op</code>. This more or less uses the <a href="https://github.com/mnelson/subroutine">subroutine</a> gem.</p>
+
+<p>Much can be read about what it means to be a service object, but here is my very scientific (Rails-specific) definition.</p>
+
+<ul>
+<li>Includes <code>ActiveModel</code> stuff like <code>Naming</code>, <code>Validations</code>, and <code>Callbacks</code></li>
+<li>Allows declaration of what fields (input parameters) it uses</li>
+<li>Reflects an action in the system like "sign up a user" or "invoice a job"</li>
+<li>Does whatever it needs to do to accomplish the action when asked including updating or creating one or more models</li>
+</ul>
+
+
+<p>Here's a simplified example:</p>
+
+<p>```ruby
+class InvoiceJobOp &lt; ::Backend::Op
+  include Mixins::AtomicOperation # all in same transaction</p>
+
+<p>  field :hours
+  field :job_id</p>
+
+<p>  validates :job_id, presence: true
+  validate  :validate_hour       # hours given
+  validate  :validate_assignment # tasker is assigned
+  # ... other checks</p>
+
+<p>  def perform</p>
+
+<pre><code>create_invoice!    # record hours and such
+generate_payment!  # pending payment transaction
+appointment_done!  # note that appointment completed
+
+if ongoing?
+  schedule_next_appointment! # schedule next if more
+else
+  complete_assignment!       # otherwise, no more
+end
+
+enqueue_background_workers!  # follow up later on stuff
+</code></pre>
+
+<p>  end
+end</p>
+
+<p>```</p>
+
+<h3>No Side Effects</h3>
+
+<p>When we followed the "Fat Model" pattern, we got what we wanted. This was usually methods in one of the models. Sometimes there were callbacks added. These were the most dangerous because they were happening on every <code>save</code>. Often, this added unnecessary side effects.</p>
+
+<p>With the service object approach, it is very clear what is happening for the action at hand. When you "invoice a job," you create the invoice, generate the payment, mark the appointment done, schedule the next appointment, and enqueue some background workers.</p>
+
+<p>This certainty leads to less technical and product debt. When something new needs to be added to this action, it's very clear where it goes.</p>
+
+<h3>Errors</h3>
+
+<p>Our <code>Op</code> class above does several model manipulations to the related invoices, appointments, etc. Each some of these does a <code>save</code> to something. Those <code>save</code> calls could raise errors. If any of those raise an error, then the <code>Op</code> itself will inherit it and it will be available on the <code>op.errors</code> method just like a normal <code>ActiveRecord</code> object.</p>
+
+<p>This also allows chaining of operations. If there was a <code>ScheduleAppointmentOp</code> class, it could be used in the above <code>schedule_next_appointment!</code> method. If it raised an error, it would propagate to the <code>InvoiceJobOp</code>.</p>
+
+<h3>Controllers</h3>
+
+<p>Generally speaking, we have one <code>Op</code> per controller action that declares what it expects and manipulates the backend data as needed.</p>
+
+<p>Here is a typical example from one of our controllers.</p>
+
+<p>```ruby
+class JobsController &lt; ApplicationController
+  def confirm</p>
+
+<pre><code>@job = Job.find(params[:id])
+authorize @job, :confirm? # authorization
+op = Organic::JobConfirmOp.new(current_user)
+op.submit!(params.merge(job_id: @job.id)) # perform action
+render :show # render template
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>An action will typically do the following:</p>
+
+<ul>
+<li>Load a resource</li>
+<li>Authorize the user is allowed do do an action</li>
+<li>Perform the action with an operation (other things are in place to render and error if the op fails)</li>
+<li>Render a template</li>
+</ul>
+
+
+<p>Note that this is clearly not a typical RESTful route. We've found that becomes less important when using this pattern. When the controllers are just wiring things up and are all a 5 lines or less, it feels like there is more flexibility.</p>
+
+<p>It probably gets summed up something like this: wherever the fat (real work) is, that should be focused. For us, it's not the controller because of service objects. The real work is 1 to 1 focused with the use case. If more was in the controllers, we'd probably be closer to the standard index, show, etc methods because of the focus concept.</p>
+
+<h3>Sharing</h3>
+
+<p>So we have pushed everything out closer to the user experience and away from the models. But what if something is needed in a few pieces of the experience?</p>
+
+<p>A few ways we have done sharing:</p>
+
+<ul>
+<li>Two <code>Op</code>s can use a lower-level one or other type of class as noted above.</li>
+<li>Two <code>Op</code>s can have a mixin with the shared behavior.</li>
+<li>We can add a method to an applicable model. We tend to do this on simple methods that are interpreting the model data to answer a commonly-asked question or commonly-used display value.</li>
+</ul>
+
+
+<h3>Summary</h3>
+
+<p>We have found that this approach provides a more maintainable and overall successful way of building Rails apps.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Architecture: Models]]></title>
@@ -1161,150 +1304,6 @@ Core
   <image src="http://bleonard.github.io/images/posts/v2-retrospective/dvd.jpg" alternate="BL DVD" class="bigPicture" />
 </div>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Translating Rails fields]]></title>
-    <link href="http://bleonard.github.io/blog/2015/01/06/translating-rails-fields/"/>
-    <updated>2015-01-06T00:00:00-08:00</updated>
-    <id>http://bleonard.github.io/blog/2015/01/06/translating-rails-fields</id>
-    <content type="html"><![CDATA[<p>When we launched <a href="https://www.taskrabbit.com">TaskRabbit</a> in London, one of our goals was to have a fully localized product. There are enough differences between British English and US English to not cut (m)any corners. Of course, it's even more important in completely different languages.</p>
-
-<p>An issue that I noticed one day was in our signup flow. It said "Last name is required." This was caused by a blank field and a model-level validation.</p>
-
-<p><code>ruby
-class User
-  validates :last_name, presence: true
-end
-</code></p>
-
-<p>It was working as expected, but it should have said "Surname is required." That's what they want across the pond.</p>
-
-<p>We translate all of our "en" locale into "en-GB" but this wasn't there because it more or less works automatically. <a href="http://api.rubyonrails.org/classes/ActiveModel/Validations.html">Active Model</a> does a <code>humanize</code> call on the field name. To translate this field, which we had done on stranger field names, you add it to a YML locale file.</p>
-
-<p>```yaml
-en:
-  activerecord:</p>
-
-<pre><code>attributes:
-  user:
-    last_name: 'Last Name'
-</code></pre>
-
-<p>```</p>
-
-<p>This is for the one model, but there is <a href="https://github.com/rails/rails/blob/ebaf4e40cdcb80ebe16014a2c979f688213d7b92/activemodel/lib/active_model/translation.rb#L61">fallback code</a> in Active Model that also allows you to define the name for all models. You can do this:</p>
-
-<p>```yaml
-en:
-  attributes:</p>
-
-<pre><code>last_name: 'Last Name'
-</code></pre>
-
-<p>```</p>
-
-<p>This has the advantage of also working for another model as well as an Active Model <a href="https://blog.engineyard.com/2014/keeping-your-rails-controllers-dry-with-services">service objects</a> in one shot.</p>
-
-<!-- more -->
-
-
-<h2>Generate a File</h2>
-
-<p>So I wrote some code to make sure all fields were defined in our "en" locale. This would ensure that they would get translated into "en-GB" and others. The values are just what Active Model would have done anyway, so there's no functional difference. It does. however, prevent us from missing anything because of Rails magic.</p>
-
-<p>Now we have a rake job that calls <code>Translation::Fields.new.generate!</code> to:</p>
-
-<ul>
-<li>load all the models that have attributes/validations</li>
-<li>clear out the file and reload I18n</li>
-<li>go through all the models and look at each one's attributes</li>
-<li>if not already defined, add the humanized version to the file</li>
-</ul>
-
-
-<p>Here is the code. It's been working well so far.</p>
-
-<p>```ruby
-module Translation
-  class Fields</p>
-
-<pre><code>def initialize
-  load_all_models
-end
-
-def generate!
-  clear_file
-  I18n.backend.send(:init_translations) # make sure init'd
-
-  old_locale = I18n.locale
-  I18n.locale = "en"
-  load_children(ActiveRecord::Base)
-
-  hash = build_hash
-  write_file(hash)
-
-  puts ""
-  hash
-ensure
-  I18n.locale = old_locale if old_locale
-end
-
-def file_name
-  @file_name ||= Rails.root.join("config",
-                                 "locales", 
-                                 "generated_default_fields.en.yml"
-                                ).to_s
-end
-
-def clear_file
-  write_file({})
-end
-
-def write_file(to_file)
-  File.open(file_name, 'w') do |file|
-    file.write({'en' =&gt; {'attributes' =&gt; to_file}}.ya2yaml)
-  end
-end
-
-def load_all_models
-  # models
-  Dir[Rails.root.join('/app/models/**/*.rb')].each do |path|
-    require_dependency path
-  end
-
-  # can load more objects that have validations here
-end
-
-def load_children(klass)
-  klass.subclasses.each do |klass|
-    attributes = klass.attribute_names
-
-    attributes.each do |attribute|
-      current = I18n.t("attributes.#{attribute}", default: "")
-      next if current.present?
-      all_keys[attribute.to_s] = attribute
-    end
-  end
-end
-
-def build_hash
-  out = {}
-  all_keys.each do |key, value|
-    out[key] = key.humanize
-  end
-  out
-end
-
-def all_keys
-  @all_keys ||= {}
-end
-</code></pre>
-
-<p>  end
-end
-```</p>
 ]]></content>
   </entry>
   

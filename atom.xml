@@ -4,7 +4,7 @@
   <title><![CDATA[BLog]]></title>
   <link href="http://bleonard.github.io/atom.xml" rel="self"/>
   <link href="http://bleonard.github.io/"/>
-  <updated>2017-02-25T22:09:42-08:00</updated>
+  <updated>2017-03-05T14:05:31-08:00</updated>
   <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
@@ -12,6 +12,176 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Architecture: Service Objects]]></title>
+    <link href="http://bleonard.github.io/blog/2017/03/03/architecture-service-objects/"/>
+    <updated>2017-03-03T00:00:00-08:00</updated>
+    <id>http://bleonard.github.io/blog/2017/03/03/architecture-service-objects</id>
+    <content type="html"><![CDATA[<p>This is the second post in what is now indisputably a &#8220;series&#8221; of articles about how we build things at <a href="https://www.taskrabbit.com">TaskRabbit</a>. Over time, we/I have internalized all kinds of lessons and patterns and are trying to take the time to write some of the key things down.</p>
+
+<p>Building upwards from the <a href="http://bleonard.github.io/blog/2017/02/24/architecture-models/">last article about models</a>, let&#8217;s talk about how we use them. The models represent rows in the database in the <a href="http://guides.rubyonrails.org/active_record_basics.html">Rails ORM</a>. What code is deciding what to put in those rows and which ones should be created, etc? In our architecture, this role is filled by <a href="https://www.netguru.co/blog/service-objects-in-rails-will-help">service objects</a>.</p>
+
+<p>Overall, we default to the following rules when using models in our system:</p>
+
+<ul>
+<li>Models contain data/state validations and methods tied directly to them</li>
+<li>Models are manipulated by service objects that reflect the user experience</li>
+</ul>
+
+
+<h3>Something has to be fat</h3>
+
+<p>In the beginning, there was <a href="http://ideum.com/2006/07/05/102/">Rails</a> and we saw that it was good. The world was optimized around the CRUD/REST use cases. Controllers had <code>update_attributes</code> and such. When there was more logic/nuance, it was put there in the controller (or the view).</p>
+
+<p>There was a backlash of sorts against that and the new paradigm was <a href="http://weblog.jamisbuck.org/2006/10/18/skinny-controller-fat-model">&#8220;Fat model, skinny controller&#8221;</a>. The controllers were simple and emphasized workflow instead of business logic. Views were simpler. That stuff was put in the models. Model code was easier to reuse.</p>
+
+<p>Thus arose the great <a href="http://blog.codeclimate.com/blog/2012/10/17/7-ways-to-decompose-fat-activerecord-models/">&#8220;God Model&#8221;</a> issue. Fat is one thing, but we had some seriously obese models. Things like <code>User</code> and <code>Task</code> simply had too much going on. We could put stuff in mixins/concerns but that didn&#8217;t change the fact that there was tons of code that all could be subtly interacting with each other.</p>
+
+<p>Business logic has to go somewhere. For us, that somewhere is in service objects.</p>
+
+<h3>Operations</h3>
+
+<p>In our architecture, we call them &#8220;Operations&#8221; and they extend a class called <code>Backend::Op</code>. This more or less uses the <a href="https://github.com/mnelson/subroutine">subroutine</a> gem.</p>
+
+<p>Much can be read about what it means to be a service object, but here is my very scientific (Rails-specific) definition.</p>
+
+<ul>
+<li>Includes <code>ActiveModel</code> stuff like <code>Naming</code>, <code>Validations</code>, and <code>Callbacks</code></li>
+<li>Allows declaration of what fields (input parameters) it uses</li>
+<li>Reflects an action in the system like &#8220;sign up a user&#8221; or &#8220;invoice a job&#8221;</li>
+<li>Does whatever it needs to do to accomplish the action when asked including updating or creating one or more models</li>
+</ul>
+
+
+<p>Here&#8217;s a simplified example:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">InvoiceJobOp</span> <span class="o">&lt;</span> <span class="o">::</span><span class="no">Backend</span><span class="o">::</span><span class="no">Op</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Mixins</span><span class="o">::</span><span class="no">AtomicOperation</span> <span class="c1"># all in same transaction</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">field</span> <span class="ss">:hours</span>
+</span><span class='line'>  <span class="n">field</span> <span class="ss">:job_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">validates</span> <span class="ss">:job_id</span><span class="p">,</span> <span class="n">presence</span><span class="p">:</span> <span class="kp">true</span>
+</span><span class='line'>  <span class="n">validate</span>  <span class="ss">:validate_hour</span>       <span class="c1"># hours given</span>
+</span><span class='line'>  <span class="n">validate</span>  <span class="ss">:validate_assignment</span> <span class="c1"># tasker is assigned</span>
+</span><span class='line'>  <span class="c1"># ... other checks</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">perform</span>
+</span><span class='line'>    <span class="n">create_invoice!</span>    <span class="c1"># record hours and such</span>
+</span><span class='line'>    <span class="n">generate_payment!</span>  <span class="c1"># pending payment transaction</span>
+</span><span class='line'>    <span class="n">appointment_done!</span>  <span class="c1"># note that appointment completed</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="n">ongoing?</span>
+</span><span class='line'>      <span class="n">schedule_next_appointment!</span> <span class="c1"># schedule next if more</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>      <span class="n">complete_assignment!</span>       <span class="c1"># otherwise, no more</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">enqueue_background_workers!</span>  <span class="c1"># follow up later on stuff</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>No Side Effects</h3>
+
+<p>When we followed the &#8220;Fat Model&#8221; pattern, we got what we wanted. This was usually methods in one of the models. Sometimes there were callbacks added. These were the most dangerous because they were happening on every <code>save</code>. Often, this added unnecessary side effects.</p>
+
+<p>With the service object approach, it is very clear what is happening for the action at hand. When you &#8220;invoice a job,&#8221; you create the invoice, generate the payment, mark the appointment done, schedule the next appointment, and enqueue some background workers.</p>
+
+<p>This certainty leads to less technical and product debt. When something new needs to be added to this action, it&#8217;s very clear where it goes.</p>
+
+<h3>Errors</h3>
+
+<p>Our <code>Op</code> class above does several model manipulations to the related invoices, appointments, etc. Each some of these does a <code>save</code> to something. Those <code>save</code> calls could raise errors. If any of those raise an error, then the <code>Op</code> itself will inherit it and it will be available on the <code>op.errors</code> method just like a normal <code>ActiveRecord</code> object.</p>
+
+<p>This also allows chaining of operations. If there was a <code>ScheduleAppointmentOp</code> class, it could be used in the above <code>schedule_next_appointment!</code> method. If it raised an error, it would propagate to the <code>InvoiceJobOp</code>.</p>
+
+<h3>Controllers</h3>
+
+<p>Generally speaking, we have one <code>Op</code> per controller action that declares what it expects and manipulates the backend data as needed.</p>
+
+<p>Here is a typical example from one of our controllers.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">JobsController</span> <span class="o">&lt;</span> <span class="no">ApplicationController</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">confirm</span>
+</span><span class='line'>    <span class="vi">@job</span> <span class="o">=</span> <span class="no">Job</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">params</span><span class="o">[</span><span class="ss">:id</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">authorize</span> <span class="vi">@job</span><span class="p">,</span> <span class="ss">:confirm?</span> <span class="c1"># authorization</span>
+</span><span class='line'>    <span class="n">op</span> <span class="o">=</span> <span class="no">Organic</span><span class="o">::</span><span class="no">JobConfirmOp</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">current_user</span><span class="p">)</span>
+</span><span class='line'>    <span class="n">op</span><span class="o">.</span><span class="n">submit!</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">job_id</span><span class="p">:</span> <span class="vi">@job</span><span class="o">.</span><span class="n">id</span><span class="p">))</span> <span class="c1"># perform action</span>
+</span><span class='line'>    <span class="n">render</span> <span class="ss">:show</span> <span class="c1"># render template</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>An action will typically do the following:</p>
+
+<ul>
+<li>Load a resource</li>
+<li>Authorize the user is allowed do do an action</li>
+<li>Perform the action with an operation (other things are in place to render and error if the op fails)</li>
+<li>Render a template</li>
+</ul>
+
+
+<p>Note that this is clearly not a typical RESTful route. We&#8217;ve found that becomes less important when using this pattern. When the controllers are just wiring things up and are all a 5 lines or less, it feels like there is more flexibility.</p>
+
+<p>It probably gets summed up something like this: wherever the fat (real work) is, that should be focused. For us, it&#8217;s not the controller because of service objects. The real work is 1 to 1 focused with the use case. If more was in the controllers, we&#8217;d probably be closer to the standard index, show, etc methods because of the focus concept.</p>
+
+<h3>Sharing</h3>
+
+<p>So we have pushed everything out closer to the user experience and away from the models. But what if something is needed in a few pieces of the experience?</p>
+
+<p>A few ways we have done sharing:</p>
+
+<ul>
+<li>Two <code>Op</code>s can use a lower-level one or other type of class as noted above.</li>
+<li>Two <code>Op</code>s can have a mixin with the shared behavior.</li>
+<li>We can add a method to an applicable model. We tend to do this on simple methods that are interpreting the model data to answer a commonly-asked question or commonly-used display value.</li>
+</ul>
+
+
+<h3>Summary</h3>
+
+<p>We have found that this approach provides a more maintainable and overall successful way of building Rails apps.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Architecture: Models]]></title>
@@ -4461,54 +4631,6 @@ I also found it helpful to use <a href="http://semaja2.net/projects/insomniaxinf
 
 
 <p>That&#8217;s it. Happy migrating.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Geohashes]]></title>
-    <link href="http://bleonard.github.io/blog/2014/09/24/geohashes/"/>
-    <updated>2014-09-24T00:00:00-07:00</updated>
-    <id>http://bleonard.github.io/blog/2014/09/24/geohashes</id>
-    <content type="html"><![CDATA[<p>Over the years, we&#8217;ve struggled at <a href="https://www.taskrabbit.com">TaskRabbit</a> with a way to represent smaller geographic areas. Postal codes seems to be the most obvious but these vary dramatically in size. For example, there are postal codes that are just one building and ones that are bigger than some US states. We&#8217;ve also tried &#8220;neighborhood&#8221; data from various sources, but these are somewhat unreliable.</p>
-
-<p>I recently learned about and started using <a href="http://en.wikipedia.org/wiki/Geohash">geohashes</a> to break the world into boxes and have been very happy with the results. I gave a lightning talk last week at <a href="http://gogaruco.com/">GoGaRuCo</a> on the subject. Many of them had heard about it, but the talk went over fairly well.</p>
-
-<h3>Use Case</h3>
-
-<p>The problem at hand is one of probabilities. Given a task, who are the best taskers for the job. Or conversely, given a tasker, what are the best few tasks for them. Taskers give us an idea of where they want to work but actions often speak louder than <s>words</s> user-drawn geographic polygons. So what I wanted to do was map their history into positive and negative areas of probability depending on what tasks they wanted to do and which they did not.</p>
-
-<p>I had all those points and it was fairly easy to draw a heatmap using <a href="https://www.mapbox.com/mapbox.js/example/v1.0.0/leaflet-heat/">this Leaflet plugin</a>, but that needed to be mapped to something more concrete. We would be using <a href="http://www.elasticsearch.org/">Elasticsearch</a> for the storage, so while researching it&#8217;s geo functions, I stumbled across the concept of <a href="http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-aggregations-bucket-geohashgrid-aggregation.html">geohashes</a> which it evidently uses internally for such queries.</p>
-
-<p><a href="http://www.bigfastblog.com/geohash-intro">This</a> article gives a really good explanation of how it works. The short version is that if you were to start with the whole world and keep cutting it in half depending on where your lat/lng was, you&#8217;d end up with a lot of left/right (or top/bottom) choices. Those choices can be encoded into binary, which can be encoded into a simple string. So this spot in London (51.507794, -0.127952) would become the &#8220;gcpvj0dyds&#8221; geohash. It has the interesting property that strings (locations) that have the same start are known to be close to it. For example, the &#8220;gcpvj09swr&#8221; geohash has the first six characters in common, so we would know that is within half a mile or so of the first one.</p>
-
-<p>So now I have all of these points. I can map them to geohashes of the necessary precision (I chose 6) and give positive and negative weights for each user action. The actual calculation turns out to be really fast. I used the code from the <a href="https://github.com/masuidrive/pr_geohash/blob/master/lib/pr_geohash.rb">pr_geohash</a> gem and had no issues. It also calculates neighbors which turns out the be important.</p>
-
-<p>Using the weight, I can combine and draw the geohashes (<a href="https://github.com/rgeo/rgeo">RGeo</a>/<a href="http://leafletjs.com/">Leaflet</a>). As an example, here is drawing where a particular Tasker is likely to want to work:</p>
-
-<p><img src="http://bleonard.github.io/images/posts/geohashes/medium.jpg" alt="Likely to Accept" /></p>
-
-<!-- more -->
-
-
-<p>And where this Tasker is generally positive:</p>
-
-<p><img src="http://bleonard.github.io/images/posts/geohashes/low.jpg" alt="Positive" /></p>
-
-<p>And also where they have negative feedback:</p>
-
-<p><img src="http://bleonard.github.io/images/posts/geohashes/negative.jpg" alt="Negative" /></p>
-
-<p>Using these tools and the fact that every Tasker&#8217;s map is different, we can make better recommendations. This reduces friction in the marketplace.</p>
-
-<p>One of the gotchas is mentioned in the <a href="http://www.bigfastblog.com/geohash-intro">article</a> I referenced earlier. If a point is on a border, especially at the beginning of the decision process, it can end up being massively off. I worked around this in my implementation by spreading out the weight to it&#8217;s neighbors. So if the location got 100 points, the neighbors would also get some, degrading as it spread out.</p>
-
-<p><img src="http://bleonard.github.io/images/posts/geohashes/boxes.jpg" alt="Spread out the weight" /></p>
-
-<p>This has proven to minimize the boundary issue.</p>
-
-<h3>Conclusion</h3>
-
-<p>Overall, I just wanted to share a new tool and concept that I learned about. We&#8217;ve found it to be a great pattern and will likely use geohashes more for representing our world.</p>
 ]]></content>
   </entry>
   
