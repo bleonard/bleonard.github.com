@@ -1,0 +1,540 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Architecture: Background Processing - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="So we have a bunch of models and are doing stuff with them in service objects. The next thing we might need is to process some code in the background &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.io/blog/2017/03/17/architecture-background-processing/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">Architecture: Background Processing</h1>
+	<div class="entry-content"><p>So we have a bunch of <a href="/blog/2017/02/24/architecture-models/">models</a> and are doing stuff with them in <a href="/blog/2017/03/03/architecture-service-objects/">service objects</a>. The next thing we might need is to process some code in the background.</p>
+
+<p>Not everything can be done inline from the API request. For example, we might need to geocode a user&#8217;s postal code when they change it in their account. Or when an invoice is created, we want to charge it 24 hours later.</p>
+
+<p>When working with background jobs, we default to the following practices:</p>
+
+<ul>
+<li>Workers are enqueued with a dictionary of inputs</li>
+<li>These inputs should be used to fetch data from the source of truth</li>
+<li>Workers know how to check if they still need to run</li>
+<li>Locking schemes should protect parallel execution</li>
+</ul>
+
+
+<h3>Enqueue</h3>
+
+<p>When we enqueue a worker, we have found that it&#8217;s quite helpful to always use a dictionary (hash) of key/value pairs. <a href="https://github.com/resque/resque">Resque</a> and <a href="http://sidekiq.org/">Sidekiq</a> both take a list of arguments like <a href="https://github.com/mperham/sidekiq/wiki/Getting-Started">so</a>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">HardWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Sidekiq</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">perform</span><span class="p">(</span><span class="nb">name</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+</span><span class='line'>    <span class="c1"># do something with name, count</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># enqueue</span>
+</span><span class='line'><span class="no">HardWorker</span><span class="o">.</span><span class="n">perform_async</span><span class="p">(</span><span class="s1">&#39;bob&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This has proved to be problematic when adding new parameters or having optional parameters. For example, if we add a new (third) input parameter, there might be stuff in the queue with the old two. When the new code gets deployed, it will throw an &#8216;invalid number of arguments&#8217; type of error. When using a hash, we can give it a default, fail gracefully, or do whatever we like on a class by class basis.</p>
+
+<p>So to provide better change management and optional arguments, we always do it like so:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">HardWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:name</span><span class="p">,</span> <span class="ss">:count</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="c1"># do something with self.name, self.count</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># enqueue</span>
+</span><span class='line'><span class="no">HardWorker</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span> <span class="s1">&#39;bob&#39;</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="mi">5</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Source of Truth</h3>
+
+<p>Let&#8217;s say we want to update a search index every time a user record is changed. We need to write their first name, last name, etc to <a href="https://www.elastic.co/">Elasticsearch</a>.</p>
+
+<p>We could do something like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">UserIndexWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:id</span><span class="p">,</span> <span class="ss">:first_name</span><span class="p">,</span> <span class="ss">:last_name</span><span class="p">,</span> <span class="ss">:etc</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="no">Elasticsearch</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="nb">id</span><span class="p">:</span> <span class="nb">id</span><span class="p">,</span> <span class="n">first_name</span><span class="p">:</span> <span class="n">first_name</span><span class="p">,</span> <span class="n">last_name</span><span class="p">:</span> <span class="n">last_name</span><span class="p">,</span> <span class="n">etc</span><span class="p">:</span> <span class="n">etc</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># When user changes</span>
+</span><span class='line'><span class="no">UserIndexWorker</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="ss">:id</span><span class="p">,</span> <span class="ss">:first_name</span><span class="p">,</span> <span class="ss">:last_name</span><span class="p">,</span> <span class="ss">:etc</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This certainly would work, but is not considered best practice. It is better to be <a href="http://www.restapitutorial.com/lessons/idempotency.html">idempotent</a>. It writes everything that should ) by passing the minimal information to the background worker, who then looks up the source of truth. That way, if there is any delay between when it is enqueued and run, it will still send the correct information.</p>
+
+<p>The better approach would look like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">UserIndexWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:user_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="no">Elasticsearch</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="ss">:id</span><span class="p">,</span> <span class="ss">:first_name</span><span class="p">,</span> <span class="ss">:last_name</span><span class="p">,</span> <span class="ss">:etc</span><span class="p">))</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">user</span>
+</span><span class='line'>    <span class="vi">@user</span> <span class="o">||=</span> <span class="no">User</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># When user changes</span>
+</span><span class='line'><span class="no">UserIndexWorker</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In the same vein, the worker should be in charge of whether or not it needs to do anything in the first place. For example, we can enqueue a worker to run later about an <code>Invoice</code>. If, at that time, the payment is <code>Invoice</code> still should be charged, then charge it.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">InvoiceChargeWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:invoice_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">unless</span> <span class="n">needed?</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">charge!</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">needed?</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">pending?</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">invoice</span>
+</span><span class='line'>    <span class="vi">@invoice</span> <span class="o">||=</span> <span class="no">Invoice</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">invoice_id</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># When invoice is created</span>
+</span><span class='line'><span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">enqueue_at</span><span class="p">(</span><span class="mi">24</span><span class="o">.</span><span class="n">hours</span><span class="o">.</span><span class="n">from_now</span><span class="p">,</span> <span class="n">invoice_id</span><span class="p">:</span> <span class="n">invoice</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is another example of single source of truth. Even for jobs that are run immediately, this check is something we always put in place: return immediately if the worker is no longer relevant.</p>
+
+<h3>Mutual Exclusion</h3>
+
+<p>Let&#8217;s say the <code>User</code> object can sometimes change a few times rapidly. The &#8220;source of truth&#8221; approach will make sure the right thing always gets indexed. So that&#8217;s great. But it is pretty silly to index the same data twice or more times, right?</p>
+
+<p>In this case, we add a queue lock. The effect is that if something is in the queue and waiting to be processed and you try to enqueue another one with the same inputs, then it will be a no-op. It looks like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">UserIndexWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:user_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">queue_lock</span> <span class="ss">:user_id</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Another case that often arises is mutual exclusion for <em>runtime</em>. Maybe weird payment things happen to the payment service if two invoices for the same user are happening at the same time.</p>
+
+<p>In this case, we add a worker lock. The effect is that if something is in the queue and about to start running and there is another running at that moment, then it will re-enqueue itself to run later. It looks like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">InvoiceChargeWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:invoice_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">worker_lock</span> <span class="ss">:to_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">unless</span> <span class="n">needed?</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">charge!</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">to_id</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">to_id</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">needed?</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">pending?</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">invoice</span>
+</span><span class='line'>    <span class="vi">@invoice</span> <span class="o">||=</span> <span class="no">Invoice</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">invoice_id</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>For either type, you don&#8217;t have to lock on all the attributes or can (as shown in the last example) use calculations. The namespace of the lock is the worker class name. You can also set the namespace to allow locking between different workers.</p>
+
+<h3>Message Bus</h3>
+
+<p>Our <a href="/blog/2015/04/02/queue-bus/">message bus</a> and our use of background processes have a lot in common. In fact, the message bus is built on top of the same background processing infrastructure. The question that arises is this: when should something be enqueued directly and when should it publish and respond to a bus subscription?</p>
+
+<p>The first note is that you should <em>always be publishing</em> (ABP). It doesn&#8217;t hurt anything to give (optional) visibility to other systems what is happening. Or use this as logging framework.</p>
+
+<p>Just publishing, however, doesn&#8217;t mean we have to use that to do work in the background. Be can bother publish and enqueue a background worker. We enqueue a worker when the work in the background is essential to the correct operation of the use case at hand.</p>
+
+<p>One example to enqueue directly would be the geocoding worker I mentioned earlier: when the user gives a new postal code, figure out where that is. It&#8217;s key to the account management system.</p>
+
+<p>The search example I&#8217;ve been using might not actually be the best one because we would have the search system subscribed to changes in the account system. What I didn&#8217;t show that the <code>enqueue</code> call might actually happen from within a subscription.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">subscribe</span> <span class="s2">&quot;user_changed&quot;</span> <span class="k">do</span> <span class="o">|</span><span class="n">attributes</span><span class="o">|</span>
+</span><span class='line'>  <span class="no">UserIndexWorker</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="n">attributes</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So these two concepts can work together. Why not just index it right in the subscription, though? A primary reason might be to use some of the locking mechanisms as the bus does not have that. It also might be the case that the worker is enqueued from other locations and this keeps things DRY. The worker is also easier to unit test.</p>
+
+<h3>TResque</h3>
+
+<p>We use <a href="https://github.com/resque/resque">Resque</a> as a base foundation and built on top of it with an abstraction layer called <a href="https://github.com/taskrabbit/tresque">TResque</a>. That&#8217;s TR (TaskRabbit) Resque. Get it? It puts all of these practices into place as well as adding and abstraction layer for the inevitable, but as yet unprioritized, move to <a href="http://sidekiq.org/">Sidekiq</a>.</p>
+
+<p>I don&#8217;t necessarily expect anyone to use this, but it doesn&#8217;t hurt to make it available as an example of how we are using these tools.</p>
+
+<p>You define a worker and enqueue things as show in the examples above. Then only layer left is around prioritization. You can give a queue name to a worker and then register what priority those workers are. If no queue is given, it is assumed to be the <code>default</code> queue.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">require</span> <span class="s1">&#39;tresque&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">module</span> <span class="nn">Account</span>
+</span><span class='line'>  <span class="k">class</span> <span class="nc">RegularWorker</span>
+</span><span class='line'>    <span class="kp">include</span> <span class="o">::</span><span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>    <span class="c1"># defaults to account_default queue</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">module</span> <span class="nn">Account</span>
+</span><span class='line'>  <span class="k">class</span> <span class="nc">RegularWorker</span>
+</span><span class='line'>    <span class="kp">include</span> <span class="o">::</span><span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>    <span class="n">queue</span> <span class="ss">:refresh</span> <span class="c1"># lower priority account_refresh queue</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="no">TResque</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;account&quot;</span><span class="p">)</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">queue</span> <span class="ss">:default</span><span class="p">,</span> <span class="mi">100</span>
+</span><span class='line'>  <span class="n">queue</span> <span class="ss">:refresh</span><span class="p">,</span> <span class="o">-</span><span class="mi">5000</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then when you run Resque, you can use these registrations to process the queues in the right order.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">require</span> <span class="s1">&#39;resque/tasks&#39;</span>
+</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;resque_scheduler/tasks&#39;</span>
+</span><span class='line'><span class="nb">require</span> <span class="s2">&quot;resque_bus/tasks&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">namespace</span> <span class="ss">:resque</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">task</span> <span class="ss">:setup</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:environment</span><span class="o">]</span> <span class="k">do</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="s1">&#39;resque_scheduler&#39;</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="s1">&#39;resque/scheduler&#39;</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="s1">&#39;tresque&#39;</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">task</span> <span class="ss">:queues</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:setup</span><span class="o">]</span> <span class="k">do</span>
+</span><span class='line'>    <span class="n">queues</span> <span class="o">=</span> <span class="o">::</span><span class="no">TResque</span><span class="o">::</span><span class="no">Registry</span><span class="o">.</span><span class="n">queues</span>
+</span><span class='line'>    <span class="no">ENV</span><span class="o">[</span><span class="s2">&quot;QUEUES&quot;</span><span class="o">]</span> <span class="o">=</span> <span class="n">queues</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">puts</span> <span class="s2">&quot;TResque: </span><span class="si">#{</span><span class="no">ENV</span><span class="o">[</span><span class="s2">&quot;QUEUES&quot;</span><span class="o">]</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="err">$</span> <span class="n">bundle</span> <span class="nb">exec</span> <span class="n">rake</span> <span class="n">resque</span><span class="ss">:queues</span> <span class="n">resque</span><span class="ss">:work</span>
+</span><span class='line'>  <span class="no">TResque</span><span class="p">:</span> <span class="n">account_default</span><span class="p">,</span> <span class="n">account_refresh</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This registration layer allows each of the systems (<a href="/blog/2014/02/11/rails-4-engines/">engines</a>) to work independently and still have centralized background processing.</p>
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

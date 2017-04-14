@@ -122,7 +122,7 @@
 
 <p>State machines are built into the foundation of the system. Almost every model has a <code>state</code> column and an initial state. There are then valid transitions to other states.</p>
 
-<p>For example, there is a <code>PaymentTransaction</code> model. It has an initial &#8220;pending&#8221; state that represents the time between when an invoice is submitted and when we charge the credit card. During this time, it can move to a &#8220;canceled&#8221; state if tit should not happen. Or, if things go as planned, it can transition to a &#8220;settled&#8221; state. After that, if there is an issue of some sort, it would go to a &#8220;refunded&#8221; state. Notably, going from &#8220;pending&#8221; to &#8220;refunded&#8221; is <em>not</em> a valid transition.</p>
+<p>For example, there is a <code>PaymentTransaction</code> model. It has an initial &#8220;pending&#8221; state that represents the time between when an invoice is submitted and when we charge the credit card. During this time, it can move to a &#8220;canceled&#8221; state if it should not happen. Or, if things go as planned, it can transition to a &#8220;settled&#8221; state. After that, if there is an issue of some sort, it would go to a &#8220;refunded&#8221; state. Notably, going from &#8220;pending&#8221; to &#8220;refunded&#8221; is <em>not</em> a valid transition.</p>
 
 <div class="jumbotron">
 <img src="/images/posts/architecture-models/states.png" class="bigPicture" />
@@ -133,7 +133,7 @@
 
 <h3>Nouns and Verbs</h3>
 
-<p>The TaskRabbit marketplace creates a job that is sent to a Tasker. The Tasker can chat with the Client and can say they will do the job. Or they can decline. If they agree, they are officially assigned to the job and make an appointment. When they complete the job, they invoice the Client for the time worked. In most cases, it&#8217;s done at that point. In other cases, it is &#8220;ongoing&#8221; where they come back next week (to clean again, for example). At more or less any time, they whole thing can be canceled.</p>
+<p>The TaskRabbit marketplace creates a job that is sent to a Tasker. The Tasker can chat with the Client and can say they will do the job. Or they can decline. If they agree, they are officially assigned to the job and make an appointment. When they complete the job, they invoice the Client for the time worked. In most cases, it&#8217;s done at that point. In other cases, it is &#8220;ongoing&#8221; where they come back next week (to clean again, for example). At more or less any time, the whole thing can be canceled.</p>
 
 <p>If given that description, you could come up with many possible model structures. They would all have a set of pros and cons, but many would work out just fine.</p>
 
@@ -164,7 +164,7 @@
 
 <h3>Denormalization</h3>
 
-<p>To try and get the both worlds, we have also aggressively embraced a variety of forms of denormalization.</p>
+<p>To try and get the best of both worlds, we have also aggressively embraced a variety of forms of denormalization.</p>
 
 <p>We actively try not to do SQL <code>JOIN</code>s for simplicity and performance reasons, but that is at odds with all these little models all over the place. So we have said it&#8217;s OK to have duplicate data. For example, each of these &#8220;decision&#8221; models have the <code>client_id</code>, <code>tasker_id</code>, and pricing information. It just gets passed along. This makes everything a local decision and queries very straightforward.</p>
 

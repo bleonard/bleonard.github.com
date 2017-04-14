@@ -7,7 +7,7 @@
 	<meta name="author" content="Brian Leonard">
 
 	
-	<meta name="description" content="This is the second post in what is now indisputably a &#8220;series&#8221; of articles about how we build things at TaskRabbit. Over time, we/I have &hellip;">
+	<meta name="description" content="The last post in our architecture series discussed background processing. There is a special type of background processing that I wanted to make a &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,876 @@
 			
 			<div class="mid-col-container">
 				<div id="content" class="inner">
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2017-04-14T00:00:00-07:00" pubdate data-updated="true">Apr 14<span>th</span>, 2017</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/architecture/'>architecture</a>, <a class='category' href='/blog/categories/resque/'>resque</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2017/04/14/architecture-consider-kron/">Architecture: Consider Kron</a></h1>
+	<div class="entry-content">
+		<p>The last post in our architecture series discussed <a href="/blog/2017/03/17/architecture-background-processing/">background processing</a>. There is a special type of background processing that I wanted to make a quick note about. These are things that need to be done periodically or otherwise on a schedule.</p>
+
+<p>In our internal speak, we call this a &#8220;kron&#8221; job. If you are familiar with <a href="https://en.wikipedia.org/wiki/Cron">cron</a> jobs, it&#8217;s the same idea. A product manager misspelled it once and it stuck! We don&#8217;t actually use regular cron infrastructure, so the spelling <em>nuance</em> is helpful.</p>
+
+<p>The specifics of how we implement it involve our <a href="/blog/2015/04/02/queue-bus/">message bus</a> infrastructure, but I think the concept and the decisions involved could include many other implementations.</p>
+
+<h3>When to use it</h3>
+
+<p>Let&#8217;s take the job from the <a href="/blog/2017/03/17/architecture-background-processing/">previous article</a>. The &#8220;charge an invoice 24 hours later&#8221; case is an interesting one. The system certainly supports delaying that code to run for an arbitrary time, but that&#8217;s not always the best idea.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">InvoiceChargeWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:invoice_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">worker_lock</span> <span class="ss">:invoice_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">unless</span> <span class="n">needed?</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">charge!</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">to_id</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">to_id</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">needed?</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">pending?</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">invoice</span>
+</span><span class='line'>    <span class="vi">@invoice</span> <span class="o">||=</span> <span class="no">Invoice</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">invoice_id</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># When invoice is created</span>
+</span><span class='line'><span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">enqueue_at</span><span class="p">(</span><span class="mi">24</span><span class="o">.</span><span class="n">hours</span><span class="o">.</span><span class="n">from_now</span><span class="p">,</span> <span class="n">invoice_id</span><span class="p">:</span> <span class="n">invoice</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>One reason would be memory. When there a lot of invoices (woot!), we still have to save the notion of what should be done somewhere until it gets processed. In this case, the <a href="https://redis.io/">Redis</a> instance will have it stored in memory. The memory could fill up and adding more workers won&#8217;t help because of the delay.</p>
+
+<p>The second reason is stability. This is important stuff and Redis could have issues and lose the data. We made everything <a href="http://www.restapitutorial.com/lessons/idempotency.html">idempotent</a> and could recreate everything, but it would certainly be a huge hassle.</p>
+
+<p>So when enqueueing something to run in the future, especially if it is important or a long time from now (more than a few minutes), we consider kron.</p>
+
+<h3>Batch mode</h3>
+
+<p>If we were going to accomplish the same things but on a schedule, the code would have to change in some way. I like the existing worker because it already has the good stuff from the last article: source of truth, knowing whether or not it still needs to be run, and mutual exclusion. When batch processing, I believe it&#8217;s also good to still operate on this one at a time where the count (memory for redis) is low or the risk of issues is high. Both are the case here.</p>
+
+<p>To turn it into a batch processor we need to know what needs to be processed at any given moment. This is easy to determine because we have the <code>needed?</code> method. It looks to be invoices that are in the <code>pending</code> state. Sometimes we need to add a <code>state</code> column or other piece of data to know what needs to be in the batch but in this case we are good to go.</p>
+
+<p>From there we can decide if we are going to update the class as-is or make a batch worker. A batch worker is its own worker and would look like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">InvoiceChargeBatchWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">worker_lock</span> <span class="ss">:all</span>
+</span><span class='line'>  <span class="n">queue_lock</span>  <span class="ss">:all</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="no">Invoice</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">stat</span><span class="p">:</span> <span class="s1">&#39;pending&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">find_each</span> <span class="k">do</span> <span class="o">|</span><span class="n">invoice</span><span class="o">|</span>
+</span><span class='line'>      <span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">invoice_id</span><span class="p">:</span> <span class="n">invoice</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># process all pending invoices</span>
+</span><span class='line'><span class="no">InvoiceChargeBatchWorker</span><span class="o">.</span><span class="n">enqueue</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>That&#8217;s it. Because of the worker lock on <code>InvoiceChargeWorker</code> and the state checking, it would be ok even if we were to enqueue it twice or something. Making a custom batch worker also prevents us from running this code twice.</p>
+
+<p>We could also stick it as a class method on the original:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">InvoiceChargeWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:invoice_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">worker_lock</span> <span class="ss">:invoice_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">process_all!</span>
+</span><span class='line'>    <span class="no">Invoice</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">stat</span><span class="p">:</span> <span class="s1">&#39;pending&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">find_each</span> <span class="k">do</span> <span class="o">|</span><span class="n">invoice</span><span class="o">|</span>
+</span><span class='line'>      <span class="nb">self</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">invoice_id</span><span class="p">:</span> <span class="n">invoice</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">unless</span> <span class="n">needed?</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">charge!</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">needed?</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">pending?</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">invoice</span>
+</span><span class='line'>    <span class="vi">@invoice</span> <span class="o">||=</span> <span class="no">Invoice</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">invoice_id</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># process all pending invoices</span>
+</span><span class='line'><span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">process_all!</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>How it works</h3>
+
+<p>Again, in any given architecture there is probably a best way to do it. For example, maybe <a href="https://medium.com/airbnb-engineering/chronos-a-replacement-for-cron-f05d7d986a9d">this</a> is a good way to do it on top of <a href="http://mesos.apache.org/">Mesos</a>.</p>
+
+<p>The challenge is running something on a schedule. In this case, process all invoices that need to be paid. That is what regular cron is made to do. However, we do not want to run that on every box. If we did that, we would have serious race conditions and might pay an invoice twice. Rather, we want to run it once globally across the entire infrastructure or at least per service.</p>
+
+<p>We could probably do this by noting in the devops setup that one of the servers is special. It should get the cron setup. We could use something like the <a href="https://github.com/javan/whenever">whenever gem</a> to say what to do and we would only run that on one box per system. It needs to be per system because it has to be able to know what worker to enqueue or, in general, what code to run.</p>
+
+<p>What we do instead is have a single service that has a process that sends out a heartbeat on the <a href="/blog/2015/04/02/queue-bus/">message bus</a>. Every minute, it publishes an event that looks like this.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="c1"># for Tue, 11 Apr 2017 00:25:00 UTC +00:00</span>
+</span><span class='line'>  <span class="c1"># epoch time: 1491870300</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="no">QueueBus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">heartbeat_seconds</span><span class="s2">&quot;, {</span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">epoch_seconds</span><span class="s2">&quot;=&gt;1491870300,</span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">epoch_minutes</span><span class="s2">&quot;=&gt;24864505,</span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">epoch_hours</span><span class="s2">&quot;=&gt;414408,</span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">epoch_days</span><span class="s2">&quot;=&gt;17267,</span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">minute</span><span class="s2">&quot;=&gt;25,</span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">hour</span><span class="s2">&quot;=&gt;0, </span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">day</span><span class="s2">&quot;=&gt;11,</span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">month</span><span class="s2">&quot;=&gt;4,</span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">year</span><span class="s2">&quot;=&gt;2017,</span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">yday</span><span class="s2">&quot;=&gt;101,</span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">wday</span><span class="s2">&quot;=&gt;2</span>
+</span><span class='line'><span class="s2">  })</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The current code for the process is already checked into <a href="https://github.com/queue-bus/queue-bus">queue-bus</a> and ready to use <a href="https://github.com/queue-bus/queue-bus/blob/5c009a3b2d2d58994813bdca0dc78547a18b0295/lib/queue_bus/heartbeat.rb">here</a>.</p>
+
+<p><a href="https://github.com/queue-bus/resque-bus">Resque bus</a> supports this using the <a href="https://github.com/resque/resque-scheduler">resque-scheduler gem</a>. It is setup off by calling <code>QueueBus.heartbeat!</code>. We make sure it&#8217;s setup every time we start up Resque.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">namespace</span> <span class="ss">:resque</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">task</span> <span class="ss">:setup</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:environment</span><span class="o">]</span> <span class="k">do</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="s1">&#39;resque_scheduler&#39;</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="s1">&#39;resque/scheduler&#39;</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="s1">&#39;tresque&#39;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="no">QueueBus</span><span class="o">.</span><span class="n">heartbeat!</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This <code>setup</code> is automatically called every time Resque starts.</p>
+
+<h3>Usage</h3>
+
+<p>So now we can subscribe to this event to run something every minute, hour, day, Monday, month, whatever.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># every minute</span>
+</span><span class='line'><span class="n">subscribe</span> <span class="s2">&quot;every_minute&quot;</span><span class="p">,</span> <span class="s1">&#39;bus_event_type&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;heartbeat_minutes&#39;</span> <span class="k">do</span> <span class="o">|</span><span class="n">attributes</span><span class="o">|</span>
+</span><span class='line'>  <span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">process_all!</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># every hour: 4:22, 5:22, 6:22, etc</span>
+</span><span class='line'><span class="n">subscribe</span> <span class="s2">&quot;once_an_hour&quot;</span><span class="p">,</span> <span class="s1">&#39;bus_event_type&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;heartbeat_minutes&#39;</span><span class="p">,</span> <span class="s1">&#39;minute&#39;</span> <span class="o">=&gt;</span> <span class="mi">22</span> <span class="k">do</span> <span class="o">|</span><span class="n">attributes</span><span class="o">|</span>
+</span><span class='line'>  <span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">process_all!</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># every day at 12:05 am</span>
+</span><span class='line'><span class="n">subscribe</span> <span class="s2">&quot;once_a_day&quot;</span><span class="p">,</span> <span class="s1">&#39;bus_event_type&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;heartbeat_minutes&#39;</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span> <span class="o">=&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;minute&#39;</span> <span class="o">=&gt;</span> <span class="mi">5</span> <span class="k">do</span> <span class="o">|</span><span class="n">attributes</span><span class="o">|</span>
+</span><span class='line'>  <span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">process_all!</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># every monday at 1:52 am</span>
+</span><span class='line'><span class="n">subscribe</span> <span class="s2">&quot;early_monday_morning&quot;</span><span class="p">,</span> <span class="s1">&#39;bus_event_type&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;heartbeat_minutes&#39;</span><span class="p">,</span> <span class="s1">&#39;wday&#39;</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;minute&#39;</span> <span class="o">=&gt;</span> <span class="mi">52</span> <span class="k">do</span> <span class="o">|</span><span class="n">attributes</span><span class="o">|</span>
+</span><span class='line'>  <span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">process_all!</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># the 3rd of every month at 2:10 am</span>
+</span><span class='line'><span class="n">subscribe</span> <span class="s2">&quot;once_a_month&quot;</span><span class="p">,</span> <span class="s1">&#39;bus_event_type&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;heartbeat_minutes&#39;</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span> <span class="o">=&gt;</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span> <span class="o">=&gt;</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;minute&#39;</span> <span class="o">=&gt;</span> <span class="mi">10</span> <span class="k">do</span> <span class="o">|</span><span class="n">attributes</span><span class="o">|</span>
+</span><span class='line'>  <span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">process_all!</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># every 5 minutes: 4:00, 4:05, 4:10, etc</span>
+</span><span class='line'><span class="n">subscribe</span> <span class="s2">&quot;every 5 minutes&quot;</span> <span class="k">do</span> <span class="o">|</span><span class="n">attributes</span><span class="o">|</span>
+</span><span class='line'>  <span class="c1"># if it doesn&#39;t fit the subscribe pattern, just subscribe to every minute and use ruby</span>
+</span><span class='line'>  <span class="k">next</span> <span class="k">unless</span> <span class="n">attributes</span><span class="o">[</span><span class="s1">&#39;minute&#39;</span><span class="o">]</span> <span class="o">%</span> <span class="mi">5</span> <span class="o">==</span> <span class="mi">0</span>
+</span><span class='line'>  <span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">process_all!</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Summary</h3>
+
+<p>So that is how &#8220;kron&#8221; works.</p>
+
+<p>Over time, we have decided this is a much more reliable way to process items in the background when a delay is acceptable. By setting up some sort of centralized architecture for this, many services and subscribe in a way that is familiar and unsurprising. We have found a lot of value in that.</p>
+
+		
+		
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2017-03-17T00:00:00-07:00" pubdate data-updated="true">Mar 17<span>th</span>, 2017</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/architecture/'>architecture</a>, <a class='category' href='/blog/categories/rails/'>rails</a>, <a class='category' href='/blog/categories/resque/'>resque</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2017/03/17/architecture-background-processing/">Architecture: Background Processing</a></h1>
+	<div class="entry-content">
+		<p>So we have a bunch of <a href="/blog/2017/02/24/architecture-models/">models</a> and are doing stuff with them in <a href="/blog/2017/03/03/architecture-service-objects/">service objects</a>. The next thing we might need is to process some code in the background.</p>
+
+<p>Not everything can be done inline from the API request. For example, we might need to geocode a user&#8217;s postal code when they change it in their account. Or when an invoice is created, we want to charge it 24 hours later.</p>
+
+<p>When working with background jobs, we default to the following practices:</p>
+
+<ul>
+<li>Workers are enqueued with a dictionary of inputs</li>
+<li>These inputs should be used to fetch data from the source of truth</li>
+<li>Workers know how to check if they still need to run</li>
+<li>Locking schemes should protect parallel execution</li>
+</ul>
+
+
+<h3>Enqueue</h3>
+
+<p>When we enqueue a worker, we have found that it&#8217;s quite helpful to always use a dictionary (hash) of key/value pairs. <a href="https://github.com/resque/resque">Resque</a> and <a href="http://sidekiq.org/">Sidekiq</a> both take a list of arguments like <a href="https://github.com/mperham/sidekiq/wiki/Getting-Started">so</a>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">HardWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Sidekiq</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">perform</span><span class="p">(</span><span class="nb">name</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+</span><span class='line'>    <span class="c1"># do something with name, count</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># enqueue</span>
+</span><span class='line'><span class="no">HardWorker</span><span class="o">.</span><span class="n">perform_async</span><span class="p">(</span><span class="s1">&#39;bob&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This has proved to be problematic when adding new parameters or having optional parameters. For example, if we add a new (third) input parameter, there might be stuff in the queue with the old two. When the new code gets deployed, it will throw an &#8216;invalid number of arguments&#8217; type of error. When using a hash, we can give it a default, fail gracefully, or do whatever we like on a class by class basis.</p>
+
+<p>So to provide better change management and optional arguments, we always do it like so:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">HardWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:name</span><span class="p">,</span> <span class="ss">:count</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="c1"># do something with self.name, self.count</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># enqueue</span>
+</span><span class='line'><span class="no">HardWorker</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span> <span class="s1">&#39;bob&#39;</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="mi">5</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Source of Truth</h3>
+
+<p>Let&#8217;s say we want to update a search index every time a user record is changed. We need to write their first name, last name, etc to <a href="https://www.elastic.co/">Elasticsearch</a>.</p>
+
+<p>We could do something like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">UserIndexWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:id</span><span class="p">,</span> <span class="ss">:first_name</span><span class="p">,</span> <span class="ss">:last_name</span><span class="p">,</span> <span class="ss">:etc</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="no">Elasticsearch</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="nb">id</span><span class="p">:</span> <span class="nb">id</span><span class="p">,</span> <span class="n">first_name</span><span class="p">:</span> <span class="n">first_name</span><span class="p">,</span> <span class="n">last_name</span><span class="p">:</span> <span class="n">last_name</span><span class="p">,</span> <span class="n">etc</span><span class="p">:</span> <span class="n">etc</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># When user changes</span>
+</span><span class='line'><span class="no">UserIndexWorker</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="ss">:id</span><span class="p">,</span> <span class="ss">:first_name</span><span class="p">,</span> <span class="ss">:last_name</span><span class="p">,</span> <span class="ss">:etc</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This certainly would work, but is not considered best practice. It is better to be <a href="http://www.restapitutorial.com/lessons/idempotency.html">idempotent</a>. It writes everything that should ) by passing the minimal information to the background worker, who then looks up the source of truth. That way, if there is any delay between when it is enqueued and run, it will still send the correct information.</p>
+
+<p>The better approach would look like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">UserIndexWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:user_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="no">Elasticsearch</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="ss">:id</span><span class="p">,</span> <span class="ss">:first_name</span><span class="p">,</span> <span class="ss">:last_name</span><span class="p">,</span> <span class="ss">:etc</span><span class="p">))</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">user</span>
+</span><span class='line'>    <span class="vi">@user</span> <span class="o">||=</span> <span class="no">User</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># When user changes</span>
+</span><span class='line'><span class="no">UserIndexWorker</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In the same vein, the worker should be in charge of whether or not it needs to do anything in the first place. For example, we can enqueue a worker to run later about an <code>Invoice</code>. If, at that time, the payment is <code>Invoice</code> still should be charged, then charge it.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">InvoiceChargeWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:invoice_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">unless</span> <span class="n">needed?</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">charge!</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">needed?</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">pending?</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">invoice</span>
+</span><span class='line'>    <span class="vi">@invoice</span> <span class="o">||=</span> <span class="no">Invoice</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">invoice_id</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># When invoice is created</span>
+</span><span class='line'><span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">enqueue_at</span><span class="p">(</span><span class="mi">24</span><span class="o">.</span><span class="n">hours</span><span class="o">.</span><span class="n">from_now</span><span class="p">,</span> <span class="n">invoice_id</span><span class="p">:</span> <span class="n">invoice</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is another example of single source of truth. Even for jobs that are run immediately, this check is something we always put in place: return immediately if the worker is no longer relevant.</p>
+
+<h3>Mutual Exclusion</h3>
+
+<p>Let&#8217;s say the <code>User</code> object can sometimes change a few times rapidly. The &#8220;source of truth&#8221; approach will make sure the right thing always gets indexed. So that&#8217;s great. But it is pretty silly to index the same data twice or more times, right?</p>
+
+<p>In this case, we add a queue lock. The effect is that if something is in the queue and waiting to be processed and you try to enqueue another one with the same inputs, then it will be a no-op. It looks like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">UserIndexWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:user_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">queue_lock</span> <span class="ss">:user_id</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Another case that often arises is mutual exclusion for <em>runtime</em>. Maybe weird payment things happen to the payment service if two invoices for the same user are happening at the same time.</p>
+
+<p>In this case, we add a worker lock. The effect is that if something is in the queue and about to start running and there is another running at that moment, then it will re-enqueue itself to run later. It looks like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">InvoiceChargeWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:invoice_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">worker_lock</span> <span class="ss">:to_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">unless</span> <span class="n">needed?</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">charge!</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">to_id</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">to_id</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">needed?</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">pending?</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">invoice</span>
+</span><span class='line'>    <span class="vi">@invoice</span> <span class="o">||=</span> <span class="no">Invoice</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">invoice_id</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>For either type, you don&#8217;t have to lock on all the attributes or can (as shown in the last example) use calculations. The namespace of the lock is the worker class name. You can also set the namespace to allow locking between different workers.</p>
+
+<h3>Message Bus</h3>
+
+<p>Our <a href="/blog/2015/04/02/queue-bus/">message bus</a> and our use of background processes have a lot in common. In fact, the message bus is built on top of the same background processing infrastructure. The question that arises is this: when should something be enqueued directly and when should it publish and respond to a bus subscription?</p>
+
+<p>The first note is that you should <em>always be publishing</em> (ABP). It doesn&#8217;t hurt anything to give (optional) visibility to other systems what is happening. Or use this as logging framework.</p>
+
+<p>Just publishing, however, doesn&#8217;t mean we have to use that to do work in the background. Be can bother publish and enqueue a background worker. We enqueue a worker when the work in the background is essential to the correct operation of the use case at hand.</p>
+
+<p>One example to enqueue directly would be the geocoding worker I mentioned earlier: when the user gives a new postal code, figure out where that is. It&#8217;s key to the account management system.</p>
+
+<p>The search example I&#8217;ve been using might not actually be the best one because we would have the search system subscribed to changes in the account system. What I didn&#8217;t show that the <code>enqueue</code> call might actually happen from within a subscription.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">subscribe</span> <span class="s2">&quot;user_changed&quot;</span> <span class="k">do</span> <span class="o">|</span><span class="n">attributes</span><span class="o">|</span>
+</span><span class='line'>  <span class="no">UserIndexWorker</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="n">attributes</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So these two concepts can work together. Why not just index it right in the subscription, though? A primary reason might be to use some of the locking mechanisms as the bus does not have that. It also might be the case that the worker is enqueued from other locations and this keeps things DRY. The worker is also easier to unit test.</p>
+
+<h3>TResque</h3>
+
+<p>We use <a href="https://github.com/resque/resque">Resque</a> as a base foundation and built on top of it with an abstraction layer called <a href="https://github.com/taskrabbit/tresque">TResque</a>. That&#8217;s TR (TaskRabbit) Resque. Get it? It puts all of these practices into place as well as adding and abstraction layer for the inevitable, but as yet unprioritized, move to <a href="http://sidekiq.org/">Sidekiq</a>.</p>
+
+<p>I don&#8217;t necessarily expect anyone to use this, but it doesn&#8217;t hurt to make it available as an example of how we are using these tools.</p>
+
+<p>You define a worker and enqueue things as show in the examples above. Then only layer left is around prioritization. You can give a queue name to a worker and then register what priority those workers are. If no queue is given, it is assumed to be the <code>default</code> queue.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">require</span> <span class="s1">&#39;tresque&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">module</span> <span class="nn">Account</span>
+</span><span class='line'>  <span class="k">class</span> <span class="nc">RegularWorker</span>
+</span><span class='line'>    <span class="kp">include</span> <span class="o">::</span><span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>    <span class="c1"># defaults to account_default queue</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">module</span> <span class="nn">Account</span>
+</span><span class='line'>  <span class="k">class</span> <span class="nc">RegularWorker</span>
+</span><span class='line'>    <span class="kp">include</span> <span class="o">::</span><span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>    <span class="n">queue</span> <span class="ss">:refresh</span> <span class="c1"># lower priority account_refresh queue</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="no">TResque</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;account&quot;</span><span class="p">)</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">queue</span> <span class="ss">:default</span><span class="p">,</span> <span class="mi">100</span>
+</span><span class='line'>  <span class="n">queue</span> <span class="ss">:refresh</span><span class="p">,</span> <span class="o">-</span><span class="mi">5000</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then when you run Resque, you can use these registrations to process the queues in the right order.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">require</span> <span class="s1">&#39;resque/tasks&#39;</span>
+</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;resque_scheduler/tasks&#39;</span>
+</span><span class='line'><span class="nb">require</span> <span class="s2">&quot;resque_bus/tasks&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">namespace</span> <span class="ss">:resque</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">task</span> <span class="ss">:setup</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:environment</span><span class="o">]</span> <span class="k">do</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="s1">&#39;resque_scheduler&#39;</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="s1">&#39;resque/scheduler&#39;</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="s1">&#39;tresque&#39;</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">task</span> <span class="ss">:queues</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:setup</span><span class="o">]</span> <span class="k">do</span>
+</span><span class='line'>    <span class="n">queues</span> <span class="o">=</span> <span class="o">::</span><span class="no">TResque</span><span class="o">::</span><span class="no">Registry</span><span class="o">.</span><span class="n">queues</span>
+</span><span class='line'>    <span class="no">ENV</span><span class="o">[</span><span class="s2">&quot;QUEUES&quot;</span><span class="o">]</span> <span class="o">=</span> <span class="n">queues</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">puts</span> <span class="s2">&quot;TResque: </span><span class="si">#{</span><span class="no">ENV</span><span class="o">[</span><span class="s2">&quot;QUEUES&quot;</span><span class="o">]</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="err">$</span> <span class="n">bundle</span> <span class="nb">exec</span> <span class="n">rake</span> <span class="n">resque</span><span class="ss">:queues</span> <span class="n">resque</span><span class="ss">:work</span>
+</span><span class='line'>  <span class="no">TResque</span><span class="p">:</span> <span class="n">account_default</span><span class="p">,</span> <span class="n">account_refresh</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This registration layer allows each of the systems (<a href="/blog/2014/02/11/rails-4-engines/">engines</a>) to work independently and still have centralized background processing.</p>
+
+		
+		
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2017-03-10T00:00:00-08:00" pubdate data-updated="true">Mar 10<span>th</span>, 2017</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/architecture/'>architecture</a>, <a class='category' href='/blog/categories/bus/'>bus</a>, <a class='category' href='/blog/categories/engines/'>engines</a>, <a class='category' href='/blog/categories/queue/'>queue</a>, <a class='category' href='/blog/categories/rails/'>rails</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2017/03/10/architecture-surface-area/">Architecture: Surface Area</a></h1>
+	<div class="entry-content">
+		<p>The last post in the <a href="https://www.taskrabbit.com">TaskRabbit</a> architecture series was about <a href="/blog/2017/03/03/architecture-service-objects/">service objects</a>. This an example of what I call minimizing &#8220;surface area&#8221; of the code.</p>
+
+<p>Frankly, I might be using the term wrong. It seems possible &#8220;surface area&#8221; usually refers to API signature of some objects. What I&#8217;m talking about here is the following train of thought:</p>
+
+<ul>
+<li>I change or add a line of code</li>
+<li>What did I just affect?</li>
+</ul>
+
+
+<p>The &#8220;surface area&#8221; is the other things I have to look over. It is the area that I have to make sure has appropriate test coverage. Having a large surface area is what slows down development teams. The goal is to minimize it.</p>
+
+<h3>Service Objects</h3>
+
+<p>So how does our use of service objects relate to this concept?</p>
+
+<p>Let&#8217;s say we have a new requirement that&#8217;s applicable when a Tasker submits an invoice that modifies what gets saved. If I were to add the code to the <code>InvoiceJobOp</code> from the <a href="/blog/2017/03/03/architecture-service-objects/">previous article</a>, then it will only apply when the <code>Op</code> is run. If we were to do something in a <code>before_save</code> in the <code>Invoice</code> model, then it might accidentally kick in anytime an <code>Invoice</code> is changed.</p>
+
+<p>That&#8217;s a lot more tests and things to keep in our mind. If it is just in the <code>Op</code>, that is less of those kinds of debt, so adding in the <code>Op</code> is an example of minimizing the surface area of the change.</p>
+
+<h3>Namespacing</h3>
+
+<p>We went through a <a href="/blog/2015/10/06/v2-retrospective/">roundabout journey</a> to end up where were we are. Many of the changes were about surface area and trying to reduce it.</p>
+
+<p>People like microservices and SOA because of this same principle. We tried it and that part of it worked out really well. There was just no way that a change in service A could affect service B. As <a href="/blog/2015/10/06/v2-retrospective/">discussed</a>, however, we ran into issues in other dimensions.</p>
+
+<p>Our current use of <a href="/blog/2014/02/11/rails-4-engines/">engines</a> follows the same approach to achieve the same surface area effect. It is all about namespacing. Modifying the user management engine can not affect the marketplace engine. This allows us to proceed with more confidence when making such changes.</p>
+
+<p>A particular aspect of our setup is that any given model is &#8220;owned&#8221; by only one engine. The rest of the engines are allowed to read from the database but they cannot write. This provides sanity and minimizes the surface area. For example, the validations only need to live in one spot. You also know that no other code can go rogue and start messing with the data by accident or otherwise.</p>
+
+<h3>Bus</h3>
+
+<p>Of course, the world isn&#8217;t always cut and dry. Venn diagrams overlap. No abstraction or encapsulation is perfect. The seams in namespacing show up when something that happens in one service (engine) needs to affect something in another one.</p>
+
+<p>For example, we were so happy just a few paragraphs ago that changes to the user management engine do not affect the marketplace engine. That is true and it is great. There is no direct effect from the code. However, as they tend to do, these pesky functional requirements always mess up perfect plans for the code. In this case, when a user changes their first name (in the account engine), the marketplace engine might need to update some data in <a href="https://www.elastic.co/">Elasticsearch</a>.</p>
+
+<p>We use a <a href="/blog/2015/04/02/queue-bus/">message bus</a> to observe changes like this and react as appropriate.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># Whenever the user changes</span>
+</span><span class='line'><span class="n">subscribe</span> <span class="s1">&#39;user_may_have_changed&#39;</span><span class="p">,</span> <span class="n">bus_observer_touched</span><span class="p">:</span> <span class="s1">&#39;user&#39;</span> <span class="k">do</span> <span class="o">|</span><span class="n">attributes</span><span class="o">|</span>
+</span><span class='line'>  <span class="c1"># update the profile in ElasticSearch</span>
+</span><span class='line'>  <span class="no">ProfileStoreWorker</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="n">attributes</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>An important note here is that <code>ProfileStoreWorker</code> is <a href="http://www.restapitutorial.com/lessons/idempotency.html">idempotent</a>. It writes everything that should go in Elasticsearch every time. This technique reduces surface area by not depending on this single event and its contents, but rather only as a trigger.</p>
+
+<p>One might say that these subscriptions are just as coupled as doing everything all in one spot. I see that point because, of course, the same things end up happening. However, we have this technique to be better for a few reasons.</p>
+
+<ul>
+<li>The trigger code (in the account engine) does not need to know about the rest of the system. It can mind its own business.</li>
+<li>The subscribing code (in the marketplace engine) can be self-contained instead of being mixed up in the trigger code path.</li>
+<li>Many different code paths might necessitate the <code>ProfileStoreWorker</code> to run. By decoupling it, we actually save complexity in many code paths.</li>
+</ul>
+
+
+<h3>Summary</h3>
+
+<p>In code, developers tend to weave a tangled web wherein seemingly innocuous changes have far-reaching effects. We have been able to create more stable and agile code by considering the &#8220;surface area&#8221; of a change and minimizing it through some encapsulation and decoupling techniques.</p>
+
+		
+		
+	</div>
+
+</article>
 
 
     <article class="post">
@@ -345,7 +1215,7 @@
 
 <p>State machines are built into the foundation of the system. Almost every model has a <code>state</code> column and an initial state. There are then valid transitions to other states.</p>
 
-<p>For example, there is a <code>PaymentTransaction</code> model. It has an initial &#8220;pending&#8221; state that represents the time between when an invoice is submitted and when we charge the credit card. During this time, it can move to a &#8220;canceled&#8221; state if tit should not happen. Or, if things go as planned, it can transition to a &#8220;settled&#8221; state. After that, if there is an issue of some sort, it would go to a &#8220;refunded&#8221; state. Notably, going from &#8220;pending&#8221; to &#8220;refunded&#8221; is <em>not</em> a valid transition.</p>
+<p>For example, there is a <code>PaymentTransaction</code> model. It has an initial &#8220;pending&#8221; state that represents the time between when an invoice is submitted and when we charge the credit card. During this time, it can move to a &#8220;canceled&#8221; state if it should not happen. Or, if things go as planned, it can transition to a &#8220;settled&#8221; state. After that, if there is an issue of some sort, it would go to a &#8220;refunded&#8221; state. Notably, going from &#8220;pending&#8221; to &#8220;refunded&#8221; is <em>not</em> a valid transition.</p>
 
 <div class="jumbotron">
 <img src="/images/posts/architecture-models/states.png" class="bigPicture" />
@@ -356,7 +1226,7 @@
 
 <h3>Nouns and Verbs</h3>
 
-<p>The TaskRabbit marketplace creates a job that is sent to a Tasker. The Tasker can chat with the Client and can say they will do the job. Or they can decline. If they agree, they are officially assigned to the job and make an appointment. When they complete the job, they invoice the Client for the time worked. In most cases, it&#8217;s done at that point. In other cases, it is &#8220;ongoing&#8221; where they come back next week (to clean again, for example). At more or less any time, they whole thing can be canceled.</p>
+<p>The TaskRabbit marketplace creates a job that is sent to a Tasker. The Tasker can chat with the Client and can say they will do the job. Or they can decline. If they agree, they are officially assigned to the job and make an appointment. When they complete the job, they invoice the Client for the time worked. In most cases, it&#8217;s done at that point. In other cases, it is &#8220;ongoing&#8221; where they come back next week (to clean again, for example). At more or less any time, the whole thing can be canceled.</p>
 
 <p>If given that description, you could come up with many possible model structures. They would all have a set of pros and cons, but many would work out just fine.</p>
 
@@ -387,7 +1257,7 @@
 
 <h3>Denormalization</h3>
 
-<p>To try and get the both worlds, we have also aggressively embraced a variety of forms of denormalization.</p>
+<p>To try and get the best of both worlds, we have also aggressively embraced a variety of forms of denormalization.</p>
 
 <p>We actively try not to do SQL <code>JOIN</code>s for simplicity and performance reasons, but that is at odds with all these little models all over the place. So we have said it&#8217;s OK to have duplicate data. For example, each of these &#8220;decision&#8221; models have the <code>client_id</code>, <code>tasker_id</code>, and pricing information. It just gets passed along. This makes everything a local decision and queries very straightforward.</p>
 
@@ -740,228 +1610,6 @@
 
 		
 		<a href="/blog/2015/11/08/react-native-integration-tests/" class="more-link">Read on &rarr;</a>
-	</div>
-
-</article>
-
-
-    <article class="post">
-	<div class="meta">
-		<div class="date">
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-10-26T00:00:00-07:00" pubdate data-updated="true">Oct 26<span>th</span>, 2015</time></div>
-		<div class="tags">
-
-
-	<a class='category' href='/blog/categories/architecture/'>architecture</a>, <a class='category' href='/blog/categories/code/'>code</a>, <a class='category' href='/blog/categories/rails/'>rails</a>, <a class='category' href='/blog/categories/startups/'>startups</a>, <a class='category' href='/blog/categories/v3/'>v3</a>
-
-
-</div>
-		
-	</div>
-	<h1 class="title"><a href="/blog/2015/10/26/rewrite/">To Rewrite or Not to Rewrite?</a></h1>
-	<div class="entry-content">
-		<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>To rewrite, or not to rewrite- that is the question: 
-</span><span class='line'>Whether 'tis better for the product to suffer
-</span><span class='line'>The features and debt of outrageous history
-</span><span class='line'>Or to once again battle a sea of edge cases,
-</span><span class='line'>And by forgetting relive them. To wish- to hope-
-</span><span class='line'>No more; and by hope to say we end
-</span><span class='line'>The heartache, and the thousand unnatural cases
-</span><span class='line'>That code can error to. 'Tis a codebase
-</span><span class='line'>Devoutly to be wish'd. To wish- to hope.
-</span><span class='line'>To hope- perchance to rebuild: ay, there's the rub!
-</span><span class='line'>For in that hope of clarity what simplicity comes
-</span><span class='line'>When we have removed this outdated cruft
-</span><span class='line'>Must give us success. But give the respect
-</span><span class='line'>To the current repo of such long life.
-</span><span class='line'>For who would bear the features of the past,
-</span><span class='line'>High expectations, the race conditions,
-</span><span class='line'>The admin tools, the product delay,
-</span><span class='line'>The exhaustion overcome, and the data
-</span><span class='line'>That shall posthaste be moved to a new store
-</span><span class='line'>As each mistake of the past be brought back
-</span><span class='line'>With sighs of regret? Who would these issues bear,
-</span><span class='line'>To toil and code under a weary life,
-</span><span class='line'>But that the chance of something rebuilt
-</span><span class='line'>That undiscover'd codebase, from whose lines
-</span><span class='line'>No complexity returns- tempts the will,
-</span><span class='line'>And makes us choose between those ills we have
-</span><span class='line'>Than sprint towards others we know not of?
-</span><span class='line'>Thus the unknowns make cowards of us all,
-</span><span class='line'>And thus the heavy weight of such choice
-</span><span class='line'>Is oft tempered by promises of thought,
-</span><span class='line'>And refactorings of great scope and breadth
-</span><span class='line'>With this regard the hope does turn awry
-</span><span class='line'>And lose the name of action.- What say you?
-</span><span class='line'>The lauded pivot! Siren of opportunity
-</span><span class='line'>May all our sins be forgotten.</span></code></pre></td></tr></table></div></figure>
-
-
-<p>The internal struggle of the rewrite decision eats away at developers. It could be so much better. We have learned so much. Let&#8217;s start over. It causes inaction over months accompanied by much grumbling. But if you do it, how can you make sure it doesn&#8217;t turn into a tragedy?</p>
-
-<p>I can&#8217;t say that I am happy or proud that we have rewritten TaskRabbit twice. That doesn&#8217;t feel right. Conceptually, if we would have done it correctly the first time, then it wouldn&#8217;t have been needed. Or maybe we should have done it in place. I would say that&#8217;s absolutely fair, but doesn&#8217;t capture the reality of development of the last 6 years.</p>
-
-<p>When I started writing this post, I just felt like mapping my existential crisis to Hamlet&#8217;s and now I&#8217;m heading towards defending myself against Joel&#8217;s famous <a href="http://www.joelonsoftware.com/articles/fog0000000069.html">post</a> stating the fact that you should never do a rewrite. I just went back and read it (again) and I (still) agree. It&#8217;s hard to argue with. Maybe it&#8217;s best to discuss the times we did rewrite to the times we didn&#8217;t.</p>
-
-
-		
-		<a href="/blog/2015/10/26/rewrite/" class="more-link">Read on &rarr;</a>
-	</div>
-
-</article>
-
-
-    <article class="post">
-	<div class="meta">
-		<div class="date">
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-10-18T00:00:00-07:00" pubdate data-updated="true">Oct 18<span>th</span>, 2015</time></div>
-		<div class="tags">
-
-
-	<a class='category' href='/blog/categories/ios/'>ios</a>, <a class='category' href='/blog/categories/javascript/'>javascript</a>, <a class='category' href='/blog/categories/react/'>react</a>
-
-
-</div>
-		
-	</div>
-	<h1 class="title"><a href="/blog/2015/10/18/building-react-native-apps/">Building React Native Apps</a></h1>
-	<div class="entry-content">
-		<p>We&#8217;ve been using and loving React Native as noted in my <a href="/blog/2015/09/21/react-native-example-app">previous post</a>. As we are working towards rolling out a fully-featured app, one thing that needed solved was how we should build the app for different environments. For example, how can we make (slightly different) development, staging, and production builds?</p>
-
-<p>In a <a href="https://github.com/facebook/react-native/issues/2246">Github issue</a>, I ran into a few other people also wondering how to do this, so I&#8217;ve added a few ways to the <a href="https://github.com/taskrabbit/ReactNativeSampleApp">Example App</a> to show the approaches we are using.</p>
-
-<p>The three approaches we are trying out are:</p>
-
-<ul>
-<li>Configurations</li>
-<li>Compile Flags</li>
-<li>Run Variables</li>
-</ul>
-
-
-<h2>Environments</h2>
-
-<p>I had already added the <code>Environment</code> <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/2cf43f3ce17f830ff17065d6b4d973ac85043b05/App/Models/Environment.js">model</a> and <code>EnvironmentStore</code> <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/2cf43f3ce17f830ff17065d6b4d973ac85043b05/App/Stores/EnvironmentStore.js">store</a> to the project. However, I just added actual dynamic configurations to the XCode project and the <code>EnvironmentManager</code> <a href="https://github.com/taskrabbit/ReactNativeSampleApp/blob/2cf43f3ce17f830ff17065d6b4d973ac85043b05/ios/Sample/EnvironmentManager.m">code</a> is using that.</p>
-
-
-		
-		<a href="/blog/2015/10/18/building-react-native-apps/" class="more-link">Read on &rarr;</a>
-	</div>
-
-</article>
-
-
-    <article class="post">
-	<div class="meta">
-		<div class="date">
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2015-10-06T00:00:00-07:00" pubdate data-updated="true">Oct 6<span>th</span>, 2015</time></div>
-		<div class="tags">
-
-
-	<a class='category' href='/blog/categories/architecture/'>architecture</a>, <a class='category' href='/blog/categories/code/'>code</a>, <a class='category' href='/blog/categories/rails/'>rails</a>, <a class='category' href='/blog/categories/startups/'>startups</a>, <a class='category' href='/blog/categories/v3/'>v3</a>
-
-
-</div>
-		
-	</div>
-	<h1 class="title"><a href="/blog/2015/10/06/v2-retrospective/">V2 - Retrospective</a></h1>
-	<div class="entry-content">
-		<p>TaskRabbit began as <a href="http://www.boston.com/business/technology/articles/2009/07/05/web_start_up_takes_entrepreneurs_idea_and_runs_with_it/">RunMyErrand</a> in 2008 when Leah had the <a href="http://techli.com/2011/09/taskrabbit-interview-leah-busque/">idea</a> and coded up the first version of the site. In 2009, I had the opportunity to help out in little ways like adding Facebook Connect support just after it launched and Leah got into <a href="http://techcrunch.com/2009/05/28/facebook-names-first-class-of-fbfund-rev-its-new-incubator/">Facebook Fund</a>. From there, she raised a <a href="http://www.xconomy.com/boston/2009/10/30/runmyerrand-picks-up-1-million-from-west-coast-venture-firms/">seed round</a> and I came on full-time.</p>
-
-<p>For a few weeks after starting, I worked on the RunMyErrand codebase, adding features and fixing bugs. Quickly, though, a few things became clear. First, we were probably going to change our name. RunMyErrand made people think only about laundry. Second, the changes we wanted to make drastic and hard to make with confidence in a codebase with no tests. I was hoping to work and live with this code for several years and we did not have the foundation that would make that a productive and enjoyable experience.</p>
-
-<p>So around Christmas 2009, I started a new Rails project. It was still called <code>runmyerrand</code> because we still didn&#8217;t have a new name. For a while at the end we called it <code>core</code> because it was at the center of a large service-oriented architecture. Today, we call it <code>V2</code> because it has now itself been replaced.</p>
-
-<p>It&#8217;s been a year and half. It&#8217;s never too late for a retrospective.</p>
-
-<h2>Launch</h2>
-
-<p>The original site was my first Rails project to work on and V2 was my first one from scratch. Rails 3 wasn&#8217;t yet released so I was nervous to get on that bleeding edge because most of the gems didn&#8217;t work quite yet. I had been immersing myself in Ruby news. In particular, I&#8217;d been listening to <a href="http://ruby5.envylabs.com/">Ruby5</a> and others podcasts and been taking notes about gems/tools that seemed relevant. In hindsight and with experience, it was a problem to rely on gems for fairly simple things, but at the time they seemed sent from heaven to solve my problems.</p>
-
-<p>I started over Christmas at the very beginning.</p>
-
-<div class="jumbotron">
-  <image src="/images/posts/v2-retrospective/tracker2009.png" alternate="Tracker 2009" class="bigPicture" />
-</div>
-
-
-<p>The site was black and white with a simple layout. At some point in January, Leah saw what I was working on. I, of course, discussed with her the notion of rebuilding the site, but I don&#8217;t think the ramifications quite came across until she saw the starkness of that layout. It was probably a huge leap of faith for her at that moment to have the trust in me that she did.</p>
-
-<p>I worked on both sites through January and February, eventually getting to 100% on new stuff. For the most part, I was building a feature-complete version of RunMyErrand with TBD branding and stronger Rails conventions like <a href="http://weblog.jamisbuck.org/2006/10/18/skinny-controller-fat-model">skinny controllers</a> and tests. There were some new features and many minor upgrades from the learnings we&#8217;d had.</p>
-
-<p>By the end of April, it was about ready to go. We had <a href="http://blog.taskrabbit.com/2010/04/08/runmyerrand-is-now-taskrabbit/">picked a name</a>, gotten help from <a href="http://www.mikekivikoski.com/">designers</a> and <a href="https://twitter.com/dpickett">Dan</a>, a great contractor to pull it over the finish line. In one hour on <a href="http://bostinno.streetwise.co/2010/04/13/runmyerrand-relaunches-with-new-name/">April 5th</a>, we launched the new code and rebranded the company.</p>
-
-
-		
-		<a href="/blog/2015/10/06/v2-retrospective/" class="more-link">Read on &rarr;</a>
 	</div>
 
 </article>

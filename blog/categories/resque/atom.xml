@@ -4,7 +4,7 @@
   <title><![CDATA[Category: resque | BLog]]></title>
   <link href="http://bleonard.github.io/blog/categories/resque/atom.xml" rel="self"/>
   <link href="http://bleonard.github.io/"/>
-  <updated>2017-03-05T14:05:31-08:00</updated>
+  <updated>2017-04-14T15:13:13-07:00</updated>
   <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
@@ -12,6 +12,559 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Architecture: Consider Kron]]></title>
+    <link href="http://bleonard.github.io/blog/2017/04/14/architecture-consider-kron/"/>
+    <updated>2017-04-14T00:00:00-07:00</updated>
+    <id>http://bleonard.github.io/blog/2017/04/14/architecture-consider-kron</id>
+    <content type="html"><![CDATA[<p>The last post in our architecture series discussed <a href="/blog/2017/03/17/architecture-background-processing/">background processing</a>. There is a special type of background processing that I wanted to make a quick note about. These are things that need to be done periodically or otherwise on a schedule.</p>
+
+<p>In our internal speak, we call this a "kron" job. If you are familiar with <a href="https://en.wikipedia.org/wiki/Cron">cron</a> jobs, it's the same idea. A product manager misspelled it once and it stuck! We don't actually use regular cron infrastructure, so the spelling <em>nuance</em> is helpful.</p>
+
+<p>The specifics of how we implement it involve our <a href="/blog/2015/04/02/queue-bus/">message bus</a> infrastructure, but I think the concept and the decisions involved could include many other implementations.</p>
+
+<h3>When to use it</h3>
+
+<p>Let's take the job from the <a href="/blog/2017/03/17/architecture-background-processing/">previous article</a>. The "charge an invoice 24 hours later" case is an interesting one. The system certainly supports delaying that code to run for an arbitrary time, but that's not always the best idea.</p>
+
+<p>```ruby
+class InvoiceChargeWorker
+  include TResque::Worker
+  inputs :invoice_id</p>
+
+<p>  worker_lock :invoice_id</p>
+
+<p>  def work</p>
+
+<pre><code>return unless needed?
+invoice.charge!
+</code></pre>
+
+<p>  end</p>
+
+<p>  def to_id</p>
+
+<pre><code>invoice.to_id
+</code></pre>
+
+<p>  end</p>
+
+<p>  def needed?</p>
+
+<pre><code>invoice.pending?
+</code></pre>
+
+<p>  end</p>
+
+<p>  def invoice</p>
+
+<pre><code>@invoice ||= Invoice.find(invoice_id)
+</code></pre>
+
+<p>  end
+end</p>
+
+<h1>When invoice is created</h1>
+
+<p>InvoiceChargeWorker.enqueue_at(24.hours.from_now, invoice_id: invoice.id)
+```</p>
+
+<p>One reason would be memory. When there a lot of invoices (woot!), we still have to save the notion of what should be done somewhere until it gets processed. In this case, the <a href="https://redis.io/">Redis</a> instance will have it stored in memory. The memory could fill up and adding more workers won't help because of the delay.</p>
+
+<p>The second reason is stability. This is important stuff and Redis could have issues and lose the data. We made everything <a href="http://www.restapitutorial.com/lessons/idempotency.html">idempotent</a> and could recreate everything, but it would certainly be a huge hassle.</p>
+
+<p>So when enqueueing something to run in the future, especially if it is important or a long time from now (more than a few minutes), we consider kron.</p>
+
+<h3>Batch mode</h3>
+
+<p>If we were going to accomplish the same things but on a schedule, the code would have to change in some way. I like the existing worker because it already has the good stuff from the last article: source of truth, knowing whether or not it still needs to be run, and mutual exclusion. When batch processing, I believe it's also good to still operate on this one at a time where the count (memory for redis) is low or the risk of issues is high. Both are the case here.</p>
+
+<p>To turn it into a batch processor we need to know what needs to be processed at any given moment. This is easy to determine because we have the <code>needed?</code> method. It looks to be invoices that are in the <code>pending</code> state. Sometimes we need to add a <code>state</code> column or other piece of data to know what needs to be in the batch but in this case we are good to go.</p>
+
+<p>From there we can decide if we are going to update the class as-is or make a batch worker. A batch worker is its own worker and would look like this:</p>
+
+<p>```ruby
+class InvoiceChargeBatchWorker
+  include TResque::Worker</p>
+
+<p>  worker_lock :all
+  queue_lock  :all</p>
+
+<p>  def work</p>
+
+<pre><code>Invoice.where(stat: 'pending').find_each do |invoice|
+  InvoiceChargeWorker.enqueue(invoice_id: invoice.id)
+end
+</code></pre>
+
+<p>  end
+end</p>
+
+<h1>process all pending invoices</h1>
+
+<p>InvoiceChargeBatchWorker.enqueue()
+```</p>
+
+<p>That's it. Because of the worker lock on <code>InvoiceChargeWorker</code> and the state checking, it would be ok even if we were to enqueue it twice or something. Making a custom batch worker also prevents us from running this code twice.</p>
+
+<p>We could also stick it as a class method on the original:</p>
+
+<p>```ruby
+class InvoiceChargeWorker
+  include TResque::Worker
+  inputs :invoice_id</p>
+
+<p>  worker_lock :invoice_id</p>
+
+<p>  def self.process_all!</p>
+
+<pre><code>Invoice.where(stat: 'pending').find_each do |invoice|
+  self.enqueue(invoice_id: invoice.id)
+end
+</code></pre>
+
+<p>  end</p>
+
+<p>  def work</p>
+
+<pre><code>return unless needed?
+invoice.charge!
+</code></pre>
+
+<p>  end</p>
+
+<p>  def needed?</p>
+
+<pre><code>invoice.pending?
+</code></pre>
+
+<p>  end</p>
+
+<p>  def invoice</p>
+
+<pre><code>@invoice ||= Invoice.find(invoice_id)
+</code></pre>
+
+<p>  end
+end</p>
+
+<h1>process all pending invoices</h1>
+
+<p>InvoiceChargeWorker.process_all!
+```</p>
+
+<h3>How it works</h3>
+
+<p>Again, in any given architecture there is probably a best way to do it. For example, maybe <a href="https://medium.com/airbnb-engineering/chronos-a-replacement-for-cron-f05d7d986a9d">this</a> is a good way to do it on top of <a href="http://mesos.apache.org/">Mesos</a>.</p>
+
+<p>The challenge is running something on a schedule. In this case, process all invoices that need to be paid. That is what regular cron is made to do. However, we do not want to run that on every box. If we did that, we would have serious race conditions and might pay an invoice twice. Rather, we want to run it once globally across the entire infrastructure or at least per service.</p>
+
+<p>We could probably do this by noting in the devops setup that one of the servers is special. It should get the cron setup. We could use something like the <a href="https://github.com/javan/whenever">whenever gem</a> to say what to do and we would only run that on one box per system. It needs to be per system because it has to be able to know what worker to enqueue or, in general, what code to run.</p>
+
+<p>What we do instead is have a single service that has a process that sends out a heartbeat on the <a href="/blog/2015/04/02/queue-bus/">message bus</a>. Every minute, it publishes an event that looks like this.</p>
+
+<p>```ruby
+  # for Tue, 11 Apr 2017 00:25:00 UTC +00:00
+  # epoch time: 1491870300</p>
+
+<p>  QueueBus.publish(heartbeat_seconds", {</p>
+
+<pre><code>"epoch_seconds"=&gt;1491870300,
+"epoch_minutes"=&gt;24864505,
+"epoch_hours"=&gt;414408,
+"epoch_days"=&gt;17267,
+"minute"=&gt;25,
+"hour"=&gt;0, 
+"day"=&gt;11,
+"month"=&gt;4,
+"year"=&gt;2017,
+"yday"=&gt;101,
+"wday"=&gt;2
+</code></pre>
+
+<p>  })
+```</p>
+
+<p>The current code for the process is already checked into <a href="https://github.com/queue-bus/queue-bus">queue-bus</a> and ready to use <a href="https://github.com/queue-bus/queue-bus/blob/5c009a3b2d2d58994813bdca0dc78547a18b0295/lib/queue_bus/heartbeat.rb">here</a>.</p>
+
+<p><a href="https://github.com/queue-bus/resque-bus">Resque bus</a> supports this using the <a href="https://github.com/resque/resque-scheduler">resque-scheduler gem</a>. It is setup off by calling <code>QueueBus.heartbeat!</code>. We make sure it's setup every time we start up Resque.</p>
+
+<p>```ruby
+namespace :resque do
+  task :setup => [:environment] do</p>
+
+<pre><code>require 'resque_scheduler'
+require 'resque/scheduler'
+require 'tresque'
+
+QueueBus.heartbeat!
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>This <code>setup</code> is automatically called every time Resque starts.</p>
+
+<h3>Usage</h3>
+
+<p>So now we can subscribe to this event to run something every minute, hour, day, Monday, month, whatever.</p>
+
+<p>```ruby</p>
+
+<h1>every minute</h1>
+
+<p>subscribe "every_minute", 'bus_event_type' => 'heartbeat_minutes' do |attributes|
+  InvoiceChargeWorker.process_all!
+end</p>
+
+<h1>every hour: 4:22, 5:22, 6:22, etc</h1>
+
+<p>subscribe "once_an_hour", 'bus_event_type' => 'heartbeat_minutes', 'minute' => 22 do |attributes|
+  InvoiceChargeWorker.process_all!
+end</p>
+
+<h1>every day at 12:05 am</h1>
+
+<p>subscribe "once_a_day", 'bus_event_type' => 'heartbeat_minutes', 'hour' => 0, 'minute' => 5 do |attributes|
+  InvoiceChargeWorker.process_all!
+end</p>
+
+<h1>every monday at 1:52 am</h1>
+
+<p>subscribe "early_monday_morning", 'bus_event_type' => 'heartbeat_minutes', 'wday' => 1, 'hour' => 1, 'minute' => 52 do |attributes|
+  InvoiceChargeWorker.process_all!
+end</p>
+
+<h1>the 3rd of every month at 2:10 am</h1>
+
+<p>subscribe "once_a_month", 'bus_event_type' => 'heartbeat_minutes', 'day' => 3, 'hour' => 2, 'minute' => 10 do |attributes|
+  InvoiceChargeWorker.process_all!
+end</p>
+
+<h1>every 5 minutes: 4:00, 4:05, 4:10, etc</h1>
+
+<p>subscribe "every 5 minutes" do |attributes|
+  # if it doesn't fit the subscribe pattern, just subscribe to every minute and use ruby
+  next unless attributes['minute'] % 5 == 0
+  InvoiceChargeWorker.process_all!
+end</p>
+
+<p>```</p>
+
+<h3>Summary</h3>
+
+<p>So that is how "kron" works.</p>
+
+<p>Over time, we have decided this is a much more reliable way to process items in the background when a delay is acceptable. By setting up some sort of centralized architecture for this, many services and subscribe in a way that is familiar and unsurprising. We have found a lot of value in that.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Architecture: Background Processing]]></title>
+    <link href="http://bleonard.github.io/blog/2017/03/17/architecture-background-processing/"/>
+    <updated>2017-03-17T00:00:00-07:00</updated>
+    <id>http://bleonard.github.io/blog/2017/03/17/architecture-background-processing</id>
+    <content type="html"><![CDATA[<p>So we have a bunch of <a href="/blog/2017/02/24/architecture-models/">models</a> and are doing stuff with them in <a href="/blog/2017/03/03/architecture-service-objects/">service objects</a>. The next thing we might need is to process some code in the background.</p>
+
+<p>Not everything can be done inline from the API request. For example, we might need to geocode a user's postal code when they change it in their account. Or when an invoice is created, we want to charge it 24 hours later.</p>
+
+<p>When working with background jobs, we default to the following practices:</p>
+
+<ul>
+<li>Workers are enqueued with a dictionary of inputs</li>
+<li>These inputs should be used to fetch data from the source of truth</li>
+<li>Workers know how to check if they still need to run</li>
+<li>Locking schemes should protect parallel execution</li>
+</ul>
+
+
+<h3>Enqueue</h3>
+
+<p>When we enqueue a worker, we have found that it's quite helpful to always use a dictionary (hash) of key/value pairs. <a href="https://github.com/resque/resque">Resque</a> and <a href="http://sidekiq.org/">Sidekiq</a> both take a list of arguments like <a href="https://github.com/mperham/sidekiq/wiki/Getting-Started">so</a>:</p>
+
+<p>```ruby
+class HardWorker
+  include Sidekiq::Worker
+  def perform(name, count)</p>
+
+<pre><code># do something with name, count
+</code></pre>
+
+<p>  end
+end</p>
+
+<h1>enqueue</h1>
+
+<p>HardWorker.perform_async('bob', 5)
+```</p>
+
+<p>This has proved to be problematic when adding new parameters or having optional parameters. For example, if we add a new (third) input parameter, there might be stuff in the queue with the old two. When the new code gets deployed, it will throw an 'invalid number of arguments' type of error. When using a hash, we can give it a default, fail gracefully, or do whatever we like on a class by class basis.</p>
+
+<p>So to provide better change management and optional arguments, we always do it like so:</p>
+
+<p>```ruby
+class HardWorker
+  include TResque::Worker
+  inputs :name, :count</p>
+
+<p>  def work</p>
+
+<pre><code># do something with self.name, self.count
+</code></pre>
+
+<p>  end
+end</p>
+
+<h1>enqueue</h1>
+
+<p>HardWorker.enqueue(name: 'bob', count: 5)
+```</p>
+
+<h3>Source of Truth</h3>
+
+<p>Let's say we want to update a search index every time a user record is changed. We need to write their first name, last name, etc to <a href="https://www.elastic.co/">Elasticsearch</a>.</p>
+
+<p>We could do something like this:</p>
+
+<p>```ruby
+class UserIndexWorker
+  include TResque::Worker
+  inputs :id, :first_name, :last_name, :etc</p>
+
+<p>  def work</p>
+
+<pre><code>Elasticsearch.index('users').write(id, id: id, first_name: first_name, last_name: last_name, etc: etc)
+</code></pre>
+
+<p>  end
+end</p>
+
+<h1>When user changes</h1>
+
+<p>UserIndexWorker.enqueue(user.attributes.slice(:id, :first_name, :last_name, :etc))
+```</p>
+
+<p>This certainly would work, but is not considered best practice. It is better to be <a href="http://www.restapitutorial.com/lessons/idempotency.html">idempotent</a>. It writes everything that should ) by passing the minimal information to the background worker, who then looks up the source of truth. That way, if there is any delay between when it is enqueued and run, it will still send the correct information.</p>
+
+<p>The better approach would look like this:</p>
+
+<p>```ruby
+class UserIndexWorker
+  include TResque::Worker
+  inputs :user_id</p>
+
+<p>  def work</p>
+
+<pre><code>Elasticsearch.index('users').write(user.attributes.slice(:id, :first_name, :last_name, :etc))
+</code></pre>
+
+<p>  end</p>
+
+<p>  def user</p>
+
+<pre><code>@user ||= User.find(user_id)
+</code></pre>
+
+<p>  end
+end</p>
+
+<h1>When user changes</h1>
+
+<p>UserIndexWorker.enqueue(user_id: user.id)
+```</p>
+
+<p>In the same vein, the worker should be in charge of whether or not it needs to do anything in the first place. For example, we can enqueue a worker to run later about an <code>Invoice</code>. If, at that time, the payment is <code>Invoice</code> still should be charged, then charge it.</p>
+
+<p>```ruby
+class InvoiceChargeWorker
+  include TResque::Worker
+  inputs :invoice_id</p>
+
+<p>  def work</p>
+
+<pre><code>return unless needed?
+invoice.charge!
+</code></pre>
+
+<p>  end</p>
+
+<p>  def needed?</p>
+
+<pre><code>invoice.pending?
+</code></pre>
+
+<p>  end</p>
+
+<p>  def invoice</p>
+
+<pre><code>@invoice ||= Invoice.find(invoice_id)
+</code></pre>
+
+<p>  end
+end</p>
+
+<h1>When invoice is created</h1>
+
+<p>InvoiceChargeWorker.enqueue_at(24.hours.from_now, invoice_id: invoice.id)
+```</p>
+
+<p>This is another example of single source of truth. Even for jobs that are run immediately, this check is something we always put in place: return immediately if the worker is no longer relevant.</p>
+
+<h3>Mutual Exclusion</h3>
+
+<p>Let's say the <code>User</code> object can sometimes change a few times rapidly. The "source of truth" approach will make sure the right thing always gets indexed. So that's great. But it is pretty silly to index the same data twice or more times, right?</p>
+
+<p>In this case, we add a queue lock. The effect is that if something is in the queue and waiting to be processed and you try to enqueue another one with the same inputs, then it will be a no-op. It looks like this:</p>
+
+<p>```ruby
+class UserIndexWorker
+  include TResque::Worker
+  inputs :user_id</p>
+
+<p>  queue_lock :user_id
+end
+```</p>
+
+<p>Another case that often arises is mutual exclusion for <em>runtime</em>. Maybe weird payment things happen to the payment service if two invoices for the same user are happening at the same time.</p>
+
+<p>In this case, we add a worker lock. The effect is that if something is in the queue and about to start running and there is another running at that moment, then it will re-enqueue itself to run later. It looks like this:</p>
+
+<p>```ruby
+class InvoiceChargeWorker
+  include TResque::Worker
+  inputs :invoice_id</p>
+
+<p>  worker_lock :to_id</p>
+
+<p>  def work</p>
+
+<pre><code>return unless needed?
+invoice.charge!
+</code></pre>
+
+<p>  end</p>
+
+<p>  def to_id</p>
+
+<pre><code>invoice.to_id
+</code></pre>
+
+<p>  end</p>
+
+<p>  def needed?</p>
+
+<pre><code>invoice.pending?
+</code></pre>
+
+<p>  end</p>
+
+<p>  def invoice</p>
+
+<pre><code>@invoice ||= Invoice.find(invoice_id)
+</code></pre>
+
+<p>  end
+end
+```</p>
+
+<p>For either type, you don't have to lock on all the attributes or can (as shown in the last example) use calculations. The namespace of the lock is the worker class name. You can also set the namespace to allow locking between different workers.</p>
+
+<h3>Message Bus</h3>
+
+<p>Our <a href="/blog/2015/04/02/queue-bus/">message bus</a> and our use of background processes have a lot in common. In fact, the message bus is built on top of the same background processing infrastructure. The question that arises is this: when should something be enqueued directly and when should it publish and respond to a bus subscription?</p>
+
+<p>The first note is that you should <em>always be publishing</em> (ABP). It doesn't hurt anything to give (optional) visibility to other systems what is happening. Or use this as logging framework.</p>
+
+<p>Just publishing, however, doesn't mean we have to use that to do work in the background. Be can bother publish and enqueue a background worker. We enqueue a worker when the work in the background is essential to the correct operation of the use case at hand.</p>
+
+<p>One example to enqueue directly would be the geocoding worker I mentioned earlier: when the user gives a new postal code, figure out where that is. It's key to the account management system.</p>
+
+<p>The search example I've been using might not actually be the best one because we would have the search system subscribed to changes in the account system. What I didn't show that the <code>enqueue</code> call might actually happen from within a subscription.</p>
+
+<p><code>ruby
+subscribe "user_changed" do |attributes|
+  UserIndexWorker.enqueue(user_id: attributes['id'])
+end
+</code></p>
+
+<p>So these two concepts can work together. Why not just index it right in the subscription, though? A primary reason might be to use some of the locking mechanisms as the bus does not have that. It also might be the case that the worker is enqueued from other locations and this keeps things DRY. The worker is also easier to unit test.</p>
+
+<h3>TResque</h3>
+
+<p>We use <a href="https://github.com/resque/resque">Resque</a> as a base foundation and built on top of it with an abstraction layer called <a href="https://github.com/taskrabbit/tresque">TResque</a>. That's TR (TaskRabbit) Resque. Get it? It puts all of these practices into place as well as adding and abstraction layer for the inevitable, but as yet unprioritized, move to <a href="http://sidekiq.org/">Sidekiq</a>.</p>
+
+<p>I don't necessarily expect anyone to use this, but it doesn't hurt to make it available as an example of how we are using these tools.</p>
+
+<p>You define a worker and enqueue things as show in the examples above. Then only layer left is around prioritization. You can give a queue name to a worker and then register what priority those workers are. If no queue is given, it is assumed to be the <code>default</code> queue.</p>
+
+<p>```ruby
+require 'tresque'</p>
+
+<p>module Account
+  class RegularWorker</p>
+
+<pre><code>include ::TResque::Worker
+# defaults to account_default queue
+</code></pre>
+
+<p>  end
+end</p>
+
+<p>module Account
+  class RegularWorker</p>
+
+<pre><code>include ::TResque::Worker
+queue :refresh # lower priority account_refresh queue
+</code></pre>
+
+<p>  end
+end</p>
+
+<p>TResque.register("account") do
+  queue :default, 100
+  queue :refresh, -5000
+end
+```</p>
+
+<p>Then when you run Resque, you can use these registrations to process the queues in the right order.</p>
+
+<p>```ruby
+require 'resque/tasks'
+require 'resque_scheduler/tasks'
+require "resque_bus/tasks"</p>
+
+<p>namespace :resque do
+  task :setup => [:environment] do</p>
+
+<pre><code>require 'resque_scheduler'
+require 'resque/scheduler'
+require 'tresque'
+</code></pre>
+
+<p>  end</p>
+
+<p>  task :queues => [:setup] do</p>
+
+<pre><code>queues = ::TResque::Registry.queues
+ENV["QUEUES"] = queues.join(",")
+puts "TResque: #{ENV["QUEUES"]}"
+</code></pre>
+
+<p>  end
+end</p>
+
+<p>```</p>
+
+<p><code>
+  $ bundle exec rake resque:queues resque:work
+  TResque: account_default, account_refresh
+</code></p>
+
+<p>This registration layer allows each of the systems (<a href="/blog/2014/02/11/rails-4-engines/">engines</a>) to work independently and still have centralized background processing.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Queue Bus]]></title>

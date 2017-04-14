@@ -1,0 +1,223 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Architecture: Surface Area - BLog</title>
+	<meta name="author" content="Brian Leonard">
+
+	
+	<meta name="description" content="The last post in the TaskRabbit architecture series was about service objects. This an example of what I call minimizing &#8220;surface area&#8221; &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="BLog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://bleonard.github.io/blog/2017/03/10/architecture-surface-area/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="/assets/slides/css/for_blog.css">
+	
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+</head>
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">	
+	<a href="/"><img src="/images/dp.jpg" alt="Profile Picture" style="width: 160px;"></a>
+</div>
+<h1><a href="/">BLog</a></h1>
+<p class="subtitle">Strong catchphrase situation here</p>
+<p class="description">Chief Architect and Technical Co-founder of TaskRabbit - neighbors helping neighbors through technology.</p>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+	  
+	  <a class="taskrabbit" href="http://www.taskrabbit.com" title="TaskRabbit">TaskRabbit</a>
+	  
+		
+		
+		
+		<a class="github" href="https://github.com/bleonard" title="GitHub">GitHub</a>
+		
+		
+		<a class="linkedin" href="http://www.linkedin.com/in/BrianL429">LinkedIn</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/bleonard" title="Twitter">Twitter</a>
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="Feed">Feed</a>
+		
+	</div>
+</nav>
+
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post">
+	<h1 class="title">Architecture: Surface Area</h1>
+	<div class="entry-content"><p>The last post in the <a href="https://www.taskrabbit.com">TaskRabbit</a> architecture series was about <a href="/blog/2017/03/03/architecture-service-objects/">service objects</a>. This an example of what I call minimizing &#8220;surface area&#8221; of the code.</p>
+
+<p>Frankly, I might be using the term wrong. It seems possible &#8220;surface area&#8221; usually refers to API signature of some objects. What I&#8217;m talking about here is the following train of thought:</p>
+
+<ul>
+<li>I change or add a line of code</li>
+<li>What did I just affect?</li>
+</ul>
+
+
+<p>The &#8220;surface area&#8221; is the other things I have to look over. It is the area that I have to make sure has appropriate test coverage. Having a large surface area is what slows down development teams. The goal is to minimize it.</p>
+
+<h3>Service Objects</h3>
+
+<p>So how does our use of service objects relate to this concept?</p>
+
+<p>Let&#8217;s say we have a new requirement that&#8217;s applicable when a Tasker submits an invoice that modifies what gets saved. If I were to add the code to the <code>InvoiceJobOp</code> from the <a href="/blog/2017/03/03/architecture-service-objects/">previous article</a>, then it will only apply when the <code>Op</code> is run. If we were to do something in a <code>before_save</code> in the <code>Invoice</code> model, then it might accidentally kick in anytime an <code>Invoice</code> is changed.</p>
+
+<p>That&#8217;s a lot more tests and things to keep in our mind. If it is just in the <code>Op</code>, that is less of those kinds of debt, so adding in the <code>Op</code> is an example of minimizing the surface area of the change.</p>
+
+<h3>Namespacing</h3>
+
+<p>We went through a <a href="/blog/2015/10/06/v2-retrospective/">roundabout journey</a> to end up where were we are. Many of the changes were about surface area and trying to reduce it.</p>
+
+<p>People like microservices and SOA because of this same principle. We tried it and that part of it worked out really well. There was just no way that a change in service A could affect service B. As <a href="/blog/2015/10/06/v2-retrospective/">discussed</a>, however, we ran into issues in other dimensions.</p>
+
+<p>Our current use of <a href="/blog/2014/02/11/rails-4-engines/">engines</a> follows the same approach to achieve the same surface area effect. It is all about namespacing. Modifying the user management engine can not affect the marketplace engine. This allows us to proceed with more confidence when making such changes.</p>
+
+<p>A particular aspect of our setup is that any given model is &#8220;owned&#8221; by only one engine. The rest of the engines are allowed to read from the database but they cannot write. This provides sanity and minimizes the surface area. For example, the validations only need to live in one spot. You also know that no other code can go rogue and start messing with the data by accident or otherwise.</p>
+
+<h3>Bus</h3>
+
+<p>Of course, the world isn&#8217;t always cut and dry. Venn diagrams overlap. No abstraction or encapsulation is perfect. The seams in namespacing show up when something that happens in one service (engine) needs to affect something in another one.</p>
+
+<p>For example, we were so happy just a few paragraphs ago that changes to the user management engine do not affect the marketplace engine. That is true and it is great. There is no direct effect from the code. However, as they tend to do, these pesky functional requirements always mess up perfect plans for the code. In this case, when a user changes their first name (in the account engine), the marketplace engine might need to update some data in <a href="https://www.elastic.co/">Elasticsearch</a>.</p>
+
+<p>We use a <a href="/blog/2015/04/02/queue-bus/">message bus</a> to observe changes like this and react as appropriate.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># Whenever the user changes</span>
+</span><span class='line'><span class="n">subscribe</span> <span class="s1">&#39;user_may_have_changed&#39;</span><span class="p">,</span> <span class="n">bus_observer_touched</span><span class="p">:</span> <span class="s1">&#39;user&#39;</span> <span class="k">do</span> <span class="o">|</span><span class="n">attributes</span><span class="o">|</span>
+</span><span class='line'>  <span class="c1"># update the profile in ElasticSearch</span>
+</span><span class='line'>  <span class="no">ProfileStoreWorker</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="n">attributes</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>An important note here is that <code>ProfileStoreWorker</code> is <a href="http://www.restapitutorial.com/lessons/idempotency.html">idempotent</a>. It writes everything that should go in Elasticsearch every time. This technique reduces surface area by not depending on this single event and its contents, but rather only as a trigger.</p>
+
+<p>One might say that these subscriptions are just as coupled as doing everything all in one spot. I see that point because, of course, the same things end up happening. However, we have this technique to be better for a few reasons.</p>
+
+<ul>
+<li>The trigger code (in the account engine) does not need to know about the rest of the system. It can mind its own business.</li>
+<li>The subscribing code (in the marketplace engine) can be self-contained instead of being mixed up in the trigger code path.</li>
+<li>Many different code paths might necessitate the <code>ProfileStoreWorker</code> to run. By decoupling it, we actually save complexity in many code paths.</li>
+</ul>
+
+
+<h3>Summary</h3>
+
+<p>In code, developers tend to weave a tangled web wherein seemingly innocuous changes have far-reaching effects. We have been able to create more stable and agile code by considering the &#8220;surface area&#8221; of a change and minimizing it through some encapsulation and decoupling techniques.</p>
+</div>
+
+</article>
+
+	<div class="share">
+
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_counter addthis_pill_style"></a>
+	</div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2017
+
+    Brian Leonard
+
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'bleonard';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-37352049-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+		</div>
+	</div>
+</body>
+</html>

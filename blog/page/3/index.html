@@ -7,7 +7,7 @@
 	<meta name="author" content="Brian Leonard">
 
 	
-	<meta name="description" content="Over the years, we&#8217;ve struggled at TaskRabbit with a way to represent smaller geographic areas. Postal codes seems to be the most obvious but &hellip;">
+	<meta name="description" content="It happens. This column has to go. But in a Rails app, there are a few problems. You can&#8217;t just drop it. My first expectation is that we would &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,305 @@
 			
 			<div class="mid-col-container">
 				<div id="content" class="inner">
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-11-13T00:00:00-08:00" pubdate data-updated="true">Nov 13<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/database/'>database</a>, <a class='category' href='/blog/categories/rails/'>rails</a>, <a class='category' href='/blog/categories/ruby/'>ruby</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2014/11/13/rails-dead-columns/">Rails Dead Columns</a></h1>
+	<div class="entry-content">
+		<p>It happens. This column has to go. But in a <a href="http://rubyonrails.org/">Rails</a> app, there are a few problems. You can&#8217;t just drop it.</p>
+
+<p>My first expectation is that we would create a <a href="http://guides.rubyonrails.org/migrations.html">migration</a> and do something like this.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>class RemoveMiddleNameFromUsers &lt; ::ActiveRecord::Migration
+</span><span class='line'>  def change
+</span><span class='line'>    remove_column :users, :middle_name
+</span><span class='line'>    remove_column :users, :gender
+</span><span class='line'>  end
+</span><span class='line'>end</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This will generally be fine but there are a few practical issues.</p>
+
+<ul>
+<li>Is any of my code still using this column?</li>
+<li>What happens to the production code in the time between the migration and new code using it?</li>
+</ul>
+
+
+<h2>Still in use?</h2>
+
+<p>The obvious thing to do is search the code for use of this column name, but sometimes that can be tricky. The name would be fairly common leading to difficult searching. You could also be accessing it in a fairly inconsistent way like via <code>send</code> and string interpolation or something.</p>
+
+<p>The best way that we&#8217;ve found out that we are still using something is to freak out in test/development/staging if it is accessed. If we didn&#8217;t have the test coverage, we&#8217;d probably log it&#8217;s usage in production and check the logs for use.</p>
+
+
+		
+		<a href="/blog/2014/11/13/rails-dead-columns/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-11-07T00:00:00-08:00" pubdate data-updated="true">Nov 7<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/opensource/'>opensource</a>, <a class='category' href='/blog/categories/rails/'>rails</a>, <a class='category' href='/blog/categories/tools/'>tools</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2014/11/07/rails-stats/">Rails Stats</a></h1>
+	<div class="entry-content">
+		<p>Summary: I extracted and improved on the Rails stats tool. The code is <a href="https://github.com/bleonard/rails_stats/">here</a>.</p>
+
+<h3>Process</h3>
+
+<p>The other day, I was curious about how our codebase had evolved over the years and knew about the <code>rake stats</code> command in Rails. So I checked out a git sha from 2010 and ran the command. Of course the gems weren&#8217;t installed. So I ran <code>bundle install</code>. It said it couldn&#8217;t find <a href="gemcutter.org">gemcutter.org</a>. That&#8217;s when I knew it wasn&#8217;t going to work out. Even if I switched it to use current standards, at least one of those gems was going to be completely gone or a million of other issues.</p>
+
+<p>I figured that an external tool to do the same thing should be easy and I was right. I copied the 3 files related to that rake job to a new project. The code just took directories in so the only dependence on being actually <em>in</em> the Rails project was a <code>Rails.root</code> call at the beginning. I switched it to be passed in from the command line and I was done!</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Controllers          |  1848 |  1483 |      32 |     174 |   5 |     6 |
+</span><span class='line'>| Helpers              |  2257 |  1892 |      45 |     245 |   5 |     5 |
+</span><span class='line'>| Models               |  4584 |  3509 |      61 |     526 |   8 |     4 |
+</span><span class='line'>| Libraries            |  2987 |  2272 |      30 |     287 |   9 |     5 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Total                | 11676 |  9156 |     168 |    1232 |   7 |     5 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>  Code LOC: 9156     Test LOC: 0     Code to Test Ratio: 1:0.0
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>&#8230; except things were missing. The tool that comes with Rails has a certain set of directories and it only looks for code there. It included the normal Rails stuff like models and controllers but was missing anything that strayed from the prescribed structure. These pieces were missing in the default tool:</p>
+
+<ul>
+<li>Anything added to the app directory (jobs, observers)</li>
+<li>Rspec tests (it only supports Test::Unit)</li>
+<li>Cucumber features</li>
+<li>Any code in <a href="/blog/2014/02/11/rails-4-engines/">Engines</a></li>
+</ul>
+
+
+<p>It turned into a bit of time sink, but was a fun project. By modifying it to use more introspection of the directory structure, I was able to cover all the pieces of the app.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake stats<span class="o">[</span>/path/to/app/<span class="o">]</span>
+</span><span class='line'>
+</span><span class='line'>Directory: /path/to/app/
+</span><span class='line'>
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Controllers          |  1848 |  1483 |      32 |     174 |   5 |     6 |
+</span><span class='line'>| Helpers              |  2257 |  1892 |      45 |     245 |   5 |     5 |
+</span><span class='line'>| Jobs                 |   399 |   295 |      11 |      33 |   3 |     6 |
+</span><span class='line'>| Models               |  4584 |  3509 |      61 |     526 |   8 |     4 |
+</span><span class='line'>| Observers            |    42 |    22 |       2 |       5 |   2 |     2 |
+</span><span class='line'>| Libraries            |  2987 |  2272 |      30 |     287 |   9 |     5 |
+</span><span class='line'>| Configuration        |  1233 |   669 |       4 |      17 |   4 |    37 |
+</span><span class='line'>| Spec Support         |  1416 |  1152 |       4 |      30 |   7 |    36 |
+</span><span class='line'>| Integration Tests    |    91 |    73 |       0 |       1 |   0 |    71 |
+</span><span class='line'>| Lib Tests            |   101 |    83 |       0 |       1 |   0 |    81 |
+</span><span class='line'>| Model Tests          |  3397 |  2522 |       0 |      18 |   0 |   138 |
+</span><span class='line'>| Cucumber Support     |   739 |   521 |       0 |       1 |   0 |   519 |
+</span><span class='line'>| Cucumber Features    |  2711 |  2487 |      29 |     145 |   5 |    15 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>| Total                | 21805 | 16980 |     218 |    1483 |   6 |     9 |
+</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
+</span><span class='line'>  Code LOC: 10142     Test LOC: 6838     Code to Test Ratio: 1:0.7
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+
+		
+		<a href="/blog/2014/11/07/rails-stats/" class="more-link">Read on &rarr;</a>
+	</div>
+
+</article>
+
+
+    <article class="post">
+	<div class="meta">
+		<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-10-30T00:00:00-07:00" pubdate data-updated="true">Oct 30<span>th</span>, 2014</time></div>
+		<div class="tags">
+
+
+	<a class='category' href='/blog/categories/mysql/'>mysql</a>, <a class='category' href='/blog/categories/rails/'>rails</a>
+
+
+</div>
+		
+	</div>
+	<h1 class="title"><a href="/blog/2014/10/30/rails-schema-with-lhm/">Rails Schema With LHM</a></h1>
+	<div class="entry-content">
+		<p>At <a href="https://www.taskrabbit.com">TaskRabbit</a>, we like <a href="http://www.mysql.com/">MySQL</a>. As with everything, it has its own set of issues, though. One of these issues is that it locks the table while a column is added. This is not the biggest deal in the early days of a table, but once you start getting millions of rows and consistent traffic around the clock, this prevents the site from working as expected.</p>
+
+<p>The first way that we worked around this problem was with the <a href="http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html">pt-online-schema-change</a> tool. It does the following:</p>
+
+<ul>
+<li>Makes a a new table with the old table&#8217;s schema</li>
+<li>Copies data from the old table to the new table</li>
+<li>Sets up a trigger for data to keep syncing</li>
+<li>Adds the column to the new table</li>
+<li>Renames the old table to something else and renames the new table to replace it</li>
+<li>Deletes the old table</li>
+</ul>
+
+
+<p>This worked quite well, but had a flaw within our process. It was outside of the development and deployment workflow. In order to develop, we would still make a <a href="http://guides.rubyonrails.org/migrations.html">Rails migration</a>. Then just before deploy, we would run the tool and add the row to the <code>schema_migrations</code> table. When we deploy, it runs migrations, but in this case it would not run because we had added that row. I don&#8217;t think we ever messed it up, but the process had a few gaps.</p>
+
+<p>We now use <a href="https://github.com/soundcloud/lhm">LHM</a> also known as Large Hadron Migrator from the good folks at <a href="https://soundcloud.com/">soundcloud</a>. It does basically the same thing, but allows you to do it right there in the migration.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">require</span> <span class="s1">&#39;lhm&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">AddMiddleNameToUsers</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Migration</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">change</span>
+</span><span class='line'>    <span class="no">Lhm</span><span class="o">.</span><span class="n">change_table</span> <span class="ss">:users</span> <span class="k">do</span> <span class="o">|</span><span class="n">m</span><span class="o">|</span>
+</span><span class='line'>      <span class="c1"># same as: add_column :users, :middle_name</span>
+</span><span class='line'>      <span class="n">m</span><span class="o">.</span><span class="n">add_column</span> <span class="ss">:middle_name</span><span class="p">,</span> <span class="s2">&quot;VARCHAR(191) DEFAULT NULL&quot;</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So this is great. Now it&#8217;s in the process.</p>
+
+<h3>Schema</h3>
+
+<p>One design choice (and it seems like the right one) is that it makes the last step manual. That is, it leaves the old (renamed) table around. We go back and delete these from production when sure everything worked out. The above migration might leave around a table named something like this: <code>lhma_2014_10_28_20_41_56_933_users</code>.</p>
+
+<p>So that&#8217;s fine, but you&#8217;ll notice that when you run <code>rake db:migrate</code> that your <code>schema.rb</code> file now has that table in it. This happens because ActiveRecord takes a snapshot of your database right after the migration. We try to take really good care of our schema file, so this made us sad.</p>
+
+<p>I went poking around in the ActiveRecord code ready to monkey patch the adapter that reads the table list or the code that generates the schema file. When I got there, though, I found there was already a class setting that did what I wanted. It even took a regex!</p>
+
+<p>So here&#8217;s what to add if you don&#8217;t want those tables showing up in your schema file:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># config/initializers/active_record_schema.rb</span>
+</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;active_record&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># ignore LHM</span>
+</span><span class='line'><span class="no">ActiveRecord</span><span class="o">::</span><span class="no">SchemaDumper</span><span class="o">.</span><span class="n">ignore_tables</span> <span class="o">&lt;&lt;</span> <span class="sr">/^lhma_/</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>That&#8217;s it. Happy migrating.</p>
+
+		
+		
+	</div>
+
+</article>
 
 
     <article class="post">
@@ -500,204 +799,6 @@ Questions?
 
 		
 		<a href="/blog/2014/02/16/resque-bus-presentation/" class="more-link">Read on &rarr;</a>
-	</div>
-
-</article>
-
-
-    <article class="post">
-	<div class="meta">
-		<div class="date">
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2014-02-11T16:27:00-08:00" pubdate data-updated="true">Feb 11<span>th</span>, 2014</time></div>
-		<div class="tags">
-
-
-	<a class='category' href='/blog/categories/architecture/'>architecture</a>, <a class='category' href='/blog/categories/engines/'>engines</a>, <a class='category' href='/blog/categories/rails/'>rails</a>
-
-
-</div>
-		
-	</div>
-	<h1 class="title"><a href="/blog/2014/02/11/rails-4-engines/">Rails 4 Engines</a></h1>
-	<div class="entry-content">
-		<p>At <a href="https://www.taskrabbit.com">TaskRabbit</a>, we have gone through a few iterations on how we make our app(s). In the beginning, there was the monolithic Rails app in the standard way with 100+ models and their many corresponding controllers and views. Then we moved to several apps with their own logic and often using the big one via API. Our newest <a href="https://taskrabbit.co.uk">project</a> is a single &#8220;app&#8221; made up of several Rails engines. We have found that this strikes a great balance between the (initial) straightforwardness of the single Rails app and the modularity of the more service-oriented architecture.</p>
-
-<p>We&#8217;ve talked about this approach with a few people and they often ask very specific questions about the tactics used to make this happen, so let&#8217;s go through it here and via a <a href="https://github.com/taskrabbit/rails_engines_example">sample application</a>.</p>
-
-<h2>Rails Engines</h2>
-
-<p><a href="http://edgeguides.rubyonrails.org/engines.html">Rails Engines</a> is basically a whole Rails app that lives in the container of another one. Put another way, as the docs note: an app itself is basically just an engine at the root level. Over the years, we&#8217;ve seen sen engines as parts of gems such as <a href="https://github.com/plataformatec/devise/blob/7a9ae13baadc3643d0f5b74077d9760d19c56adb/lib/devise/rails.rb">devise</a> or <a href="https://github.com/sferik/rails_admin/blob/master/lib/rails_admin/engine.rb">rails_admin</a>. These example show the power of engines by providing a large set of relatively self-contained functionality &#8220;mounted&#8221; into an app.</p>
-
-<p>At some point, there was a talk that suggested the approach of putting my our functionality into engines and that the Rails team seemed to be devoting more and more time to make them a first class citizen. Our friends at Pivotal Labs were talking about it a lot, too. Sometimes <a href="http://pivotallabs.com/migrating-from-a-single-rails-app-to-a-suite-of-rails-engines/">good</a> and sometimes <a href="http://pivotallabs.com/experience-report-engine-usage-that-didn-t-work/">not so good</a>.</p>
-
-<h2>Versus Many Apps</h2>
-
-<p>We&#8217;d seen an app balloon and get out of control before, leading us to try and find better ways of modularization. It was fun and somewhat liberating to say &#8220;Make a new app!&#8221; when there was a new problem domain to tackle. We also used it as a way to handle our growing organization. We could ask Team A to work on App A and know that they could run faster by understanding the scope was limited to that. As a side-note and in retrospect, we probably let organizational factors affect architecture way more than appropriate.</p>
-
-<p>Lots of things were great about this scenario. The teams had freedom to explore new approaches and we learned a lot. App B could upgrade Rack (or whatever) because it depend on the crazy thing that App A depended on. App C had the terrible native code-dependent gem and we only had to put that on the App C servers. Memory usage was kept lower, allowing us to run more background workers and unicorn threads.</p>
-
-
-		
-		<a href="/blog/2014/02/11/rails-4-engines/" class="more-link">Read on &rarr;</a>
-	</div>
-
-</article>
-
-
-    <article class="post">
-	<div class="meta">
-		<div class="date">
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-09-28T16:27:00-07:00" pubdate data-updated="true">Sep 28<span>th</span>, 2013</time></div>
-		<div class="tags">
-
-
-	<a class='category' href='/blog/categories/architecture/'>architecture</a>, <a class='category' href='/blog/categories/bus/'>bus</a>, <a class='category' href='/blog/categories/redis/'>redis</a>, <a class='category' href='/blog/categories/resque/'>resque</a>
-
-
-</div>
-		
-	</div>
-	<h1 class="title"><a href="/blog/2013/09/28/resque-bus/">Resque Bus</a></h1>
-	<div class="entry-content">
-		<p>At <a href="http://www.taskrabbit.com">TaskRabbit</a>, we are using <a href="https://github.com/resque/resque">Resque</a> to do our background job processing. We&#8217;ve also gone one step further and used <a href="http://redis.io/">Redis</a> and Resque to create an asynchronous <a href="http://en.wikipedia.org/wiki/Message_queue">message</a> <a href="http://en.wikipedia.org/wiki/Enterprise_service_bus">bus</a> system that we call <a href="https://github.com/taskrabbit/resque-bus">Resque Bus</a>.</p>
-
-<h3>Redis / Resque</h3>
-
-<p><a href="http://redis.io/">Redis</a> is a single-threaded in-memory key/value store similar to <a href="http://memcached.org/">memcached</a>. Redis has other features like pub/sub and more advanced data structures, but the key feature that makes it an ideal storage engine for a queue and a message bus is that is can perform atomic operations.  Atomic operations are the kind of operations you can expect to do on in-process data (like Array.pop or Array.splice) but in way that keeps the data sane for everyone connected to the database.</p>
-
-<p><a href="https://github.com/resque/resque">Resque</a> is a background queue built on top of Redis. There seems to be <a href="http://sidekiq.org/">other</a> <a href="https://github.com/collectiveidea/delayed_job">options</a> <a href="https://github.com/kr/beanstalkd">out</a> there these days, but we are pretty happy with Resque and associated <a href="http://resquework.org">tools/ecosystem</a>. There is plenty of code in the resque codebase, but it all comes down to inserting json the queue, popping, and executing code with that as an input.</p>
-
-<h3>Resque Bus</h3>
-
-<p><a href="https://github.com/taskrabbit/resque-bus">Resque Bus</a> uses Resque to create an asynchronous <a href="http://en.wikipedia.org/wiki/Message_queue">message</a> <a href="http://en.wikipedia.org/wiki/Enterprise_service_bus">bus</a> system. As we have created more applications with interdependencies, we have found it helpful to create something like this to loosely couple the worlds. There are <a href="http://zeromq.org/">several</a> <a href="http://www.rabbitmq.com/">other</a> <a href="http://redis.io/topics/pubsub">possible</a> <a href="http://kafka.apache.org/">solutions</a> to this problem, but I really felt that it was important to use something that our team understood well for this piece of infrastructure that we could easily modify and maintain.</p>
-
-
-		
-		<a href="/blog/2013/09/28/resque-bus/" class="more-link">Read on &rarr;</a>
-	</div>
-
-</article>
-
-
-    <article class="post">
-	<div class="meta">
-		<div class="date">
-
-
-
-
-
-
-
-
-  
-
-
-<time datetime="2013-05-23T11:40:00-07:00" pubdate data-updated="true">May 23<span>rd</span>, 2013</time></div>
-		<div class="tags">
-
-
-	<a class='category' href='/blog/categories/rails/'>rails</a>
-
-
-</div>
-		
-	</div>
-	<h1 class="title"><a href="/blog/2013/05/23/rollback-after-save/">Rollback ActiveRecord Model in After_save</a></h1>
-	<div class="entry-content">
-		<p>It&#8217;s not exactly a best practice, but sometimes it comes up and I couldn&#8217;t find any material on the Internet about how to make it work. The situation is that you&#8217;re saving your record and it&#8217;s <code>after_save</code> and now you&#8217;ve decided that you don&#8217;t want to save it at all. What to do? The short answer is to <code>raise ActiveRecord::RecordInvalid.new(self)</code> and run away.</p>
-
-<h3>How did you get here?</h3>
-
-<p>This seems most relevant to syncing scenarios. For example, when a Task is created, we need to create a parallel record in an external system. When it is necessary, it has to happen and the Task should not exist (or be saved) without it. I could make that call in a <code>before_save</code> callback and add a validation error if it didn&#8217;t work. However, if the rest of the validations don&#8217;t work, then there is no taking back that call. Everything else in a SQL transaction, but not other systems. I had some success with making absolute sure that it was the <em>last</em> <code>before_save</code> and that worked out for a while. Then we needed to send the <code>id</code> of the Task to the external system. This just does not exist before the save actually occurs the first time. So I wanted to put it in an <code>after_save</code> callback.</p>
-
-<h3>What to do?</h3>
-
-<p>The thing to note in this case, though, is that <code>after_save</code> is still in the SQL transaction. So if we freak out enough, it will roll the whole thing back. The trick is freaking out in the right way.</p>
-
-<p>Returning <code>false</code> no longer seems to stop things. I swear that used to happen in older (&lt; 3) versions of Rails. Raising most errors will stop the transaction but also crash the system.  The first one that I tried was <code>ActiveRecord::Rollback</code> and it worked just fine in that it did not save and did not crash, but this test that I had was failing.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">task</span><span class="o">.</span><span class="n">save</span><span class="o">.</span><span class="n">should</span> <span class="o">==</span> <span class="kp">false</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Now, I wouldn&#8217;t have even have caught this if I did what I usually do which would be to use the <code>task.save.should be_false</code> rspec helper. This is because raising <code>ActiveRecord::Rollback</code> ended up in the <code>save</code> call returning nil. That would usually be fine, but I wanted to get it just like normal.</p>
-
-<p>If you take a look at the ActiveRecord <a href="https://github.com/rails/rails/blob/7ead1d81431b2c2c0366347b7bfdf9a329b6f934/activerecord/lib/active_record/persistence.rb#L105">code</a> for save, the answer reveals itself.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="o">*</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">create_or_update</span>
-</span><span class='line'><span class="k">rescue</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">RecordInvalid</span>
-</span><span class='line'>  <span class="kp">false</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>By raising <code>ActiveRecord::RecordInvalid</code> we treat it like a validation error and it has the expected behavior. I went ahead and added an actual error to seem even more like the normal case. Final code:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">Task</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
-</span><span class='line'>  <span class="n">after_save</span> <span class="ss">:sync_with_external</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">sync_with_external</span>
-</span><span class='line'>    <span class="n">response</span> <span class="o">=</span> <span class="no">External</span><span class="o">.</span><span class="n">sync!</span><span class="p">(</span><span class="nb">id</span><span class="p">:</span> <span class="nb">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">info</span><span class="p">:</span> <span class="nb">self</span><span class="o">.</span><span class="n">info</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">error?</span>
-</span><span class='line'>      <span class="nb">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="ss">:base</span><span class="p">,</span> <span class="s2">&quot;There was a problem, etc ...&quot;</span><span class="p">)</span>
-</span><span class='line'>      <span class="k">raise</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">RecordInvalid</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">self</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">end</span>
-</span><span class='line'>    <span class="kp">true</span> <span class="c1"># I still do this out of superstition</span>
-</span><span class='line'>  <span class="k">end</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>Caveats</h3>
-
-<p>This main issue that comes up is that you only get to have one of these to be absolutely sure everything is fine. If there were two of these external services, you&#8217;d end up with the same original problem. I guess, you should put and your flakiest ones first or try to get out of it altogether.</p>
-
-<p>Also note that or non-immediately-critical syncing (like search indexing), the right spot for these types of things are in <code>after_commit</code> where I would queue up a background job with retry logic. That would be outside of the SQL transaction and actually be needed to prevent timing issues in that background thread.</p>
-
-		
-		
 	</div>
 
 </article>

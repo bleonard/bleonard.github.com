@@ -4,7 +4,7 @@
   <title><![CDATA[BLog]]></title>
   <link href="http://bleonard.github.io/atom.xml" rel="self"/>
   <link href="http://bleonard.github.io/"/>
-  <updated>2017-03-05T14:05:31-08:00</updated>
+  <updated>2017-04-14T15:13:13-07:00</updated>
   <id>http://bleonard.github.io/</id>
   <author>
     <name><![CDATA[Brian Leonard]]></name>
@@ -12,6 +12,798 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Architecture: Consider Kron]]></title>
+    <link href="http://bleonard.github.io/blog/2017/04/14/architecture-consider-kron/"/>
+    <updated>2017-04-14T00:00:00-07:00</updated>
+    <id>http://bleonard.github.io/blog/2017/04/14/architecture-consider-kron</id>
+    <content type="html"><![CDATA[<p>The last post in our architecture series discussed <a href="http://bleonard.github.io/blog/2017/03/17/architecture-background-processing/">background processing</a>. There is a special type of background processing that I wanted to make a quick note about. These are things that need to be done periodically or otherwise on a schedule.</p>
+
+<p>In our internal speak, we call this a &#8220;kron&#8221; job. If you are familiar with <a href="https://en.wikipedia.org/wiki/Cron">cron</a> jobs, it&#8217;s the same idea. A product manager misspelled it once and it stuck! We don&#8217;t actually use regular cron infrastructure, so the spelling <em>nuance</em> is helpful.</p>
+
+<p>The specifics of how we implement it involve our <a href="http://bleonard.github.io/blog/2015/04/02/queue-bus/">message bus</a> infrastructure, but I think the concept and the decisions involved could include many other implementations.</p>
+
+<h3>When to use it</h3>
+
+<p>Let&#8217;s take the job from the <a href="http://bleonard.github.io/blog/2017/03/17/architecture-background-processing/">previous article</a>. The &#8220;charge an invoice 24 hours later&#8221; case is an interesting one. The system certainly supports delaying that code to run for an arbitrary time, but that&#8217;s not always the best idea.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">InvoiceChargeWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:invoice_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">worker_lock</span> <span class="ss">:invoice_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">unless</span> <span class="n">needed?</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">charge!</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">to_id</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">to_id</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">needed?</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">pending?</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">invoice</span>
+</span><span class='line'>    <span class="vi">@invoice</span> <span class="o">||=</span> <span class="no">Invoice</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">invoice_id</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># When invoice is created</span>
+</span><span class='line'><span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">enqueue_at</span><span class="p">(</span><span class="mi">24</span><span class="o">.</span><span class="n">hours</span><span class="o">.</span><span class="n">from_now</span><span class="p">,</span> <span class="n">invoice_id</span><span class="p">:</span> <span class="n">invoice</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>One reason would be memory. When there a lot of invoices (woot!), we still have to save the notion of what should be done somewhere until it gets processed. In this case, the <a href="https://redis.io/">Redis</a> instance will have it stored in memory. The memory could fill up and adding more workers won&#8217;t help because of the delay.</p>
+
+<p>The second reason is stability. This is important stuff and Redis could have issues and lose the data. We made everything <a href="http://www.restapitutorial.com/lessons/idempotency.html">idempotent</a> and could recreate everything, but it would certainly be a huge hassle.</p>
+
+<p>So when enqueueing something to run in the future, especially if it is important or a long time from now (more than a few minutes), we consider kron.</p>
+
+<h3>Batch mode</h3>
+
+<p>If we were going to accomplish the same things but on a schedule, the code would have to change in some way. I like the existing worker because it already has the good stuff from the last article: source of truth, knowing whether or not it still needs to be run, and mutual exclusion. When batch processing, I believe it&#8217;s also good to still operate on this one at a time where the count (memory for redis) is low or the risk of issues is high. Both are the case here.</p>
+
+<p>To turn it into a batch processor we need to know what needs to be processed at any given moment. This is easy to determine because we have the <code>needed?</code> method. It looks to be invoices that are in the <code>pending</code> state. Sometimes we need to add a <code>state</code> column or other piece of data to know what needs to be in the batch but in this case we are good to go.</p>
+
+<p>From there we can decide if we are going to update the class as-is or make a batch worker. A batch worker is its own worker and would look like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">InvoiceChargeBatchWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">worker_lock</span> <span class="ss">:all</span>
+</span><span class='line'>  <span class="n">queue_lock</span>  <span class="ss">:all</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="no">Invoice</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">stat</span><span class="p">:</span> <span class="s1">&#39;pending&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">find_each</span> <span class="k">do</span> <span class="o">|</span><span class="n">invoice</span><span class="o">|</span>
+</span><span class='line'>      <span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">invoice_id</span><span class="p">:</span> <span class="n">invoice</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># process all pending invoices</span>
+</span><span class='line'><span class="no">InvoiceChargeBatchWorker</span><span class="o">.</span><span class="n">enqueue</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>That&#8217;s it. Because of the worker lock on <code>InvoiceChargeWorker</code> and the state checking, it would be ok even if we were to enqueue it twice or something. Making a custom batch worker also prevents us from running this code twice.</p>
+
+<p>We could also stick it as a class method on the original:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">InvoiceChargeWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:invoice_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">worker_lock</span> <span class="ss">:invoice_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">process_all!</span>
+</span><span class='line'>    <span class="no">Invoice</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">stat</span><span class="p">:</span> <span class="s1">&#39;pending&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">find_each</span> <span class="k">do</span> <span class="o">|</span><span class="n">invoice</span><span class="o">|</span>
+</span><span class='line'>      <span class="nb">self</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">invoice_id</span><span class="p">:</span> <span class="n">invoice</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">unless</span> <span class="n">needed?</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">charge!</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">needed?</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">pending?</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">invoice</span>
+</span><span class='line'>    <span class="vi">@invoice</span> <span class="o">||=</span> <span class="no">Invoice</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">invoice_id</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># process all pending invoices</span>
+</span><span class='line'><span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">process_all!</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>How it works</h3>
+
+<p>Again, in any given architecture there is probably a best way to do it. For example, maybe <a href="https://medium.com/airbnb-engineering/chronos-a-replacement-for-cron-f05d7d986a9d">this</a> is a good way to do it on top of <a href="http://mesos.apache.org/">Mesos</a>.</p>
+
+<p>The challenge is running something on a schedule. In this case, process all invoices that need to be paid. That is what regular cron is made to do. However, we do not want to run that on every box. If we did that, we would have serious race conditions and might pay an invoice twice. Rather, we want to run it once globally across the entire infrastructure or at least per service.</p>
+
+<p>We could probably do this by noting in the devops setup that one of the servers is special. It should get the cron setup. We could use something like the <a href="https://github.com/javan/whenever">whenever gem</a> to say what to do and we would only run that on one box per system. It needs to be per system because it has to be able to know what worker to enqueue or, in general, what code to run.</p>
+
+<p>What we do instead is have a single service that has a process that sends out a heartbeat on the <a href="http://bleonard.github.io/blog/2015/04/02/queue-bus/">message bus</a>. Every minute, it publishes an event that looks like this.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="c1"># for Tue, 11 Apr 2017 00:25:00 UTC +00:00</span>
+</span><span class='line'>  <span class="c1"># epoch time: 1491870300</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="no">QueueBus</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">heartbeat_seconds</span><span class="s2">&quot;, {</span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">epoch_seconds</span><span class="s2">&quot;=&gt;1491870300,</span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">epoch_minutes</span><span class="s2">&quot;=&gt;24864505,</span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">epoch_hours</span><span class="s2">&quot;=&gt;414408,</span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">epoch_days</span><span class="s2">&quot;=&gt;17267,</span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">minute</span><span class="s2">&quot;=&gt;25,</span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">hour</span><span class="s2">&quot;=&gt;0, </span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">day</span><span class="s2">&quot;=&gt;11,</span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">month</span><span class="s2">&quot;=&gt;4,</span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">year</span><span class="s2">&quot;=&gt;2017,</span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">yday</span><span class="s2">&quot;=&gt;101,</span>
+</span><span class='line'><span class="s2">    &quot;</span><span class="n">wday</span><span class="s2">&quot;=&gt;2</span>
+</span><span class='line'><span class="s2">  })</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The current code for the process is already checked into <a href="https://github.com/queue-bus/queue-bus">queue-bus</a> and ready to use <a href="https://github.com/queue-bus/queue-bus/blob/5c009a3b2d2d58994813bdca0dc78547a18b0295/lib/queue_bus/heartbeat.rb">here</a>.</p>
+
+<p><a href="https://github.com/queue-bus/resque-bus">Resque bus</a> supports this using the <a href="https://github.com/resque/resque-scheduler">resque-scheduler gem</a>. It is setup off by calling <code>QueueBus.heartbeat!</code>. We make sure it&#8217;s setup every time we start up Resque.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">namespace</span> <span class="ss">:resque</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">task</span> <span class="ss">:setup</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:environment</span><span class="o">]</span> <span class="k">do</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="s1">&#39;resque_scheduler&#39;</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="s1">&#39;resque/scheduler&#39;</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="s1">&#39;tresque&#39;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="no">QueueBus</span><span class="o">.</span><span class="n">heartbeat!</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This <code>setup</code> is automatically called every time Resque starts.</p>
+
+<h3>Usage</h3>
+
+<p>So now we can subscribe to this event to run something every minute, hour, day, Monday, month, whatever.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># every minute</span>
+</span><span class='line'><span class="n">subscribe</span> <span class="s2">&quot;every_minute&quot;</span><span class="p">,</span> <span class="s1">&#39;bus_event_type&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;heartbeat_minutes&#39;</span> <span class="k">do</span> <span class="o">|</span><span class="n">attributes</span><span class="o">|</span>
+</span><span class='line'>  <span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">process_all!</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># every hour: 4:22, 5:22, 6:22, etc</span>
+</span><span class='line'><span class="n">subscribe</span> <span class="s2">&quot;once_an_hour&quot;</span><span class="p">,</span> <span class="s1">&#39;bus_event_type&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;heartbeat_minutes&#39;</span><span class="p">,</span> <span class="s1">&#39;minute&#39;</span> <span class="o">=&gt;</span> <span class="mi">22</span> <span class="k">do</span> <span class="o">|</span><span class="n">attributes</span><span class="o">|</span>
+</span><span class='line'>  <span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">process_all!</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># every day at 12:05 am</span>
+</span><span class='line'><span class="n">subscribe</span> <span class="s2">&quot;once_a_day&quot;</span><span class="p">,</span> <span class="s1">&#39;bus_event_type&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;heartbeat_minutes&#39;</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span> <span class="o">=&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;minute&#39;</span> <span class="o">=&gt;</span> <span class="mi">5</span> <span class="k">do</span> <span class="o">|</span><span class="n">attributes</span><span class="o">|</span>
+</span><span class='line'>  <span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">process_all!</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># every monday at 1:52 am</span>
+</span><span class='line'><span class="n">subscribe</span> <span class="s2">&quot;early_monday_morning&quot;</span><span class="p">,</span> <span class="s1">&#39;bus_event_type&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;heartbeat_minutes&#39;</span><span class="p">,</span> <span class="s1">&#39;wday&#39;</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;minute&#39;</span> <span class="o">=&gt;</span> <span class="mi">52</span> <span class="k">do</span> <span class="o">|</span><span class="n">attributes</span><span class="o">|</span>
+</span><span class='line'>  <span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">process_all!</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># the 3rd of every month at 2:10 am</span>
+</span><span class='line'><span class="n">subscribe</span> <span class="s2">&quot;once_a_month&quot;</span><span class="p">,</span> <span class="s1">&#39;bus_event_type&#39;</span> <span class="o">=&gt;</span> <span class="s1">&#39;heartbeat_minutes&#39;</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span> <span class="o">=&gt;</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span> <span class="o">=&gt;</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;minute&#39;</span> <span class="o">=&gt;</span> <span class="mi">10</span> <span class="k">do</span> <span class="o">|</span><span class="n">attributes</span><span class="o">|</span>
+</span><span class='line'>  <span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">process_all!</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># every 5 minutes: 4:00, 4:05, 4:10, etc</span>
+</span><span class='line'><span class="n">subscribe</span> <span class="s2">&quot;every 5 minutes&quot;</span> <span class="k">do</span> <span class="o">|</span><span class="n">attributes</span><span class="o">|</span>
+</span><span class='line'>  <span class="c1"># if it doesn&#39;t fit the subscribe pattern, just subscribe to every minute and use ruby</span>
+</span><span class='line'>  <span class="k">next</span> <span class="k">unless</span> <span class="n">attributes</span><span class="o">[</span><span class="s1">&#39;minute&#39;</span><span class="o">]</span> <span class="o">%</span> <span class="mi">5</span> <span class="o">==</span> <span class="mi">0</span>
+</span><span class='line'>  <span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">process_all!</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Summary</h3>
+
+<p>So that is how &#8220;kron&#8221; works.</p>
+
+<p>Over time, we have decided this is a much more reliable way to process items in the background when a delay is acceptable. By setting up some sort of centralized architecture for this, many services and subscribe in a way that is familiar and unsurprising. We have found a lot of value in that.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Architecture: Background Processing]]></title>
+    <link href="http://bleonard.github.io/blog/2017/03/17/architecture-background-processing/"/>
+    <updated>2017-03-17T00:00:00-07:00</updated>
+    <id>http://bleonard.github.io/blog/2017/03/17/architecture-background-processing</id>
+    <content type="html"><![CDATA[<p>So we have a bunch of <a href="http://bleonard.github.io/blog/2017/02/24/architecture-models/">models</a> and are doing stuff with them in <a href="http://bleonard.github.io/blog/2017/03/03/architecture-service-objects/">service objects</a>. The next thing we might need is to process some code in the background.</p>
+
+<p>Not everything can be done inline from the API request. For example, we might need to geocode a user&#8217;s postal code when they change it in their account. Or when an invoice is created, we want to charge it 24 hours later.</p>
+
+<p>When working with background jobs, we default to the following practices:</p>
+
+<ul>
+<li>Workers are enqueued with a dictionary of inputs</li>
+<li>These inputs should be used to fetch data from the source of truth</li>
+<li>Workers know how to check if they still need to run</li>
+<li>Locking schemes should protect parallel execution</li>
+</ul>
+
+
+<h3>Enqueue</h3>
+
+<p>When we enqueue a worker, we have found that it&#8217;s quite helpful to always use a dictionary (hash) of key/value pairs. <a href="https://github.com/resque/resque">Resque</a> and <a href="http://sidekiq.org/">Sidekiq</a> both take a list of arguments like <a href="https://github.com/mperham/sidekiq/wiki/Getting-Started">so</a>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">HardWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">Sidekiq</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">perform</span><span class="p">(</span><span class="nb">name</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+</span><span class='line'>    <span class="c1"># do something with name, count</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># enqueue</span>
+</span><span class='line'><span class="no">HardWorker</span><span class="o">.</span><span class="n">perform_async</span><span class="p">(</span><span class="s1">&#39;bob&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This has proved to be problematic when adding new parameters or having optional parameters. For example, if we add a new (third) input parameter, there might be stuff in the queue with the old two. When the new code gets deployed, it will throw an &#8216;invalid number of arguments&#8217; type of error. When using a hash, we can give it a default, fail gracefully, or do whatever we like on a class by class basis.</p>
+
+<p>So to provide better change management and optional arguments, we always do it like so:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">HardWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:name</span><span class="p">,</span> <span class="ss">:count</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="c1"># do something with self.name, self.count</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># enqueue</span>
+</span><span class='line'><span class="no">HardWorker</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span> <span class="s1">&#39;bob&#39;</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="mi">5</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Source of Truth</h3>
+
+<p>Let&#8217;s say we want to update a search index every time a user record is changed. We need to write their first name, last name, etc to <a href="https://www.elastic.co/">Elasticsearch</a>.</p>
+
+<p>We could do something like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">UserIndexWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:id</span><span class="p">,</span> <span class="ss">:first_name</span><span class="p">,</span> <span class="ss">:last_name</span><span class="p">,</span> <span class="ss">:etc</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="no">Elasticsearch</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="nb">id</span><span class="p">:</span> <span class="nb">id</span><span class="p">,</span> <span class="n">first_name</span><span class="p">:</span> <span class="n">first_name</span><span class="p">,</span> <span class="n">last_name</span><span class="p">:</span> <span class="n">last_name</span><span class="p">,</span> <span class="n">etc</span><span class="p">:</span> <span class="n">etc</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># When user changes</span>
+</span><span class='line'><span class="no">UserIndexWorker</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="ss">:id</span><span class="p">,</span> <span class="ss">:first_name</span><span class="p">,</span> <span class="ss">:last_name</span><span class="p">,</span> <span class="ss">:etc</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This certainly would work, but is not considered best practice. It is better to be <a href="http://www.restapitutorial.com/lessons/idempotency.html">idempotent</a>. It writes everything that should ) by passing the minimal information to the background worker, who then looks up the source of truth. That way, if there is any delay between when it is enqueued and run, it will still send the correct information.</p>
+
+<p>The better approach would look like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">UserIndexWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:user_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="no">Elasticsearch</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="ss">:id</span><span class="p">,</span> <span class="ss">:first_name</span><span class="p">,</span> <span class="ss">:last_name</span><span class="p">,</span> <span class="ss">:etc</span><span class="p">))</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">user</span>
+</span><span class='line'>    <span class="vi">@user</span> <span class="o">||=</span> <span class="no">User</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># When user changes</span>
+</span><span class='line'><span class="no">UserIndexWorker</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In the same vein, the worker should be in charge of whether or not it needs to do anything in the first place. For example, we can enqueue a worker to run later about an <code>Invoice</code>. If, at that time, the payment is <code>Invoice</code> still should be charged, then charge it.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">InvoiceChargeWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:invoice_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">unless</span> <span class="n">needed?</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">charge!</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">needed?</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">pending?</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">invoice</span>
+</span><span class='line'>    <span class="vi">@invoice</span> <span class="o">||=</span> <span class="no">Invoice</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">invoice_id</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># When invoice is created</span>
+</span><span class='line'><span class="no">InvoiceChargeWorker</span><span class="o">.</span><span class="n">enqueue_at</span><span class="p">(</span><span class="mi">24</span><span class="o">.</span><span class="n">hours</span><span class="o">.</span><span class="n">from_now</span><span class="p">,</span> <span class="n">invoice_id</span><span class="p">:</span> <span class="n">invoice</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is another example of single source of truth. Even for jobs that are run immediately, this check is something we always put in place: return immediately if the worker is no longer relevant.</p>
+
+<h3>Mutual Exclusion</h3>
+
+<p>Let&#8217;s say the <code>User</code> object can sometimes change a few times rapidly. The &#8220;source of truth&#8221; approach will make sure the right thing always gets indexed. So that&#8217;s great. But it is pretty silly to index the same data twice or more times, right?</p>
+
+<p>In this case, we add a queue lock. The effect is that if something is in the queue and waiting to be processed and you try to enqueue another one with the same inputs, then it will be a no-op. It looks like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">UserIndexWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:user_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">queue_lock</span> <span class="ss">:user_id</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Another case that often arises is mutual exclusion for <em>runtime</em>. Maybe weird payment things happen to the payment service if two invoices for the same user are happening at the same time.</p>
+
+<p>In this case, we add a worker lock. The effect is that if something is in the queue and about to start running and there is another running at that moment, then it will re-enqueue itself to run later. It looks like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">InvoiceChargeWorker</span>
+</span><span class='line'>  <span class="kp">include</span> <span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>  <span class="n">inputs</span> <span class="ss">:invoice_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">worker_lock</span> <span class="ss">:to_id</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">work</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">unless</span> <span class="n">needed?</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">charge!</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">to_id</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">to_id</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">needed?</span>
+</span><span class='line'>    <span class="n">invoice</span><span class="o">.</span><span class="n">pending?</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">invoice</span>
+</span><span class='line'>    <span class="vi">@invoice</span> <span class="o">||=</span> <span class="no">Invoice</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">invoice_id</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>For either type, you don&#8217;t have to lock on all the attributes or can (as shown in the last example) use calculations. The namespace of the lock is the worker class name. You can also set the namespace to allow locking between different workers.</p>
+
+<h3>Message Bus</h3>
+
+<p>Our <a href="http://bleonard.github.io/blog/2015/04/02/queue-bus/">message bus</a> and our use of background processes have a lot in common. In fact, the message bus is built on top of the same background processing infrastructure. The question that arises is this: when should something be enqueued directly and when should it publish and respond to a bus subscription?</p>
+
+<p>The first note is that you should <em>always be publishing</em> (ABP). It doesn&#8217;t hurt anything to give (optional) visibility to other systems what is happening. Or use this as logging framework.</p>
+
+<p>Just publishing, however, doesn&#8217;t mean we have to use that to do work in the background. Be can bother publish and enqueue a background worker. We enqueue a worker when the work in the background is essential to the correct operation of the use case at hand.</p>
+
+<p>One example to enqueue directly would be the geocoding worker I mentioned earlier: when the user gives a new postal code, figure out where that is. It&#8217;s key to the account management system.</p>
+
+<p>The search example I&#8217;ve been using might not actually be the best one because we would have the search system subscribed to changes in the account system. What I didn&#8217;t show that the <code>enqueue</code> call might actually happen from within a subscription.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">subscribe</span> <span class="s2">&quot;user_changed&quot;</span> <span class="k">do</span> <span class="o">|</span><span class="n">attributes</span><span class="o">|</span>
+</span><span class='line'>  <span class="no">UserIndexWorker</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="n">attributes</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So these two concepts can work together. Why not just index it right in the subscription, though? A primary reason might be to use some of the locking mechanisms as the bus does not have that. It also might be the case that the worker is enqueued from other locations and this keeps things DRY. The worker is also easier to unit test.</p>
+
+<h3>TResque</h3>
+
+<p>We use <a href="https://github.com/resque/resque">Resque</a> as a base foundation and built on top of it with an abstraction layer called <a href="https://github.com/taskrabbit/tresque">TResque</a>. That&#8217;s TR (TaskRabbit) Resque. Get it? It puts all of these practices into place as well as adding and abstraction layer for the inevitable, but as yet unprioritized, move to <a href="http://sidekiq.org/">Sidekiq</a>.</p>
+
+<p>I don&#8217;t necessarily expect anyone to use this, but it doesn&#8217;t hurt to make it available as an example of how we are using these tools.</p>
+
+<p>You define a worker and enqueue things as show in the examples above. Then only layer left is around prioritization. You can give a queue name to a worker and then register what priority those workers are. If no queue is given, it is assumed to be the <code>default</code> queue.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">require</span> <span class="s1">&#39;tresque&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">module</span> <span class="nn">Account</span>
+</span><span class='line'>  <span class="k">class</span> <span class="nc">RegularWorker</span>
+</span><span class='line'>    <span class="kp">include</span> <span class="o">::</span><span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>    <span class="c1"># defaults to account_default queue</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">module</span> <span class="nn">Account</span>
+</span><span class='line'>  <span class="k">class</span> <span class="nc">RegularWorker</span>
+</span><span class='line'>    <span class="kp">include</span> <span class="o">::</span><span class="no">TResque</span><span class="o">::</span><span class="no">Worker</span>
+</span><span class='line'>    <span class="n">queue</span> <span class="ss">:refresh</span> <span class="c1"># lower priority account_refresh queue</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'><span class="no">TResque</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;account&quot;</span><span class="p">)</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">queue</span> <span class="ss">:default</span><span class="p">,</span> <span class="mi">100</span>
+</span><span class='line'>  <span class="n">queue</span> <span class="ss">:refresh</span><span class="p">,</span> <span class="o">-</span><span class="mi">5000</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then when you run Resque, you can use these registrations to process the queues in the right order.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">require</span> <span class="s1">&#39;resque/tasks&#39;</span>
+</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;resque_scheduler/tasks&#39;</span>
+</span><span class='line'><span class="nb">require</span> <span class="s2">&quot;resque_bus/tasks&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">namespace</span> <span class="ss">:resque</span> <span class="k">do</span>
+</span><span class='line'>  <span class="n">task</span> <span class="ss">:setup</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:environment</span><span class="o">]</span> <span class="k">do</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="s1">&#39;resque_scheduler&#39;</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="s1">&#39;resque/scheduler&#39;</span>
+</span><span class='line'>    <span class="nb">require</span> <span class="s1">&#39;tresque&#39;</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">task</span> <span class="ss">:queues</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:setup</span><span class="o">]</span> <span class="k">do</span>
+</span><span class='line'>    <span class="n">queues</span> <span class="o">=</span> <span class="o">::</span><span class="no">TResque</span><span class="o">::</span><span class="no">Registry</span><span class="o">.</span><span class="n">queues</span>
+</span><span class='line'>    <span class="no">ENV</span><span class="o">[</span><span class="s2">&quot;QUEUES&quot;</span><span class="o">]</span> <span class="o">=</span> <span class="n">queues</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">puts</span> <span class="s2">&quot;TResque: </span><span class="si">#{</span><span class="no">ENV</span><span class="o">[</span><span class="s2">&quot;QUEUES&quot;</span><span class="o">]</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'>  <span class="err">$</span> <span class="n">bundle</span> <span class="nb">exec</span> <span class="n">rake</span> <span class="n">resque</span><span class="ss">:queues</span> <span class="n">resque</span><span class="ss">:work</span>
+</span><span class='line'>  <span class="no">TResque</span><span class="p">:</span> <span class="n">account_default</span><span class="p">,</span> <span class="n">account_refresh</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This registration layer allows each of the systems (<a href="http://bleonard.github.io/blog/2014/02/11/rails-4-engines/">engines</a>) to work independently and still have centralized background processing.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Architecture: Surface Area]]></title>
+    <link href="http://bleonard.github.io/blog/2017/03/10/architecture-surface-area/"/>
+    <updated>2017-03-10T00:00:00-08:00</updated>
+    <id>http://bleonard.github.io/blog/2017/03/10/architecture-surface-area</id>
+    <content type="html"><![CDATA[<p>The last post in the <a href="https://www.taskrabbit.com">TaskRabbit</a> architecture series was about <a href="http://bleonard.github.io/blog/2017/03/03/architecture-service-objects/">service objects</a>. This an example of what I call minimizing &#8220;surface area&#8221; of the code.</p>
+
+<p>Frankly, I might be using the term wrong. It seems possible &#8220;surface area&#8221; usually refers to API signature of some objects. What I&#8217;m talking about here is the following train of thought:</p>
+
+<ul>
+<li>I change or add a line of code</li>
+<li>What did I just affect?</li>
+</ul>
+
+
+<p>The &#8220;surface area&#8221; is the other things I have to look over. It is the area that I have to make sure has appropriate test coverage. Having a large surface area is what slows down development teams. The goal is to minimize it.</p>
+
+<h3>Service Objects</h3>
+
+<p>So how does our use of service objects relate to this concept?</p>
+
+<p>Let&#8217;s say we have a new requirement that&#8217;s applicable when a Tasker submits an invoice that modifies what gets saved. If I were to add the code to the <code>InvoiceJobOp</code> from the <a href="http://bleonard.github.io/blog/2017/03/03/architecture-service-objects/">previous article</a>, then it will only apply when the <code>Op</code> is run. If we were to do something in a <code>before_save</code> in the <code>Invoice</code> model, then it might accidentally kick in anytime an <code>Invoice</code> is changed.</p>
+
+<p>That&#8217;s a lot more tests and things to keep in our mind. If it is just in the <code>Op</code>, that is less of those kinds of debt, so adding in the <code>Op</code> is an example of minimizing the surface area of the change.</p>
+
+<h3>Namespacing</h3>
+
+<p>We went through a <a href="http://bleonard.github.io/blog/2015/10/06/v2-retrospective/">roundabout journey</a> to end up where were we are. Many of the changes were about surface area and trying to reduce it.</p>
+
+<p>People like microservices and SOA because of this same principle. We tried it and that part of it worked out really well. There was just no way that a change in service A could affect service B. As <a href="http://bleonard.github.io/blog/2015/10/06/v2-retrospective/">discussed</a>, however, we ran into issues in other dimensions.</p>
+
+<p>Our current use of <a href="http://bleonard.github.io/blog/2014/02/11/rails-4-engines/">engines</a> follows the same approach to achieve the same surface area effect. It is all about namespacing. Modifying the user management engine can not affect the marketplace engine. This allows us to proceed with more confidence when making such changes.</p>
+
+<p>A particular aspect of our setup is that any given model is &#8220;owned&#8221; by only one engine. The rest of the engines are allowed to read from the database but they cannot write. This provides sanity and minimizes the surface area. For example, the validations only need to live in one spot. You also know that no other code can go rogue and start messing with the data by accident or otherwise.</p>
+
+<h3>Bus</h3>
+
+<p>Of course, the world isn&#8217;t always cut and dry. Venn diagrams overlap. No abstraction or encapsulation is perfect. The seams in namespacing show up when something that happens in one service (engine) needs to affect something in another one.</p>
+
+<p>For example, we were so happy just a few paragraphs ago that changes to the user management engine do not affect the marketplace engine. That is true and it is great. There is no direct effect from the code. However, as they tend to do, these pesky functional requirements always mess up perfect plans for the code. In this case, when a user changes their first name (in the account engine), the marketplace engine might need to update some data in <a href="https://www.elastic.co/">Elasticsearch</a>.</p>
+
+<p>We use a <a href="http://bleonard.github.io/blog/2015/04/02/queue-bus/">message bus</a> to observe changes like this and react as appropriate.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># Whenever the user changes</span>
+</span><span class='line'><span class="n">subscribe</span> <span class="s1">&#39;user_may_have_changed&#39;</span><span class="p">,</span> <span class="n">bus_observer_touched</span><span class="p">:</span> <span class="s1">&#39;user&#39;</span> <span class="k">do</span> <span class="o">|</span><span class="n">attributes</span><span class="o">|</span>
+</span><span class='line'>  <span class="c1"># update the profile in ElasticSearch</span>
+</span><span class='line'>  <span class="no">ProfileStoreWorker</span><span class="o">.</span><span class="n">enqueue</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="n">attributes</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]</span><span class="p">)</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>An important note here is that <code>ProfileStoreWorker</code> is <a href="http://www.restapitutorial.com/lessons/idempotency.html">idempotent</a>. It writes everything that should go in Elasticsearch every time. This technique reduces surface area by not depending on this single event and its contents, but rather only as a trigger.</p>
+
+<p>One might say that these subscriptions are just as coupled as doing everything all in one spot. I see that point because, of course, the same things end up happening. However, we have this technique to be better for a few reasons.</p>
+
+<ul>
+<li>The trigger code (in the account engine) does not need to know about the rest of the system. It can mind its own business.</li>
+<li>The subscribing code (in the marketplace engine) can be self-contained instead of being mixed up in the trigger code path.</li>
+<li>Many different code paths might necessitate the <code>ProfileStoreWorker</code> to run. By decoupling it, we actually save complexity in many code paths.</li>
+</ul>
+
+
+<h3>Summary</h3>
+
+<p>In code, developers tend to weave a tangled web wherein seemingly innocuous changes have far-reaching effects. We have been able to create more stable and agile code by considering the &#8220;surface area&#8221; of a change and minimizing it through some encapsulation and decoupling techniques.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Architecture: Service Objects]]></title>
@@ -221,7 +1013,7 @@
 
 <p>State machines are built into the foundation of the system. Almost every model has a <code>state</code> column and an initial state. There are then valid transitions to other states.</p>
 
-<p>For example, there is a <code>PaymentTransaction</code> model. It has an initial &#8220;pending&#8221; state that represents the time between when an invoice is submitted and when we charge the credit card. During this time, it can move to a &#8220;canceled&#8221; state if tit should not happen. Or, if things go as planned, it can transition to a &#8220;settled&#8221; state. After that, if there is an issue of some sort, it would go to a &#8220;refunded&#8221; state. Notably, going from &#8220;pending&#8221; to &#8220;refunded&#8221; is <em>not</em> a valid transition.</p>
+<p>For example, there is a <code>PaymentTransaction</code> model. It has an initial &#8220;pending&#8221; state that represents the time between when an invoice is submitted and when we charge the credit card. During this time, it can move to a &#8220;canceled&#8221; state if it should not happen. Or, if things go as planned, it can transition to a &#8220;settled&#8221; state. After that, if there is an issue of some sort, it would go to a &#8220;refunded&#8221; state. Notably, going from &#8220;pending&#8221; to &#8220;refunded&#8221; is <em>not</em> a valid transition.</p>
 
 <div class="jumbotron">
 <img src="http://bleonard.github.io/images/posts/architecture-models/states.png" class="bigPicture" />
@@ -232,7 +1024,7 @@
 
 <h3>Nouns and Verbs</h3>
 
-<p>The TaskRabbit marketplace creates a job that is sent to a Tasker. The Tasker can chat with the Client and can say they will do the job. Or they can decline. If they agree, they are officially assigned to the job and make an appointment. When they complete the job, they invoice the Client for the time worked. In most cases, it&#8217;s done at that point. In other cases, it is &#8220;ongoing&#8221; where they come back next week (to clean again, for example). At more or less any time, they whole thing can be canceled.</p>
+<p>The TaskRabbit marketplace creates a job that is sent to a Tasker. The Tasker can chat with the Client and can say they will do the job. Or they can decline. If they agree, they are officially assigned to the job and make an appointment. When they complete the job, they invoice the Client for the time worked. In most cases, it&#8217;s done at that point. In other cases, it is &#8220;ongoing&#8221; where they come back next week (to clean again, for example). At more or less any time, the whole thing can be canceled.</p>
 
 <p>If given that description, you could come up with many possible model structures. They would all have a set of pros and cons, but many would work out just fine.</p>
 
@@ -263,7 +1055,7 @@
 
 <h3>Denormalization</h3>
 
-<p>To try and get the both worlds, we have also aggressively embraced a variety of forms of denormalization.</p>
+<p>To try and get the best of both worlds, we have also aggressively embraced a variety of forms of denormalization.</p>
 
 <p>We actively try not to do SQL <code>JOIN</code>s for simplicity and performance reasons, but that is at odds with all these little models all over the place. So we have said it&#8217;s OK to have duplicate data. For example, each of these &#8220;decision&#8221; models have the <code>client_id</code>, <code>tasker_id</code>, and pricing information. It just gets passed along. This makes everything a local decision and queries very straightforward.</p>
 
@@ -3804,833 +4596,6 @@ I also found it helpful to use <a href="http://semaja2.net/projects/insomniaxinf
 
 
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Rails Dead Columns]]></title>
-    <link href="http://bleonard.github.io/blog/2014/11/13/rails-dead-columns/"/>
-    <updated>2014-11-13T00:00:00-08:00</updated>
-    <id>http://bleonard.github.io/blog/2014/11/13/rails-dead-columns</id>
-    <content type="html"><![CDATA[<p>It happens. This column has to go. But in a <a href="http://rubyonrails.org/">Rails</a> app, there are a few problems. You can&#8217;t just drop it.</p>
-
-<p>My first expectation is that we would create a <a href="http://guides.rubyonrails.org/migrations.html">migration</a> and do something like this.</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>class RemoveMiddleNameFromUsers &lt; ::ActiveRecord::Migration
-</span><span class='line'>  def change
-</span><span class='line'>    remove_column :users, :middle_name
-</span><span class='line'>    remove_column :users, :gender
-</span><span class='line'>  end
-</span><span class='line'>end</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This will generally be fine but there are a few practical issues.</p>
-
-<ul>
-<li>Is any of my code still using this column?</li>
-<li>What happens to the production code in the time between the migration and new code using it?</li>
-</ul>
-
-
-<h2>Still in use?</h2>
-
-<p>The obvious thing to do is search the code for use of this column name, but sometimes that can be tricky. The name would be fairly common leading to difficult searching. You could also be accessing it in a fairly inconsistent way like via <code>send</code> and string interpolation or something.</p>
-
-<p>The best way that we&#8217;ve found out that we are still using something is to freak out in test/development/staging if it is accessed. If we didn&#8217;t have the test coverage, we&#8217;d probably log it&#8217;s usage in production and check the logs for use.</p>
-
-<!-- more -->
-
-
-<h2>Deploy</h2>
-
-<p>Even if you aren&#8217;t using the column, there&#8217;s still an issue during the deploy window after the migration and before the server reboots. Rails has cached all the columns from right after it booted up so that it can know what to write to the table when you save a new record (among other things).</p>
-
-<p>This means that it still assumes that column is there and when it reads/writes it will look for or set that column. Obviously this will not work. So what we need is two deploys wherein we first tell ActiveRecord that column no longer exists. Then sometime in the future, we can actually remove it.</p>
-
-<p>Incidentally, I&#8217;ve noticed a read-only (<code>def readonly?</code> returns <code>true</code>) ActiveRecord model always does a <code>SELECT *</code> instead of looking for specific columns and doesn&#8217;t have this issue.</p>
-
-<h2>Code</h2>
-
-<p>Here is the code use for these purposes.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">module</span> <span class="nn">Mixins</span>
-</span><span class='line'>  <span class="k">module</span> <span class="nn">DeadColumns</span>
-</span><span class='line'>    <span class="kp">extend</span> <span class="no">ActiveSupport</span><span class="o">::</span><span class="no">Concern</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">class</span> <span class="nc">DeadColumnError</span> <span class="o">&lt;</span> <span class="no">StandardError</span><span class="p">;</span> <span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="c1"># to run in config/initializers to remove things globally</span>
-</span><span class='line'>    <span class="k">class</span> <span class="nc">All</span>
-</span><span class='line'>      <span class="k">class</span> <span class="o">&lt;&lt;</span> <span class="nb">self</span>
-</span><span class='line'>        <span class="k">def</span> <span class="nf">init</span>
-</span><span class='line'>          <span class="k">return</span> <span class="k">if</span> <span class="vi">@active_record_init</span>
-</span><span class='line'>          <span class="vi">@active_record_init</span> <span class="o">=</span> <span class="kp">true</span>
-</span><span class='line'>          <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="ss">:include</span><span class="p">,</span> <span class="no">Mixins</span><span class="o">::</span><span class="no">DeadColumns</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="k">def</span> <span class="nf">death_watch</span><span class="p">(</span><span class="nb">name</span><span class="p">,</span> <span class="o">*</span><span class="n">columns</span><span class="p">)</span>
-</span><span class='line'>          <span class="n">init</span>
-</span><span class='line'>          <span class="vi">@registered_tables</span> <span class="o">||=</span> <span class="p">{}</span>
-</span><span class='line'>          <span class="vi">@registered_tables</span><span class="o">[</span><span class="nb">name</span><span class="o">.</span><span class="n">to_s</span><span class="o">]</span> <span class="o">=</span> <span class="n">columns</span><span class="o">.</span><span class="n">collect</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:to_s</span><span class="p">)</span>
-</span><span class='line'>        <span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="k">def</span> <span class="nf">table_columns_registered</span><span class="p">(</span><span class="nb">name</span><span class="p">)</span>
-</span><span class='line'>          <span class="vi">@registered_tables</span><span class="o">[</span><span class="nb">name</span><span class="o">.</span><span class="n">to_s</span><span class="o">]</span> <span class="o">||</span> <span class="o">[]</span>
-</span><span class='line'>        <span class="k">end</span>
-</span><span class='line'>      <span class="k">end</span>
-</span><span class='line'>    <span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">included</span> <span class="k">do</span>
-</span><span class='line'>      <span class="k">class</span> <span class="o">&lt;&lt;</span> <span class="nb">self</span>
-</span><span class='line'>        <span class="n">alias_method_chain</span> <span class="ss">:columns</span><span class="p">,</span> <span class="ss">:death</span>
-</span><span class='line'>      <span class="k">end</span>
-</span><span class='line'>    <span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">module</span> <span class="nn">ClassMethods</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="k">def</span> <span class="nf">dead_column_list</span>
-</span><span class='line'>        <span class="k">return</span> <span class="vi">@dead_columns</span> <span class="k">if</span> <span class="vi">@dead_columns</span>
-</span><span class='line'>        <span class="vi">@dead_columns</span> <span class="o">=</span> <span class="no">Mixins</span><span class="o">::</span><span class="no">DeadColumns</span><span class="o">::</span><span class="no">All</span><span class="o">.</span><span class="n">table_columns_registered</span><span class="p">(</span><span class="nb">self</span><span class="o">.</span><span class="n">table_name</span><span class="p">)</span><span class="o">.</span><span class="n">dup</span>
-</span><span class='line'>      <span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="k">def</span> <span class="nf">columns_with_death</span>
-</span><span class='line'>        <span class="vi">@columns_with_death</span> <span class="o">||=</span> <span class="n">columns_without_death</span><span class="o">.</span><span class="n">reject</span><span class="p">{</span><span class="o">|</span><span class="n">c</span><span class="o">|</span> <span class="n">dead_column_list</span><span class="o">.</span><span class="n">include?</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">to_s</span><span class="p">)</span> <span class="p">}</span>
-</span><span class='line'>      <span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'>      <span class="k">def</span> <span class="nf">dead_columns</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">to_kill</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">collect</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:to_s</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">dead_column_list</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">to_kill</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">to_kill</span><span class="o">.</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">col</span><span class="o">|</span>
-</span><span class='line'>
-</span><span class='line'>          <span class="n">define_method</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">col</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">do</span>
-</span><span class='line'>            <span class="k">raise</span> <span class="no">DeadColumnError</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="nb">self</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">#</span><span class="si">#{</span><span class="n">col</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span class='line'>          <span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'>          <span class="n">define_method</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">col</span><span class="si">}</span><span class="s2">?&quot;</span><span class="p">)</span> <span class="k">do</span>
-</span><span class='line'>            <span class="k">raise</span> <span class="no">DeadColumnError</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="nb">self</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">#</span><span class="si">#{</span><span class="n">col</span><span class="si">}</span><span class="s2">?&quot;</span>
-</span><span class='line'>          <span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'>          <span class="n">define_method</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">col</span><span class="si">}</span><span class="s2">_changed?&quot;</span><span class="p">)</span> <span class="k">do</span>
-</span><span class='line'>            <span class="k">raise</span> <span class="no">DeadColumnError</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">#{</span><span class="nb">self</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">#</span><span class="si">#{</span><span class="n">col</span><span class="si">}</span><span class="s2">?&quot;</span>
-</span><span class='line'>          <span class="k">end</span>
-</span><span class='line'>        <span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="c1"># reset all these ActiveRecord caches</span>
-</span><span class='line'>        <span class="vi">@dynamic_methods_hash</span> <span class="o">=</span> <span class="vi">@columns_hash</span> <span class="o">=</span> <span class="vi">@column_names</span> <span class="o">=</span> <span class="vi">@content_columns</span> <span class="o">=</span> <span class="vi">@column_defaults</span> <span class="o">=</span> <span class="vi">@columns</span> <span class="o">=</span> <span class="vi">@columns_with_death</span> <span class="o">=</span> <span class="kp">nil</span>
-</span><span class='line'>      <span class="k">end</span>
-</span><span class='line'>    <span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">def</span> <span class="nf">attribute_names</span>
-</span><span class='line'>      <span class="k">super</span> <span class="o">-</span> <span class="nb">self</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">dead_column_list</span>
-</span><span class='line'>    <span class="k">end</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">def</span> <span class="nf">as_json</span><span class="p">(</span><span class="n">options</span> <span class="o">=</span> <span class="kp">nil</span><span class="p">)</span>
-</span><span class='line'>      <span class="n">options</span> <span class="o">||=</span> <span class="p">{}</span>
-</span><span class='line'>      <span class="n">options</span><span class="o">[</span><span class="ss">:only</span><span class="o">]</span> <span class="o">=</span> <span class="nb">self</span><span class="o">.</span><span class="n">class</span><span class="o">.</span><span class="n">column_names</span> <span class="k">if</span> <span class="n">options</span><span class="o">[</span><span class="ss">:only</span><span class="o">].</span><span class="n">nil?</span>
-</span><span class='line'>      <span class="k">super</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">end</span>
-</span><span class='line'>  <span class="k">end</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>Then in an initializer, we do this:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># config/dead_columns.rb</span>
-</span><span class='line'>
-</span><span class='line'><span class="no">Mixins</span><span class="o">::</span><span class="no">DeadColumns</span><span class="o">::</span><span class="no">All</span><span class="o">.</span><span class="n">death_watch</span><span class="p">(</span><span class="ss">:users</span><span class="p">,</span> <span class="ss">:middle_name</span><span class="p">,</span> <span class="ss">:gender</span><span class="p">)</span>
-</span><span class='line'><span class="no">Mixins</span><span class="o">::</span><span class="no">DeadColumns</span><span class="o">::</span><span class="no">All</span><span class="o">.</span><span class="n">death_watch</span><span class="p">(</span><span class="ss">:tasks</span><span class="p">,</span> <span class="ss">:old_price_info</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>We used to mix this in to each model, so it was more like this:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">class</span> <span class="nc">User</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
-</span><span class='line'>  <span class="kp">include</span> <span class="no">Mixins</span><span class="o">::</span><span class="no">DeadColumns</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="n">dead_columns</span> <span class="ss">:middle_name</span><span class="p">,</span> <span class="o">::</span><span class="n">gender</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>This worked with a slightly modified version of the above code. We stopped using that version, though, when we switched to heavily using <a href="http://bleonard.github.io/blog/2014/02/11/rails-4-engines/">engines</a>, and now have many <code>User</code> (and other) models. The initializer works better to make sure it hits all of them.</p>
-
-<h2>Conclusion</h2>
-
-<p>Hopefully, this is helpful as an example of some code to deploy so you can safely remove your columns. It feels good to drop those columns and now you can do it without the pain.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Rails Stats]]></title>
-    <link href="http://bleonard.github.io/blog/2014/11/07/rails-stats/"/>
-    <updated>2014-11-07T00:00:00-08:00</updated>
-    <id>http://bleonard.github.io/blog/2014/11/07/rails-stats</id>
-    <content type="html"><![CDATA[<p>Summary: I extracted and improved on the Rails stats tool. The code is <a href="https://github.com/bleonard/rails_stats/">here</a>.</p>
-
-<h3>Process</h3>
-
-<p>The other day, I was curious about how our codebase had evolved over the years and knew about the <code>rake stats</code> command in Rails. So I checked out a git sha from 2010 and ran the command. Of course the gems weren&#8217;t installed. So I ran <code>bundle install</code>. It said it couldn&#8217;t find <a href="gemcutter.org">gemcutter.org</a>. That&#8217;s when I knew it wasn&#8217;t going to work out. Even if I switched it to use current standards, at least one of those gems was going to be completely gone or a million of other issues.</p>
-
-<p>I figured that an external tool to do the same thing should be easy and I was right. I copied the 3 files related to that rake job to a new project. The code just took directories in so the only dependence on being actually <em>in</em> the Rails project was a <code>Rails.root</code> call at the beginning. I switched it to be passed in from the command line and I was done!</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Controllers          |  1848 |  1483 |      32 |     174 |   5 |     6 |
-</span><span class='line'>| Helpers              |  2257 |  1892 |      45 |     245 |   5 |     5 |
-</span><span class='line'>| Models               |  4584 |  3509 |      61 |     526 |   8 |     4 |
-</span><span class='line'>| Libraries            |  2987 |  2272 |      30 |     287 |   9 |     5 |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Total                | 11676 |  9156 |     168 |    1232 |   7 |     5 |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>  Code LOC: 9156     Test LOC: 0     Code to Test Ratio: 1:0.0
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>&#8230; except things were missing. The tool that comes with Rails has a certain set of directories and it only looks for code there. It included the normal Rails stuff like models and controllers but was missing anything that strayed from the prescribed structure. These pieces were missing in the default tool:</p>
-
-<ul>
-<li>Anything added to the app directory (jobs, observers)</li>
-<li>Rspec tests (it only supports Test::Unit)</li>
-<li>Cucumber features</li>
-<li>Any code in <a href="http://bleonard.github.io/blog/2014/02/11/rails-4-engines/">Engines</a></li>
-</ul>
-
-
-<p>It turned into a bit of time sink, but was a fun project. By modifying it to use more introspection of the directory structure, I was able to cover all the pieces of the app.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake stats<span class="o">[</span>/path/to/app/<span class="o">]</span>
-</span><span class='line'>
-</span><span class='line'>Directory: /path/to/app/
-</span><span class='line'>
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Controllers          |  1848 |  1483 |      32 |     174 |   5 |     6 |
-</span><span class='line'>| Helpers              |  2257 |  1892 |      45 |     245 |   5 |     5 |
-</span><span class='line'>| Jobs                 |   399 |   295 |      11 |      33 |   3 |     6 |
-</span><span class='line'>| Models               |  4584 |  3509 |      61 |     526 |   8 |     4 |
-</span><span class='line'>| Observers            |    42 |    22 |       2 |       5 |   2 |     2 |
-</span><span class='line'>| Libraries            |  2987 |  2272 |      30 |     287 |   9 |     5 |
-</span><span class='line'>| Configuration        |  1233 |   669 |       4 |      17 |   4 |    37 |
-</span><span class='line'>| Spec Support         |  1416 |  1152 |       4 |      30 |   7 |    36 |
-</span><span class='line'>| Integration Tests    |    91 |    73 |       0 |       1 |   0 |    71 |
-</span><span class='line'>| Lib Tests            |   101 |    83 |       0 |       1 |   0 |    81 |
-</span><span class='line'>| Model Tests          |  3397 |  2522 |       0 |      18 |   0 |   138 |
-</span><span class='line'>| Cucumber Support     |   739 |   521 |       0 |       1 |   0 |   519 |
-</span><span class='line'>| Cucumber Features    |  2711 |  2487 |      29 |     145 |   5 |    15 |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Total                | 21805 | 16980 |     218 |    1483 |   6 |     9 |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>  Code LOC: 10142     Test LOC: 6838     Code to Test Ratio: 1:0.7
-</span></code></pre></td></tr></table></div></figure>
-
-
-
-
-<!-- more -->
-
-
-<h3>Things it knows about</h3>
-
-<ul>
-<li>Any concepts you&#8217;ve added within an <code>app</code> directory</li>
-<li>Configuration files</li>
-<li>Library files</li>
-<li>Gems that you&#8217;ve embedded in the project</li>
-<li>Engines and their code</li>
-<li>RSpec/Unit/Cucumber Tests</li>
-</ul>
-
-
-<h3>Example output</h3>
-
-<p>Here are some open source Rails projects an their output.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-<span class='line-number'>86</span>
-<span class='line-number'>87</span>
-<span class='line-number'>88</span>
-<span class='line-number'>89</span>
-<span class='line-number'>90</span>
-<span class='line-number'>91</span>
-<span class='line-number'>92</span>
-<span class='line-number'>93</span>
-<span class='line-number'>94</span>
-<span class='line-number'>95</span>
-<span class='line-number'>96</span>
-<span class='line-number'>97</span>
-<span class='line-number'>98</span>
-<span class='line-number'>99</span>
-<span class='line-number'>100</span>
-<span class='line-number'>101</span>
-<span class='line-number'>102</span>
-<span class='line-number'>103</span>
-<span class='line-number'>104</span>
-<span class='line-number'>105</span>
-<span class='line-number'>106</span>
-<span class='line-number'>107</span>
-<span class='line-number'>108</span>
-<span class='line-number'>109</span>
-<span class='line-number'>110</span>
-<span class='line-number'>111</span>
-<span class='line-number'>112</span>
-<span class='line-number'>113</span>
-<span class='line-number'>114</span>
-<span class='line-number'>115</span>
-<span class='line-number'>116</span>
-<span class='line-number'>117</span>
-<span class='line-number'>118</span>
-<span class='line-number'>119</span>
-<span class='line-number'>120</span>
-<span class='line-number'>121</span>
-<span class='line-number'>122</span>
-<span class='line-number'>123</span>
-<span class='line-number'>124</span>
-<span class='line-number'>125</span>
-<span class='line-number'>126</span>
-<span class='line-number'>127</span>
-<span class='line-number'>128</span>
-<span class='line-number'>129</span>
-<span class='line-number'>130</span>
-<span class='line-number'>131</span>
-<span class='line-number'>132</span>
-<span class='line-number'>133</span>
-<span class='line-number'>134</span>
-<span class='line-number'>135</span>
-<span class='line-number'>136</span>
-<span class='line-number'>137</span>
-<span class='line-number'>138</span>
-<span class='line-number'>139</span>
-<span class='line-number'>140</span>
-<span class='line-number'>141</span>
-<span class='line-number'>142</span>
-<span class='line-number'>143</span>
-<span class='line-number'>144</span>
-<span class='line-number'>145</span>
-<span class='line-number'>146</span>
-<span class='line-number'>147</span>
-<span class='line-number'>148</span>
-<span class='line-number'>149</span>
-<span class='line-number'>150</span>
-<span class='line-number'>151</span>
-<span class='line-number'>152</span>
-<span class='line-number'>153</span>
-<span class='line-number'>154</span>
-<span class='line-number'>155</span>
-<span class='line-number'>156</span>
-<span class='line-number'>157</span>
-<span class='line-number'>158</span>
-<span class='line-number'>159</span>
-<span class='line-number'>160</span>
-<span class='line-number'>161</span>
-<span class='line-number'>162</span>
-<span class='line-number'>163</span>
-<span class='line-number'>164</span>
-<span class='line-number'>165</span>
-<span class='line-number'>166</span>
-<span class='line-number'>167</span>
-<span class='line-number'>168</span>
-<span class='line-number'>169</span>
-<span class='line-number'>170</span>
-<span class='line-number'>171</span>
-<span class='line-number'>172</span>
-<span class='line-number'>173</span>
-<span class='line-number'>174</span>
-<span class='line-number'>175</span>
-<span class='line-number'>176</span>
-<span class='line-number'>177</span>
-<span class='line-number'>178</span>
-<span class='line-number'>179</span>
-<span class='line-number'>180</span>
-<span class='line-number'>181</span>
-<span class='line-number'>182</span>
-<span class='line-number'>183</span>
-<span class='line-number'>184</span>
-<span class='line-number'>185</span>
-<span class='line-number'>186</span>
-<span class='line-number'>187</span>
-<span class='line-number'>188</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake stats<span class="o">[</span>/users/brian/examples/diaspora/<span class="o">]</span>
-</span><span class='line'>
-</span><span class='line'>Directory: /users/brian/examples/diaspora
-</span><span class='line'>
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Collections          |   259 |   198 |       0 |      56 |   0 |     1 |
-</span><span class='line'>| Helpers              |  1863 |  1478 |       0 |     218 |   0 |     4 |
-</span><span class='line'>| Models               |  4694 |  3517 |      55 |     580 |  10 |     4 |
-</span><span class='line'>| Pages                |   201 |   158 |       0 |      21 |   0 |     5 |
-</span><span class='line'>| Controllers          |  2797 |  2168 |      40 |     208 |   5 |     8 |
-</span><span class='line'>| Mailers              |   313 |   263 |      13 |      32 |   2 |     6 |
-</span><span class='line'>| Presenters           |   516 |   425 |      18 |      71 |   3 |     3 |
-</span><span class='line'>| Uploaders            |    84 |    63 |       2 |       9 |   4 |     5 |
-</span><span class='line'>| Workers              |   600 |   399 |      32 |      33 |   1 |    10 |
-</span><span class='line'>| Javascripts          |  7550 |  4941 |       0 |     741 |   0 |     4 |
-</span><span class='line'>| Libraries            |  7031 |  4890 |      69 |     701 |  10 |     4 |
-</span><span class='line'>| Configuration        |  2556 |   833 |       5 |      10 |   2 |    81 |
-</span><span class='line'>| Controller Tests     |  4628 |  3775 |       0 |       2 |   0 |  1885 |
-</span><span class='line'>| Spec Support         |  1141 |   900 |       6 |      56 |   9 |    14 |
-</span><span class='line'>| Helper Tests         |   771 |   615 |       0 |       6 |   0 |   100 |
-</span><span class='line'>| Integration Tests    |   891 |   647 |       0 |      14 |   0 |    44 |
-</span><span class='line'>| Lib Tests            |  4076 |  3259 |       2 |       4 |   2 |   812 |
-</span><span class='line'>| Other Tests          |   120 |   101 |       0 |       0 |   0 |     0 |
-</span><span class='line'>| Mailer Tests         |   412 |   328 |       0 |       0 |   0 |     0 |
-</span><span class='line'>| Model Tests          |  6120 |  4964 |       0 |       1 |   0 |  4962 |
-</span><span class='line'>| Presenter Tests      |   353 |   303 |       0 |       0 |   0 |     0 |
-</span><span class='line'>| Worker Tests         |   821 |   648 |       0 |       0 |   0 |     0 |
-</span><span class='line'>| Cucumber Features    |  2157 |  1863 |      47 |     155 |   3 |    10 |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Total                | 49954 | 36736 |     289 |    2918 |  10 |    10 |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>  Code LOC: 19333     Test LOC: 17403     Code to Test Ratio: 1:0.9
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake stats<span class="o">[</span>/users/brian/examples/discourse<span class="o">]</span>
-</span><span class='line'>
-</span><span class='line'>Directory: /users/brian/examples/discourse
-</span><span class='line'>
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Controllers          |  5005 |  3812 |      56 |     416 |   7 |     7 |
-</span><span class='line'>| Helpers              |   286 |   218 |       0 |      32 |   0 |     4 |
-</span><span class='line'>| Jobs                 |  1830 |  1343 |      53 |     114 |   2 |     9 |
-</span><span class='line'>| Mailers              |   438 |   340 |       7 |      24 |   3 |    12 |
-</span><span class='line'>| Models               | 12378 |  8393 |     123 |     983 |   7 |     6 |
-</span><span class='line'>| Serializers          |  2809 |  2223 |      73 |     374 |   5 |     3 |
-</span><span class='line'>| Services             |  1353 |  1060 |      20 |     106 |   5 |     8 |
-</span><span class='line'>| Javascripts          | 21722 | 13649 |       0 |    1844 |   0 |     5 |
-</span><span class='line'>| Libraries            | 35298 | 27521 |     189 |    2565 |  13 |     8 |
-</span><span class='line'>| Configuration        |  1758 |  1179 |       6 |      12 |   2 |    96 |
-</span><span class='line'>| Other Tests          | 12998 |  9830 |      20 |      41 |   2 |   237 |
-</span><span class='line'>| Controller Tests     |  7673 |  5911 |       0 |       4 |   0 |  1475 |
-</span><span class='line'>| Spec Support         |   707 |   560 |       1 |      16 |  16 |    33 |
-</span><span class='line'>| Helper Tests         |    88 |    71 |       0 |       0 |   0 |     0 |
-</span><span class='line'>| Integration Tests    |   307 |   235 |       0 |       1 |   0 |   233 |
-</span><span class='line'>| Job Tests            |  1343 |  1017 |       3 |       9 |   3 |   111 |
-</span><span class='line'>| Mailer Tests         |   421 |   302 |       0 |       1 |   0 |   300 |
-</span><span class='line'>| Model Tests          | 11236 |  8599 |       2 |      49 |  24 |   173 |
-</span><span class='line'>| Serializer Tests     |   297 |   236 |       0 |       2 |   0 |   116 |
-</span><span class='line'>| Service Tests        |  1767 |  1406 |       0 |       2 |   0 |   701 |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Total                | 119714| 87905 |     553 |    6595 |  11 |    11 |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>  Code LOC: 59738     Test LOC: 28167     Code to Test Ratio: 1:0.5
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake stats<span class="o">[</span>/users/brian/examples/gitlabhq<span class="o">]</span>
-</span><span class='line'>
-</span><span class='line'>Directory: /users/brian/examples/gitlabhq
-</span><span class='line'>
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Controllers          |  3690 |  2890 |      66 |     384 |   5 |     5 |
-</span><span class='line'>| Finders              |   428 |   267 |       8 |      27 |   3 |     7 |
-</span><span class='line'>| Helpers              |  2280 |  1761 |       0 |     222 |   0 |     5 |
-</span><span class='line'>| Mailers              |   382 |   275 |       1 |      29 |  29 |     7 |
-</span><span class='line'>| Models               |  6922 |  4680 |      58 |     714 |  12 |     4 |
-</span><span class='line'>| Services             |  2021 |  1502 |      51 |     149 |   2 |     8 |
-</span><span class='line'>| Uploaders            |    81 |    62 |       2 |      14 |   7 |     2 |
-</span><span class='line'>| Workers              |   128 |    99 |       6 |       8 |   1 |    10 |
-</span><span class='line'>| Javascripts          |  3843 |  2936 |       1 |     534 | 534 |     3 |
-</span><span class='line'>| Libraries            |  7246 |  4785 |     120 |     438 |   3 |     8 |
-</span><span class='line'>| Configuration        |  1421 |   782 |       4 |      11 |   2 |    69 |
-</span><span class='line'>| Controller Tests     |   428 |   334 |       0 |       0 |   0 |     0 |
-</span><span class='line'>| Spec Support         |  1119 |   715 |       2 |      27 |  13 |    24 |
-</span><span class='line'>| Other Tests          |    67 |    55 |       0 |       0 |   0 |     0 |
-</span><span class='line'>| Feature Tests        |  2209 |  1765 |       0 |       8 |   0 |   218 |
-</span><span class='line'>| Finder Tests         |   281 |   230 |       0 |       0 |   0 |     0 |
-</span><span class='line'>| Helper Tests         |  1608 |  1255 |       0 |       5 |   0 |   249 |
-</span><span class='line'>| Lib Tests            |  1459 |  1180 |       1 |      11 |  11 |   105 |
-</span><span class='line'>| Mailer Tests         |   630 |   478 |       0 |       0 |   0 |     0 |
-</span><span class='line'>| Model Tests          |  3856 |  2669 |       0 |      10 |   0 |   264 |
-</span><span class='line'>| Request Tests        |  4229 |  3600 |       0 |      10 |   0 |   358 |
-</span><span class='line'>| Routing Tests        |   849 |   520 |       0 |       0 |   0 |     0 |
-</span><span class='line'>| Service Tests        |  1611 |  1307 |       0 |      34 |   0 |    36 |
-</span><span class='line'>| Worker Tests         |    45 |    35 |       0 |       2 |   0 |    15 |
-</span><span class='line'>| Cucumber Features    |  6749 |  5734 |     141 |     947 |   6 |     4 |
-</span><span class='line'>| Cucumber Support     |  6235 |  4980 |      65 |      71 |   1 |    68 |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Total                | 59817 | 44896 |     526 |    3655 |   6 |    10 |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>  Code LOC: 20039     Test LOC: 24857     Code to Test Ratio: 1:1.2
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake stats<span class="o">[</span>/users/brian/examples/redmine/<span class="o">]</span>
-</span><span class='line'>
-</span><span class='line'>Directory: /users/brian/examples/redmine
-</span><span class='line'>
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Controllers          |  6738 |  5005 |      51 |     416 |   8 |    10 |
-</span><span class='line'>| Helpers              |  4445 |  3014 |       2 |     281 | 140 |     8 |
-</span><span class='line'>| Models               | 13221 |  9369 |      86 |    1026 |  11 |     7 |
-</span><span class='line'>| Libraries            | 19041 | 13499 |     137 |    1147 |   8 |     9 |
-</span><span class='line'>| Configuration        |   779 |   550 |      14 |      18 |   1 |    28 |
-</span><span class='line'>| Integration Tests    |  8286 |  6032 |      92 |     202 |   2 |    27 |
-</span><span class='line'>| Other Tests          |   669 |   521 |       3 |      53 |  17 |     7 |
-</span><span class='line'>| Test Support         |  1102 |   791 |       8 |      70 |   8 |     9 |
-</span><span class='line'>| Functional Tests     | 18448 | 14784 |      61 |    1372 |  22 |     8 |
-</span><span class='line'>| Unit Tests           | 23680 | 18217 |     117 |    1783 |  15 |     8 |
-</span><span class='line'>| Helper Tests         |  3321 |  2567 |      16 |     171 |  10 |    13 |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Total                | 99730 | 74349 |     587 |    6539 |  11 |     9 |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>  Code LOC: 31437     Test LOC: 42912     Code to Test Ratio: 1:1.4
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake stats<span class="o">[</span>/users/brian/examples/refinerycms<span class="o">]</span>
-</span><span class='line'>
-</span><span class='line'>Directory: /users/brian/examples/refinerycms
-</span><span class='line'>
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Controllers          |   950 |   748 |      17 |      83 |   4 |     7 |
-</span><span class='line'>| Helpers              |   399 |   308 |       0 |      28 |   0 |     9 |
-</span><span class='line'>| Mailers              |    22 |    18 |       1 |       2 |   2 |     7 |
-</span><span class='line'>| Models               |   846 |   570 |      14 |      86 |   6 |     4 |
-</span><span class='line'>| Presenters           |   365 |   271 |       8 |      44 |   5 |     4 |
-</span><span class='line'>| Javascripts          |   717 |   531 |       0 |      52 |   0 |     8 |
-</span><span class='line'>| Libraries            |     4 |     4 |       0 |       0 |   0 |     0 |
-</span><span class='line'>| Gems                 |  4166 |  2997 |      44 |     372 |   8 |     6 |
-</span><span class='line'>| Controller Tests     |   207 |   170 |       1 |       1 |   1 |   168 |
-</span><span class='line'>| Spec Support         |   309 |   243 |       2 |       6 |   3 |    38 |
-</span><span class='line'>| Feature Tests        |  1907 |  1484 |       0 |       4 |   0 |   369 |
-</span><span class='line'>| Lib Tests            |  1952 |  1687 |       6 |       4 |   0 |   419 |
-</span><span class='line'>| Model Tests          |  1323 |  1072 |       0 |       5 |   0 |   212 |
-</span><span class='line'>| Helper Tests         |   324 |   264 |       0 |       1 |   0 |   262 |
-</span><span class='line'>| Presenter Tests      |   355 |   299 |       0 |       0 |   0 |     0 |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Total                | 13846 | 10666 |      93 |     688 |   7 |    13 |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>  Code LOC: 5447     Test LOC: 5219     Code to Test Ratio: 1:1.0
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake stats<span class="o">[</span>/users/brian/examples/spree<span class="o">]</span>
-</span><span class='line'>
-</span><span class='line'>Directory: /users/brian/examples/spree
-</span><span class='line'>
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Name                 | Lines |   LOC | Classes | Methods | M/C | LOC/M |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Controllers          |  4653 |  3800 |      86 |     492 |   5 |     5 |
-</span><span class='line'>| Helpers              |  1142 |   949 |       0 |      90 |   0 |     8 |
-</span><span class='line'>| Models               |  9893 |  7308 |     167 |     973 |   5 |     5 |
-</span><span class='line'>| Javascripts          |  2770 |  2100 |       9 |     416 |  46 |     3 |
-</span><span class='line'>| Mailers              |    63 |    58 |       5 |       8 |   1 |     5 |
-</span><span class='line'>| Libraries            |    15 |    14 |       0 |       0 |   0 |     0 |
-</span><span class='line'>| Gems                 |  4690 |  3641 |      35 |     254 |   7 |    12 |
-</span><span class='line'>| Controller Tests     |  7344 |  6000 |       6 |      19 |   3 |   313 |
-</span><span class='line'>| Model Tests          | 16747 | 13452 |      20 |      27 |   1 |   496 |
-</span><span class='line'>| Request Tests        |    32 |    24 |       0 |       0 |   0 |     0 |
-</span><span class='line'>| Spec Support         |   577 |   427 |       3 |       9 |   3 |    45 |
-</span><span class='line'>| Feature Tests        |  6079 |  4809 |       0 |      17 |   0 |   280 |
-</span><span class='line'>| Helper Tests         |   602 |   470 |       2 |       1 |   0 |   468 |
-</span><span class='line'>| Lib Tests            |  1455 |  1216 |       8 |      11 |   1 |   108 |
-</span><span class='line'>| Mailer Tests         |   252 |   208 |       0 |       0 |   0 |     0 |
-</span><span class='line'>| Other Tests          |    33 |    27 |       0 |       0 |   0 |     0 |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>| Total                | 56347 | 44503 |     341 |    2317 |   6 |    17 |
-</span><span class='line'>+----------------------+-------+-------+---------+---------+-----+-------+
-</span><span class='line'>  Code LOC: 17870     Test LOC: 26633     Code to Test Ratio: 1:1.5
-</span><span class='line'>
-</span></code></pre></td></tr></table></div></figure>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Rails Schema with LHM]]></title>
-    <link href="http://bleonard.github.io/blog/2014/10/30/rails-schema-with-lhm/"/>
-    <updated>2014-10-30T00:00:00-07:00</updated>
-    <id>http://bleonard.github.io/blog/2014/10/30/rails-schema-with-lhm</id>
-    <content type="html"><![CDATA[<p>At <a href="https://www.taskrabbit.com">TaskRabbit</a>, we like <a href="http://www.mysql.com/">MySQL</a>. As with everything, it has its own set of issues, though. One of these issues is that it locks the table while a column is added. This is not the biggest deal in the early days of a table, but once you start getting millions of rows and consistent traffic around the clock, this prevents the site from working as expected.</p>
-
-<p>The first way that we worked around this problem was with the <a href="http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html">pt-online-schema-change</a> tool. It does the following:</p>
-
-<ul>
-<li>Makes a a new table with the old table&#8217;s schema</li>
-<li>Copies data from the old table to the new table</li>
-<li>Sets up a trigger for data to keep syncing</li>
-<li>Adds the column to the new table</li>
-<li>Renames the old table to something else and renames the new table to replace it</li>
-<li>Deletes the old table</li>
-</ul>
-
-
-<p>This worked quite well, but had a flaw within our process. It was outside of the development and deployment workflow. In order to develop, we would still make a <a href="http://guides.rubyonrails.org/migrations.html">Rails migration</a>. Then just before deploy, we would run the tool and add the row to the <code>schema_migrations</code> table. When we deploy, it runs migrations, but in this case it would not run because we had added that row. I don&#8217;t think we ever messed it up, but the process had a few gaps.</p>
-
-<p>We now use <a href="https://github.com/soundcloud/lhm">LHM</a> also known as Large Hadron Migrator from the good folks at <a href="https://soundcloud.com/">soundcloud</a>. It does basically the same thing, but allows you to do it right there in the migration.</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">require</span> <span class="s1">&#39;lhm&#39;</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nc">AddMiddleNameToUsers</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Migration</span>
-</span><span class='line'>  <span class="k">def</span> <span class="nf">change</span>
-</span><span class='line'>    <span class="no">Lhm</span><span class="o">.</span><span class="n">change_table</span> <span class="ss">:users</span> <span class="k">do</span> <span class="o">|</span><span class="n">m</span><span class="o">|</span>
-</span><span class='line'>      <span class="c1"># same as: add_column :users, :middle_name</span>
-</span><span class='line'>      <span class="n">m</span><span class="o">.</span><span class="n">add_column</span> <span class="ss">:middle_name</span><span class="p">,</span> <span class="s2">&quot;VARCHAR(191) DEFAULT NULL&quot;</span>
-</span><span class='line'>    <span class="k">end</span>
-</span><span class='line'>  <span class="k">end</span>
-</span><span class='line'><span class="k">end</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>So this is great. Now it&#8217;s in the process.</p>
-
-<h3>Schema</h3>
-
-<p>One design choice (and it seems like the right one) is that it makes the last step manual. That is, it leaves the old (renamed) table around. We go back and delete these from production when sure everything worked out. The above migration might leave around a table named something like this: <code>lhma_2014_10_28_20_41_56_933_users</code>.</p>
-
-<p>So that&#8217;s fine, but you&#8217;ll notice that when you run <code>rake db:migrate</code> that your <code>schema.rb</code> file now has that table in it. This happens because ActiveRecord takes a snapshot of your database right after the migration. We try to take really good care of our schema file, so this made us sad.</p>
-
-<p>I went poking around in the ActiveRecord code ready to monkey patch the adapter that reads the table list or the code that generates the schema file. When I got there, though, I found there was already a class setting that did what I wanted. It even took a regex!</p>
-
-<p>So here&#8217;s what to add if you don&#8217;t want those tables showing up in your schema file:</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="c1"># config/initializers/active_record_schema.rb</span>
-</span><span class='line'><span class="nb">require</span> <span class="s1">&#39;active_record&#39;</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1"># ignore LHM</span>
-</span><span class='line'><span class="no">ActiveRecord</span><span class="o">::</span><span class="no">SchemaDumper</span><span class="o">.</span><span class="n">ignore_tables</span> <span class="o">&lt;&lt;</span> <span class="sr">/^lhma_/</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>That&#8217;s it. Happy migrating.</p>
 ]]></content>
   </entry>
   
